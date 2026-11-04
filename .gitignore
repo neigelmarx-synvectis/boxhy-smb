@@ -1,0 +1,33 @@
+# MPLAB X / XC16 build outputs
+build/
+dist/
+debug/
+_build/
+out/
+disassembly/
+nbproject/private/
+nbproject/Makefile-*.mk.bak
+nbproject/Package-*.bash.bak
+*.mk.bak
+funclist
+*.o
+*.d
+*.elf
+*.hex
+*.lss
+*.map
+*.cof
+*.hxl
+*.sym
+
+# MCC backups
+*.mc3.bak*
+*.bak
+
+# OS / editors
+.DS_Store
+Thumbs.db
+*.swp
+
+# MPLAB VS Code extension regenerated cmake files
+cmake/**/.generated/

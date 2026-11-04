@@ -1,0 +1,21 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "BOXHY_SMB_V1_3_0_default_conf",
+            "binaryDir": "${fileDir}/../../../_build/BOXHY_SMB_V1_3_0/default",
+            "generator": "Ninja",
+            "toolchainFile": "${fileDir}/.generated/toolchain.cmake",
+            "cacheVariables": {
+                "CMAKE_USER_MAKE_RULES_OVERRIDE": {
+                    "type": "FILEPATH",
+                    "value": "${fileDir}/.generated/overrides.cmake"
+                },
+                "CMAKE_EXPORT_COMPILE_COMMANDS": {
+                    "type": "BOOL",
+                    "value": "ON"
+                }
+            }
+        }
+    ]
+}

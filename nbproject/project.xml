@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>com.microchip.mplab.nbide.embedded.makeproject</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/make-project/1">
+            <name>BOXHY_SMB_V1_3_0</name>
+            <name>BOXHY_SMB_V1_2_7</name>
+            <name>BOXHY_SMB_V1_2_6</name>
+            <name>BOXHY_SMB_V1_2_5</name>
+            <name>BOXHY_SMB_V1_2_4</name>
+            <name>BOXHY_SMB_V1_2_2</name>
+            <name>BOXHY_SMB_V1_2_1</name>
+            <name>BOXHY_SMB_V1_2</name>
+            <name>BOXHY_SMB</name>
+            <name>test_dspic2</name>
+            <creation-uuid>dea71215-8719-4668-b74a-0bb6a0f3e557</creation-uuid>
+            <make-project-type>0</make-project-type>
+            <c-extensions>c</c-extensions>
+            <cpp-extensions/>
+            <header-extensions>h</header-extensions>
+            <asminc-extensions/>
+            <sourceEncoding>ISO-8859-1</sourceEncoding>
+            <make-dep-projects/>
+            <sourceRootList/>
+            <confList>
+                <confElem>
+                    <name>default</name>
+                    <type>2</type>
+                </confElem>
+            </confList>
+            <formatting>
+                <project-formatting-style>false</project-formatting-style>
+            </formatting>
+        </data>
+    </configuration>
+</project>

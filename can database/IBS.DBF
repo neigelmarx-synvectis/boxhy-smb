@@ -1,0 +1,19 @@
+//******************************BUSMASTER Messages and signals Database ******************************//
+
+[DATABASE_VERSION] 1.3
+
+[PROTOCOL] CAN
+
+[BUSMASTER_VERSION] [3.2.2]
+
+[NUMBER_OF_MESSAGES] 2
+
+[START_MSG] CurrentLimits_00,419380432,4,2,1,X
+[START_SIGNALS] Dischargelimit,16,1,0,U,65535,0,1,-1600.000000,0.050000,,
+[START_SIGNALS] ChargeLimit,16,3,0,U,65535,0,1,-1600.000000,0.050000,A,
+[END_MSG]
+
+[START_MSG] CurrentLimits_01,419380433,4,2,1,X
+[START_SIGNALS] DischargeLimit,16,1,0,U,65535,0,1,-1600.000000,0.050000,A,
+[START_SIGNALS] ChargeLimit,16,3,0,U,65535,0,1,-1600.000000,0.050000,,
+[END_MSG]
