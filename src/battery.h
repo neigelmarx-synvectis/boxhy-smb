@@ -79,7 +79,5 @@ void Battery_Update1s(void);
 void Battery_ResetErrors(void);
 /** Une erreur batterie justifiant le passage en SMB_EMERGENCY est présente. */
 bool Battery_HasCriticalError(void);
-/** Décodage du format courant IBS (flottant 11 bits de mantisse) en 0.01 A. */
-int16_t Battery_DecodeIbsCurrent(uint8_t data0, uint8_t data1, uint8_t data2);
 
 #endif /* BATTERY_H */

@@ -9,7 +9,15 @@ respecte le [Semantic Versioning](https://semver.org/lang/fr/).
 ### Ajouté
 - Mise sous git du projet (dépôt `boxhy-smb`), `.gitignore` MPLAB X / XC16, README et CHANGELOG.
 - Tests unitaires hôte (`tests/`, `make -C tests`) : cadre de test maison, doubles de la couche
-  HAL, une suite par module (14 suites, 182 tests). Les tests figent le comportement actuel.
+  HAL, une suite par module (15 suites, 203 tests). Les tests figent le comportement actuel.
+- Base CAN de référence `can database/BOXHY.dbc` (format Vector, 60 messages, 311 signaux) et
+  générateur `tools/candb_gen.py` (Python standard). Le générateur produit `src/can_db.h` et les `.DBF`
+  BUSMASTER, et valide la base (signal hors DLC, chevauchement, flottant). `make -C tests` vérifie
+  que les fichiers générés sont à jour.
+- Couche CAN générique `src/can_signal.c/.h` : lecture et écriture d'un signal d'après ses paramètres
+  DBC (Intel / Motorola, signé, flottant 32 bits, facteur, offset). Codage et décodage d'une trame
+  entière par tables de liaison signal / variable, placées en mémoire programme. Le nombre de liaisons est
+  contrôlé à la compilation.
 
 ### Modifié
 - Découpage du fichier unique `smb_v1_3_0_main.c` (3027 lignes) en modules `src/` par
@@ -27,6 +35,28 @@ respecte le [Semantic Versioning](https://semver.org/lang/fr/).
 - Sources converties en UTF-8 / LF ; encodage des projets MPLAB X et VS Code passé à UTF-8.
 - Descripteurs de projet (`nbproject/configurations.xml`, `.vscode/BOXHY_SMB_V1_3_0.mplab.json`)
   mis à jour avec les nouveaux fichiers.
+- Toutes les trames CAN lues ou émises par la SMB passent par la couche générique : télémétrie
+  (`can_tx.c`), batteries IBS, FCCB (états et commandes), maintenance, ordres IHM. Les trames
+  restent identiques octet pour octet, sauf les corrections ci-dessous. Flash 26 559 → 26 856 octets,
+  RAM 1 254 → 1 204 octets.
+- `.DBF` BUSMASTER régénérés depuis le `.dbc`, avec les trames réellement émises par le firmware :
+  SOP dans `SMB_TX_BAT_GENERAL`, octets 5 à 7 de `SMB_TX_GENERAL`, DLC 7 de `SMB_ENERGY_MANAGEMENT`,
+  ID `0x2C01D01` de `SMB_RX_DCAC_INPUT_RELAY`, valeurs d'état SMB et FCCB du code (STANDBY = 30).
+
+### Corrigé
+- Trame `0x2C00004` : l'octet 4 contient maintenant le poids fort du compteur buzzer 5 min, au lieu de 0 (bug 4).
+- Trame `0xCFF0127` : l'octet 2 contient la consigne pile en A (`/100`), au lieu de `(uint8_t)x / 100` (bug 4).
+- Températures max IBS (cellules et carte) : mot 16 bits big-endian, au lieu d'un poids fort ×255 (bug 5).
+- Courant et limites de courant IBS : décodage complet du flottant IEEE big-endian. L'origine ignorait les
+  12 bits de poids faible de la mantisse, d'où un écart pouvant atteindre quelques 0,01 A.
+
+### À valider (écarts entre les anciens `.DBF` et le firmware, le firmware fait foi)
+- `IBS.DBF` décrivait 0x18FF0CDx comme deux U16 (×0,05, −1600 A) sur 4 octets ; le firmware décode
+  deux flottants big-endian sur 8 octets.
+- `FCCB_TX_GENERAL` : la SMB lit `ppmh2_error_flag` (octet 1 bit 2) et `short_circuit_ongoing_flag`
+  (octet 5 bit 0), absents de l'ancien `BOXHY_FCCB.DBF`.
+- `FCCB_RX_ON_OFF` (0x2FC1001) : décrit en octets entiers sur 8 octets. Les commandes de maintenance
+  et de RAZ des erreurs utilisent les octets 2, 3 et 7. Arrêt et démarrage restent émis en DLC 3.
 
 ### Écarts volontaires par rapport au comportement d'origine
 - Drapeaux partagés avec les ISR déclarés `volatile`.
@@ -47,8 +77,8 @@ Repérées par `TODO(bug n)` dans le code et figées par des tests `current_beha
 2. Compteur SOC "très très haut" déclaré `bool` : l'erreur ne se déclenche jamais ; l'avertissement
    SOC haut n'apparaît qu'au-dessus de 95 % (85 % probablement visé).
 3. Réception CAN : `break` manquants après `0x2C01009` et `0x25C1000`.
-4. Trames `0x2C00004` (octet 4) et `0xCFF0127` (octet 2) : cast 8 bits avant décalage / division.
-5. Températures max IBS : poids fort multiplié par 255 au lieu de 256.
+4. ~~Trames `0x2C00004` (octet 4) et `0xCFF0127` (octet 2) : cast 8 bits avant décalage / division.~~ Corrigé.
+5. ~~Températures max IBS : poids fort multiplié par 255 au lieu de 256.~~ Corrigé.
 6. Version télémétrie 1.2.7 alors que le firmware est 1.3.0.
 7. `FCS_START_2` et `FC_STOP_1` : erreur critique non évaluée tant que la déconnexion SOC est active.
 8. Compteurs watchdog sans protection ISR (sans impact aujourd'hui).

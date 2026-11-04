@@ -4,63 +4,121 @@
  */
 #include <string.h>
 #include "fcs.h"
+#include "can_db.h"
 #include "smb_config.h"
 #include "hal/can_port.h"
 
-#define FCS_COMMAND_ID        0x2FC1001UL
-#define FCS_CURRENT_LIMIT_ID  0x2FC1002UL
+#define FCS_COMMAND_CONFIRM   0xFF /* octet 7 des commandes longues (maintenance, RAZ erreurs) */
+#define FCS_MAINTENANCE_KEY   0x82
 
 sFcs fcs;
 
-static uint8_t command_data[8];
-static CAN_MSG_OBJ command_msg;
+/* ---- Réception ------------------------------------------------------------------------- */
+
+#define M CANDB_FCCB_TX_GENERAL
+static const sCanBinding fccb_general[] CAN_ROM = {
+    CAN_BIND(CANDB_FCCB_TX_GENERAL__STEP, &fcs.step, CAN_VAR_U8, 1),
+    CAN_BIND(CANDB_FCCB_TX_GENERAL__CRITICAL_ERROR_FLAG, &fcs.critical_error_flag, CAN_VAR_BOOL, 1),
+    CAN_BIND(CANDB_FCCB_TX_GENERAL__MINOR_ERROR_FLAG, &fcs.minor_error_flag, CAN_VAR_BOOL, 1),
+    CAN_BIND(CANDB_FCCB_TX_GENERAL__PPMH2_ERROR_FLAG, &fcs.ppmh2_error_flag, CAN_VAR_BOOL, 1),
+    CAN_BIND_NONE(CANDB_FCCB_TX_GENERAL__CHECK_H2_SUPPLY_WARNING_FLAG),
+    CAN_BIND(CANDB_FCCB_TX_GENERAL__FC_CURRENT_LOW_LEVEL_WARNING_FLAG, &fcs.low_current_warning_flag, CAN_VAR_BOOL, 1),
+    CAN_BIND(CANDB_FCCB_TX_GENERAL__DCDC_TEMPERATURE_HIGH_LEVEL_WARNING_FLAG, &fcs.dcdc_temperature_warning_flag, CAN_VAR_BOOL, 1),
+    CAN_BIND_NONE(CANDB_FCCB_TX_GENERAL__PURGE_REQUEST_FLAG),
+    CAN_BIND_NONE(CANDB_FCCB_TX_GENERAL__SHORT_CIRCUIT_REQUEST_FLAG),
+    CAN_BIND_NONE(CANDB_FCCB_TX_GENERAL__CAN_START_REQUEST_FLAG),
+    CAN_BIND_NONE(CANDB_FCCB_TX_GENERAL__CAN_STOP_REQUEST_FLAG),
+    CAN_BIND_NONE(CANDB_FCCB_TX_GENERAL__CAN_CRITICAL_STOP_REQUEST_FLAG),
+    CAN_BIND_NONE(CANDB_FCCB_TX_GENERAL__INSTANT_H2_CONSUMPTION),
+    CAN_BIND(CANDB_FCCB_TX_GENERAL__SHORT_CIRCUIT_ONGOING_FLAG, &fcs.short_circuit_ongoing_flag, CAN_VAR_BOOL, 1),
+    CAN_BIND(CANDB_FCCB_TX_GENERAL__SPAC_OUTPUT_CURRENT, &fcs.output_current, CAN_VAR_I16, 0.01),
+};
+CAN_CHECK_BINDINGS(M, fccb_general);
+#undef M
+
+#define M CANDB_FCCB_TX_TEMPERATURE
+static const sCanBinding fccb_temperature[] CAN_ROM = {
+    CAN_BIND_NONE(CANDB_FCCB_TX_TEMPERATURE__FC_TOP_TEMPERATURE),
+    CAN_BIND_NONE(CANDB_FCCB_TX_TEMPERATURE__FC_BOT_TEMPERATURE),
+    CAN_BIND_NONE(CANDB_FCCB_TX_TEMPERATURE__BOARD_TEMPERATURE),
+    CAN_BIND(CANDB_FCCB_TX_TEMPERATURE__DCDC_TEMPERATURE, &fcs.dcdc_temperature, CAN_VAR_U8, 1),
+    CAN_BIND_NONE(CANDB_FCCB_TX_TEMPERATURE__FC_OPTIMUM_TEMPERATURE),
+    CAN_BIND_NONE(CANDB_FCCB_TX_TEMPERATURE__FILTERED_STACK_FANS_DUTY_CYCLE),
+    CAN_BIND_NONE(CANDB_FCCB_TX_TEMPERATURE__PPMH2),
+    CAN_BIND_NONE(CANDB_FCCB_TX_TEMPERATURE__FC_MEAN_TEMPERATURE),
+};
+CAN_CHECK_BINDINGS(M, fccb_temperature);
+#undef M
+
+#define M CANDB_FCCB_TX_PURGE_CC_INFOS
+static const sCanBinding fccb_purge_cc_infos[] CAN_ROM = {
+    CAN_BIND_NONE(CANDB_FCCB_TX_PURGE_CC_INFOS__PURGE_CNT),
+    CAN_BIND_NONE(CANDB_FCCB_TX_PURGE_CC_INFOS__SHORT_CIRCUIT_CNT),
+    CAN_BIND_NONE(CANDB_FCCB_TX_PURGE_CC_INFOS__PURGE_INTERVAL_CNT),
+    CAN_BIND(CANDB_FCCB_TX_PURGE_CC_INFOS__SHORT_CIRCUIT_INTERVAL_CNT, &fcs.short_circuit_interval_cnt, CAN_VAR_U8, 0.1),
+    CAN_BIND_NONE(CANDB_FCCB_TX_PURGE_CC_INFOS__INLET_PRESSURE),
+};
+CAN_CHECK_BINDINGS(M, fccb_purge_cc_infos);
+#undef M
+
+static const sCanMessage fcs_rx_messages[] CAN_ROM = {
+    CAN_MESSAGE(CANDB_FCCB_TX_GENERAL, fccb_general),
+    CAN_MESSAGE(CANDB_FCCB_TX_TEMPERATURE, fccb_temperature),
+    CAN_MESSAGE(CANDB_FCCB_TX_PURGE_CC_INFOS, fccb_purge_cc_infos),
+};
+
+/* ---- Commandes ------------------------------------------------------------------------- */
+
+static struct
+{
+    uint8_t critical_stop;
+    uint8_t stop;
+    uint8_t start;          /* 1 : démarrage ; FCS_MAINTENANCE_KEY : mode maintenance */
+    uint8_t reset_errors;
+    uint8_t confirm;
+    uint16_t current_limit; /* 0,01 A */
+} cmd;
+
+#define M CANDB_FCCB_RX_ON_OFF
+static const sCanBinding fccb_on_off[] CAN_ROM = {
+    CAN_BIND(CANDB_FCCB_RX_ON_OFF__CAN_CRITICAL_STOP_REQUEST, &cmd.critical_stop, CAN_VAR_U8, 1),
+    CAN_BIND(CANDB_FCCB_RX_ON_OFF__CAN_STOP_REQUEST, &cmd.stop, CAN_VAR_U8, 1),
+    CAN_BIND(CANDB_FCCB_RX_ON_OFF__CAN_START_REQUEST, &cmd.start, CAN_VAR_U8, 1),
+    CAN_BIND(CANDB_FCCB_RX_ON_OFF__RESET_ERRORS_REQUEST, &cmd.reset_errors, CAN_VAR_U8, 1),
+    CAN_BIND(CANDB_FCCB_RX_ON_OFF__COMMAND_CONFIRM, &cmd.confirm, CAN_VAR_U8, 1),
+};
+CAN_CHECK_BINDINGS(M, fccb_on_off);
+static const sCanMessage msg_on_off CAN_ROM = CAN_MESSAGE(M, fccb_on_off);
+#undef M
+
+#define M CANDB_FCCB_RX_OUPUT_CURRENT_LIMIT
+static const sCanBinding fccb_current_limit[] CAN_ROM = {
+    CAN_BIND(CANDB_FCCB_RX_OUPUT_CURRENT_LIMIT__OUTPUT_CURRENT_LIMIT, &cmd.current_limit, CAN_VAR_U16, 0.01),
+};
+CAN_CHECK_BINDINGS(M, fccb_current_limit);
+static const sCanMessage msg_current_limit CAN_ROM = CAN_MESSAGE(M, fccb_current_limit);
+#undef M
 
 void Fcs_Init(void)
 {
-    uint8_t i;
-
-    for (i = 0; i < 8; i++)
-        command_data[i] = 0;
-    command_msg.msgId = FCS_COMMAND_ID;
-    command_msg.field.frameType = CAN_FRAME_DATA;
-    command_msg.field.idType = CAN_FRAME_EXT;
-    command_msg.field.dlc = CAN_DLC_4;
-    command_msg.data = command_data;
-
+    memset(&cmd, 0, sizeof(cmd));
     memset(&fcs, 0, sizeof(fcs));
 }
 
 bool Fcs_HandleCanFrame(const CAN_MSG_OBJ *msg)
 {
-    uFLAGSBYTE flags;
-    const uint8_t *d = msg->data;
+    const sCanMessage *m = CanMsg_Find(fcs_rx_messages, CAN_ARRAY_SIZE(fcs_rx_messages), msg->msgId);
 
-    switch (msg->msgId)
+    if (m == NULL)
+        return false;
+    CanMsg_Unpack(m, msg->data);
+    if (m->id == CANDB_FCCB_TX_GENERAL_ID)
     {
-    case 0x2FC0000UL: /* état et erreurs FCCB */
+        /* la trame d'état fait office de présence FCCB */
         fcs.watchdog.cnt = 0;
         fcs.watchdog.error = 0;
-        fcs.step = d[0];
-        flags.byte = d[1];
-        fcs.critical_error_flag = flags.sFLAGSBITS.b0;
-        fcs.minor_error_flag = flags.sFLAGSBITS.b1;
-        fcs.ppmh2_error_flag = flags.sFLAGSBITS.b2;
-        flags.byte = d[2];
-        fcs.low_current_warning_flag = flags.sFLAGSBITS.b1;
-        fcs.dcdc_temperature_warning_flag = flags.sFLAGSBITS.b2;
-        flags.byte = d[5];
-        fcs.short_circuit_ongoing_flag = flags.sFLAGSBITS.b0;
-        fcs.output_current = (int16_t)(uint16_t)(d[6] | ((uint16_t)d[7] << 8));
-        return true;
-    case 0x2FC0004UL:
-        fcs.short_circuit_interval_cnt = d[6];
-        return true;
-    case 0x2FC0003UL:
-        fcs.dcdc_temperature = d[3];
-        return true;
-    default:
-        return false;
     }
+    return true;
 }
 
 void Fcs_UpdateGeneralError(void)
@@ -83,54 +141,30 @@ void Fcs_Update1s(void)
     TimedFlag8_Update(&fcs.watchdog, true, WATCHDOG_TIMEOUT);
 }
 
-/* ---- Commandes ------------------------------------------------------------------ */
+/* ---- Émission des commandes ------------------------------------------------------------- */
 
-static void send_command(uint32_t id, const uint8_t *bytes, uint8_t dlc)
+/* Commandes courtes (arrêt critique, arrêt, démarrage) en DLC 3 ; commandes longues
+ * (maintenance, RAZ des erreurs) en DLC 8 avec l'octet de confirmation 0xFF. */
+static void send_on_off(uint8_t critical_stop, uint8_t stop, uint8_t start, uint8_t reset_errors, bool long_command)
 {
-    uint8_t i;
-    for (i = 0; i < 8; i++)
-        command_data[i] = (i < dlc) ? bytes[i] : 0;
-    command_msg.field.dlc = dlc;
-    command_msg.msgId = id;
-    CanPort_Transmit(CAN_PRIORITY_HIGH, &command_msg);
+    cmd.critical_stop = critical_stop;
+    cmd.stop = stop;
+    cmd.start = start;
+    cmd.reset_errors = reset_errors;
+    cmd.confirm = long_command ? FCS_COMMAND_CONFIRM : 0;
+    CanMsg_Send(&msg_on_off, long_command ? CAN_DLC_8 : CAN_DLC_3, CAN_PRIORITY_HIGH);
 }
 
-void Fcs_SendStart(void)
-{
-    static const uint8_t b[3] = {0, 0, 1};
-    send_command(FCS_COMMAND_ID, b, CAN_DLC_3);
-}
-
-void Fcs_SendStop(void)
-{
-    static const uint8_t b[3] = {0, 1, 0};
-    send_command(FCS_COMMAND_ID, b, CAN_DLC_3);
-}
-
-void Fcs_SendCriticalStop(void)
-{
-    static const uint8_t b[3] = {1, 0, 0};
-    send_command(FCS_COMMAND_ID, b, CAN_DLC_3);
-}
-
-void Fcs_SendMaintenanceMode(void)
-{
-    static const uint8_t b[8] = {0, 0, 0x82, 0, 0, 0, 0, 0xFF};
-    send_command(FCS_COMMAND_ID, b, CAN_DLC_8);
-}
-
-void Fcs_SendResetErrors(void)
-{
-    static const uint8_t b[8] = {0, 0, 0, 0x01, 0, 0, 0, 0xFF};
-    send_command(FCS_COMMAND_ID, b, CAN_DLC_8);
-}
+void Fcs_SendStart(void)           { send_on_off(0, 0, 1, 0, false); }
+void Fcs_SendStop(void)            { send_on_off(0, 1, 0, 0, false); }
+void Fcs_SendCriticalStop(void)    { send_on_off(1, 0, 0, 0, false); }
+void Fcs_SendMaintenanceMode(void) { send_on_off(0, 0, FCS_MAINTENANCE_KEY, 0, true); }
+void Fcs_SendResetErrors(void)     { send_on_off(0, 0, 0, 1, true); }
 
 void Fcs_SendCurrentLimit(uint16_t current_limit)
 {
-    uint8_t b[2];
-    b[0] = (uint8_t)current_limit;
-    b[1] = (uint8_t)(current_limit >> 8);
-    send_command(FCS_CURRENT_LIMIT_ID, b, CAN_DLC_2);
+    cmd.current_limit = current_limit;
+    CanMsg_Send(&msg_current_limit, msg_current_limit.dlc, CAN_PRIORITY_HIGH);
 }
 
 void Fcs_ResetErrors(void)

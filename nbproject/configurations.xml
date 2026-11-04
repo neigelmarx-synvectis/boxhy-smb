@@ -44,6 +44,8 @@
         <itemPath>src/maintenance.h</itemPath>
         <itemPath>src/can_rx.h</itemPath>
         <itemPath>src/can_tx.h</itemPath>
+        <itemPath>src/can_signal.h</itemPath>
+        <itemPath>src/can_db.h</itemPath>
         <itemPath>src/smb_state_machine.h</itemPath>
       </logicalFolder>
       <logicalFolder name="HAL"
@@ -96,6 +98,7 @@
         <itemPath>src/maintenance.c</itemPath>
         <itemPath>src/can_rx.c</itemPath>
         <itemPath>src/can_tx.c</itemPath>
+        <itemPath>src/can_signal.c</itemPath>
         <itemPath>src/smb_state_machine.c</itemPath>
       </logicalFolder>
       <logicalFolder name="HAL"

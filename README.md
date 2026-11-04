@@ -35,12 +35,16 @@ et de l'IHM (boutons, LEDs, buzzer).
 | `src/cooling.c/.h` | Ventilateurs AC : trois régulateurs PI, PWM |
 | `src/hmi.c/.h` | Boutons filtrés, motifs du buzzer, limite 5 min, drapeau RAZ IHM |
 | `src/maintenance.c/.h` | Mode maintenance : demande et commandes manuelles par CAN |
+| `src/can_signal.c/.h` | Couche CAN générique : lecture / écriture de signaux d'après leurs paramètres DBC, codage / décodage de trames par tables de liaison |
+| `src/can_db.h` | **Généré** depuis `can database/BOXHY.dbc` : identifiants, DLC et disposition de chaque signal |
 | `src/can_rx.c/.h` | Réception CAN : aiguillage d'un message vers le module concerné |
-| `src/can_tx.c/.h` | Télémétrie CAN : une fonction par trame, cycle de 25 créneaux |
+| `src/can_tx.c/.h` | Télémétrie CAN : une table de liaisons par trame, cycle de 25 créneaux |
 | `hal/` | Couche d'abstraction matérielle (GPIO/PWM, CAN, UART, ADC) : `static inline` sur les drivers MCC, coût nul, substituable par des doubles de test |
 | `mcc_generated_files/` | Drivers générés par MCC (horloge, ADC1, CAN1, UART1, TMR1/TMR5, DMA, pin manager, traps) |
 | `tests/` | Tests unitaires hôte : `test_framework.h` (cadre maison), `mocks/hal/` (doubles de la HAL), un `test_<module>.c` par module, `Makefile` |
-| `can database/` | Bases CAN (`.DBF`) BOXHY_SMB, BOXHY_FCCB, IBS et configuration `.cfx` |
+| `can database/BOXHY.dbc` | **Base CAN de référence** (format Vector DBC) : toutes les trames SMB, FCCB, IBS et IHM |
+| `can database/*.DBF` | Bases BUSMASTER **générées** depuis le `.dbc` (chargées par `BOXHY_CONFIG_1.1.0.cfx`) |
+| `tools/candb_gen.py` | Générateur (Python standard) : `.dbc` vers `src/can_db.h` et `.DBF` |
 | `nbproject/` | Projet MPLAB X et makefiles générés |
 | `cmake/`, `.vscode/` | Projet pour l'extension MPLAB de VS Code |
 | `Makefile` | Point d'entrée `make` du projet MPLAB X |
@@ -72,7 +76,7 @@ avec les états de sortie `FC_STOP_1/2`, `DCAC_STOP`, `STOPPING`, et les états 
 
 ### Interfaces
 
-- **CAN1** : échange avec la carte FCCB (états `FCCB_*`, commandes `Fcs_Send*`) et avec la batterie IBS (trames `0x18FFxxD0/D1`, keep-alive). Les bases CAN sont dans `can database/`.
+- **CAN1** : échange avec la carte FCCB (états `FCCB_*`, commandes `Fcs_Send*`), avec les batteries IBS (trames `0x18FFxxD0/D1`, keep-alive) et avec l'IHM (télémétrie, maintenance). Toutes les trames sont décrites dans `can database/BOXHY.dbc` (voir « Base CAN »).
 - **UART1 (RS232)** : interrogation de l'onduleur avec les commandes `QPIGS`, `QMOD`, `QPIWS` et décodage de son mode (fault, standby, AC source, battery, power saving…).
 - **ADC1** : 4 voies moyennées sur 50 échantillons : température 1, température 2, tension d'alimentation, tension de bus.
 - **Sorties** : relais `DCAC_INPUT_RELAY`, `DCAC_PRECHARGE_RELAY`, `FCS_OUTPUT_RELAY`, `SUPPLY_PRECHARGE_RELAY`, PWM ventilateurs, buzzer.
@@ -84,6 +88,38 @@ Trois régulateurs PI (`Generic_PidController`) pilotent la PWM des ventilateurs
 courant pile est calculée dans `ems.c` à partir du courant système et de la capacité de charge des
 batteries. Tous les seuils (SOC 10 / 25 / 70 / 85 / 95 %, puissance AC, températures, timeouts…)
 sont dans `src/smb_config.h`.
+
+## Base CAN
+
+Le fichier `can database/BOXHY.dbc` est la seule référence pour la disposition des trames.
+Le firmware ne contient aucune position de bit écrite à la main : chaque trame lue ou émise
+est décrite par une **table de liaisons** qui associe un signal du `.dbc` à une variable du firmware.
+
+```c
+static const sCanBinding smb_currents[] CAN_ROM = {
+    CAN_BIND(CANDB_SMB_TX_CURRENTS__FCS_OUTPUT_CURRENT, &fcs.output_current, CAN_VAR_I16, 0.01),
+    ...
+};
+CAN_CHECK_BINDINGS(CANDB_SMB_TX_CURRENTS, smb_currents);
+```
+
+- `CAN_BIND(signal, &variable, type, unité)` : l'unité est la valeur physique d'un LSB de la variable.
+  La conversion avec le facteur et l'offset DBC est précalculée en entiers à la compilation.
+  `CAN_BIND_CONST` émet une valeur fixe, et `CAN_BIND_NONE` ignore un signal.
+- `CanMsg_Pack()` / `CanMsg_Unpack()` codent ou décodent une trame entière. Les fonctions
+  `CanSignal_Get*` / `CanSignal_Set*` traitent un signal isolé : Intel ou Motorola, signé, flottant 32 bits.
+- `CAN_CHECK_BINDINGS` fait échouer la compilation si un signal du `.dbc` n'a pas de liaison.
+- Les tables sont placées en mémoire programme (`CAN_ROM`, attribut `space(auto_psv)`) : elles ne
+  consomment pas de RAM malgré `-mconst-in-data`.
+
+Pour modifier une trame :
+
+1. Modifier `can database/BOXHY.dbc`, avec CANdb++, un éditeur de texte ou cantools.
+2. Lancer `python3 tools/candb_gen.py`, qui régénère `src/can_db.h` et les trois `.DBF` BUSMASTER.
+3. Mettre à jour la table de liaisons du module concerné. La compilation signale un signal oublié.
+4. `make -C tests` vérifie que les fichiers générés sont à jour, puis lance les tests.
+
+Les `.DBF` sont répartis par préfixe de nom de message : `SMB_`, `FCCB_` et `IBS_`.
 
 ## Compiler
 
@@ -105,10 +141,10 @@ Ouvrir le dossier avec l'extension MPLAB installée ; le projet `.vscode/BOXHY_S
 
 ### Occupation mémoire (build debug PICkit 4)
 
-| | v1.3.0 fichier unique | v1.3.0 modulaire |
-|---|---|---|
-| Flash | 31 659 octets (96 %) | 26 559 octets (80 %) |
-| RAM | 1 414 octets | 1 254 octets |
+| | v1.3.0 fichier unique | v1.3.0 modulaire | + CAN générique (DBC) |
+|---|---|---|---|
+| Flash | 31 659 octets (96 %) | 26 559 octets (80 %) | 26 856 octets (81 %) |
+| RAM | 1 414 octets | 1 254 octets | 1 204 octets |
 
 Le gain de flash vient presque entièrement de la suppression de `printf` : les requêtes RS232
 sont désormais des tableaux d'octets constants envoyés par `UART1_Write`. Le linker n'embarque
@@ -118,11 +154,15 @@ qu'avant le découpage (écart de quelques dizaines d'octets).
 Le gain de RAM vient des constantes devenues `#define` : les `const` (placées en RAM par
 `-mconst-in-data`) et les variables initialisées jamais modifiées (seuils, timeouts). La suppression
 des variables globales inutilisées y contribue aussi.
+Le passage au CAN générique coûte 297 octets de flash au total. Les tables de liaison occupent
+3,3 Ko de données lues via la fenêtre PSV, soit environ 5 Ko de mémoire programme. Elles remplacent
+le codage écrit à la main et l'ancien décodage IBS, qui utilisait `powf` de la libm. Le passage
+libère aussi 50 octets de RAM, car les buffers CAN propres à chaque module ont disparu.
 
 ## Tests unitaires
 
 ```sh
-make -C tests          # compile et exécute toutes les suites
+make -C tests          # vérifie la base CAN générée, compile et exécute toutes les suites
 make -C tests clean
 ```
 
@@ -130,7 +170,8 @@ Les modules sont compilés avec `gcc -std=c99 -Wall -Wextra -Werror` et les doub
 (`tests/mocks/hal/`) à la place de l'implémentation cible. Chaque suite `tests/test_<module>.c`
 fige le comportement du firmware d'origine, y compris les anomalies connues (tests nommés
 `..._current_behaviour_...`, voir CHANGELOG). Le cadre de test `tests/test_framework.h` est
-autonome (pas de dépendance externe).
+autonome (pas de dépendance externe). `tests/test_can_signal.c` compare l'extraction et l'écriture
+de chacun des 311 signaux de la base à une implémentation de référence bit par bit.
 
 ## Remarques
 
@@ -138,7 +179,8 @@ autonome (pas de dépendance externe).
 - Toute modification de périphérique doit passer par MCC (`test_dspic2.mc3`) puis régénération de `mcc_generated_files/`.
 - Les anomalies du firmware d'origine ont été volontairement **conservées** lors du découpage
   (comportement identique) ; elles sont repérées par des commentaires `TODO(bug n)` dans le code
-  et listées dans le CHANGELOG.
+  et listées dans le CHANGELOG. Les anomalies d'encodage CAN 4 et 5 ont été corrigées lors du
+  passage aux signaux DBC.
 
 ## Auteurs
 

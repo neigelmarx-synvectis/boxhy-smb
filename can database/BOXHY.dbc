@@ -1,0 +1,594 @@
+VERSION ""
+
+
+NS_ :
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	BA_DEF_DEF_
+	SIG_VALTYPE_
+
+BS_:
+
+BU_: SMB FCCB IBS IHM
+
+
+BO_ 2193227776 SMB_TX_BAT_GENERAL: 8 SMB
+ SG_ SOC : 0|8@1+ (1,0) [0|255] "%" IHM
+ SG_ ibs0_system_running_flag : 8|1@1+ (1,0) [0|1] "" IHM
+ SG_ ibs0_error_flag : 9|1@1+ (1,0) [0|1] "" IHM
+ SG_ ibs0_low_soc_warning_flag : 10|1@1+ (1,0) [0|1] "" IHM
+ SG_ ibs0_balancing_flag : 11|1@1+ (1,0) [0|1] "" IHM
+ SG_ ibs1_system_running_flag : 12|1@1+ (1,0) [0|1] "" IHM
+ SG_ ibs1_error_flag : 13|1@1+ (1,0) [0|1] "" IHM
+ SG_ ibs1_low_soc_warning_flag : 14|1@1+ (1,0) [0|1] "" IHM
+ SG_ ibs1_balancing_flag : 15|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_output_current : 16|16@1- (0.01,0) [-327.68|327.67] "A" IHM
+ SG_ ibs0_avg_cell_temperature : 32|8@1- (1,0) [-128|127] "°C" IHM
+ SG_ ibs1_avg_cell_temperature : 40|8@1- (1,0) [-128|127] "°C" IHM
+ SG_ ibs0_sop : 48|8@1+ (1,0) [0|255] "%" IHM
+ SG_ ibs1_sop : 56|8@1+ (1,0) [0|255] "%" IHM
+
+BO_ 2192310272 SMB_TX_INV_FLAGS: 7 SMB
+ SG_ inverter_mode : 0|8@1+ (1,0) [0|255] "" IHM
+ SG_ inverter_error_flag : 8|1@1+ (1,0) [0|1] "" IHM
+ SG_ device_switched_on_flag : 9|1@1+ (1,0) [0|1] "" IHM
+ SG_ load_status_flag : 10|1@1+ (1,0) [0|1] "" IHM
+ SG_ charging_status_flag : 11|1@1+ (1,0) [0|1] "" IHM
+ SG_ ac_charging_status_flag : 12|1@1+ (1,0) [0|1] "" IHM
+ SG_ scc_charging_status_flag : 13|1@1+ (1,0) [0|1] "" IHM
+ SG_ bus_overvoltage_error_flag : 16|1@1+ (1,0) [0|1] "" IHM
+ SG_ bus_undervoltage_error_flag : 17|1@1+ (1,0) [0|1] "" IHM
+ SG_ bus_soft_fail_error_flag : 18|1@1+ (1,0) [0|1] "" IHM
+ SG_ inverter_voltage_too_low_error_flag : 19|1@1+ (1,0) [0|1] "" IHM
+ SG_ inverter_voltage_too_high_error_flag : 20|1@1+ (1,0) [0|1] "" IHM
+ SG_ overtemperature_error_flag : 21|1@1+ (1,0) [0|1] "" IHM
+ SG_ fan_locked_error_flag : 22|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_voltage_high_error_flag : 23|1@1+ (1,0) [0|1] "" IHM
+ SG_ overcharge_error_flag : 24|1@1+ (1,0) [0|1] "" IHM
+ SG_ overload_error_flag : 25|1@1+ (1,0) [0|1] "" IHM
+ SG_ inverter_over_current_error_flag : 26|1@1+ (1,0) [0|1] "" IHM
+ SG_ inverter_soft_start_error_flag : 27|1@1+ (1,0) [0|1] "" IHM
+ SG_ self_test_error_flag : 28|1@1+ (1,0) [0|1] "" IHM
+ SG_ ac_output_dc_voltage_too_high_error_flag : 29|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_disconnected_error_flag : 30|1@1+ (1,0) [0|1] "" IHM
+ SG_ current_sensor_error_flag : 31|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_short_circuit_error_flag : 32|1@1+ (1,0) [0|1] "" IHM
+ SG_ mppt_overload_error_flag : 33|1@1+ (1,0) [0|1] "" IHM
+ SG_ ac_output_apparent_power_very_high_error_flag : 34|1@1+ (1,0) [0|1] "" IHM
+ SG_ line_fail_warning_flag : 40|1@1+ (1,0) [0|1] "" IHM
+ SG_ opv_short_warning_flag : 41|1@1+ (1,0) [0|1] "" IHM
+ SG_ bus_soft_fail_warning_flag : 42|1@1+ (1,0) [0|1] "" IHM
+ SG_ overtemperature_warning_flag : 43|1@1+ (1,0) [0|1] "" IHM
+ SG_ fan_locked_warning_flag : 44|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_voltage_high_warning_flag : 45|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_voltage_low_warning_flag : 46|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_under_shutdown_voltage_warning_flag : 47|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_derating_warning_flag : 48|1@1+ (1,0) [0|1] "" IHM
+ SG_ overload_warning_flag : 49|1@1+ (1,0) [0|1] "" IHM
+ SG_ eeprom_warning_flag : 50|1@1+ (1,0) [0|1] "" IHM
+ SG_ power_limit_warning_flag : 51|1@1+ (1,0) [0|1] "" IHM
+ SG_ pv_voltage_high_warning_flag : 52|1@1+ (1,0) [0|1] "" IHM
+ SG_ mppt_overload_warning_flag : 53|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_too_low_to_charge_warning_flag : 54|1@1+ (1,0) [0|1] "" IHM
+
+BO_ 2192310273 SMB_TX_INV_GENERAL: 8 SMB
+ SG_ ac_output_apparent_power : 0|16@1+ (1,0) [0|65535] "VA" IHM
+ SG_ ac_output_active_power : 16|16@1+ (1,0) [0|65535] "W" IHM
+ SG_ ac_output_voltage : 32|16@1+ (0.1,0) [0|6553.5] "V" IHM
+ SG_ dcac_temp : 48|8@1+ (1,0) [0|255] "°C" IHM
+ SG_ toggle_qmod_flag : 56|1@1+ (1,0) [0|1] "" IHM
+ SG_ toggle_qpiws_flag : 57|1@1+ (1,0) [0|1] "" IHM
+ SG_ toggle_qpigs_flag : 58|1@1+ (1,0) [0|1] "" IHM
+
+BO_ 2193620992 SMB_TX_GENERAL: 8 SMB
+ SG_ STEP : 0|8@1+ (1,0) [0|255] "" IHM
+ SG_ critical_error_flag : 8|1@1+ (1,0) [0|1] "" IHM
+ SG_ dcac_general_error_flag : 9|1@1+ (1,0) [0|1] "" IHM
+ SG_ fcs_general_error_flag : 10|1@1+ (1,0) [0|1] "" IHM
+ SG_ fcs_ppmh2_error_flag : 11|1@1+ (1,0) [0|1] "" IHM
+ SG_ dcac_receive_timeout_flag : 12|1@1+ (1,0) [0|1] "" IHM
+ SG_ ibs0_watchdog_error_flag : 16|1@1+ (1,0) [0|1] "" IHM
+ SG_ ibs1_watchdog_error_flag : 17|1@1+ (1,0) [0|1] "" IHM
+ SG_ dcac_watchdog_error_flag : 18|1@1+ (1,0) [0|1] "" IHM
+ SG_ fcs_watchdog_error_flag : 19|1@1+ (1,0) [0|1] "" IHM
+ SG_ fcs_startup_error_flag : 20|1@1+ (1,0) [0|1] "" IHM
+ SG_ ambiant_temp_error_flag : 21|1@1+ (1,0) [0|1] "" IHM
+ SG_ temp2_error_flag : 22|1@1+ (1,0) [0|1] "" IHM
+ SG_ software_error_flag : 23|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_mode_button_flag : 24|1@1+ (1,0) [0|1] "" IHM
+ SG_ hybrid_mode_button_flag : 25|1@1+ (1,0) [0|1] "" IHM
+ SG_ fcs_step : 32|8@1+ (1,0) [0|255] "" IHM
+ SG_ battery_soc_high_level_warning_flag : 40|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_soc_low_level_warning_flag : 41|1@1+ (1,0) [0|1] "" IHM
+ SG_ ac_output_apparent_power_high_level_warning_flag : 42|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_sop_warning_flag : 43|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_sop_error_flag : 44|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_soc_very_very_high_level_error_flag : 48|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_soc_very_low_level_error_flag : 49|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_overvoltage_warning_flag : 50|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_overvoltage_error_flag : 51|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_overcurrent_warning_flag : 56|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_overcurrent_error_flag : 57|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_overtemperature_charge_error_flag : 58|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_overtemperature_discharge_error_flag : 59|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_overtemperature_charge_warning_flag : 61|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_overtemperature_discharge_warning_flag : 62|1@1+ (1,0) [0|1] "" IHM
+
+BO_ 2193620993 SMB_TX_RAW1: 8 SMB
+ SG_ ihm_left_button_state : 0|1@1+ (1,0) [0|1] "" IHM
+ SG_ ihm_middle_button_state : 1|1@1+ (1,0) [0|1] "" IHM
+ SG_ ihm_right_button_state : 2|1@1+ (1,0) [0|1] "" IHM
+ SG_ battery_mode_button_state : 3|1@1+ (1,0) [0|1] "" IHM
+ SG_ hybrid_mode_button_state : 4|1@1+ (1,0) [0|1] "" IHM
+ SG_ dcac_input_relay_state : 8|1@1+ (1,0) [0|1] "" IHM
+ SG_ dcac_precharge_relay_state : 9|1@1+ (1,0) [0|1] "" IHM
+ SG_ supply_precharge_relay_state : 10|1@1+ (1,0) [0|1] "" IHM
+ SG_ fcs_output_relay_state : 11|1@1+ (1,0) [0|1] "" IHM
+ SG_ buzzer_state : 12|1@1+ (1,0) [0|1] "" IHM
+ SG_ ihm_left_button_led_state : 13|1@1+ (1,0) [0|1] "" IHM
+ SG_ ihm_middle_button_led_state : 14|1@1+ (1,0) [0|1] "" IHM
+ SG_ ihm_right_button_led_state : 15|1@1+ (1,0) [0|1] "" IHM
+ SG_ ambiant_temp_raw : 16|8@1+ (100,0) [0|25500] "" IHM
+ SG_ temp2_raw : 24|8@1+ (100,0) [0|25500] "" IHM
+ SG_ supply_voltage_raw : 32|16@1+ (1,0) [0|65535] "" IHM
+ SG_ bus_voltage_raw : 48|16@1+ (1,0) [0|65535] "" IHM
+
+BO_ 2193620994 SMB_TX_TEMPERATURE: 8 SMB
+ SG_ ac_ambiant_temp : 0|8@1- (1,0) [-128|127] "°C" IHM
+ SG_ temp2 : 8|8@1- (1,0) [-128|127] "°C" IHM
+ SG_ supply_voltage : 32|16@1+ (0.01,0) [0|655.35] "V" IHM
+ SG_ bus_voltage : 48|16@1+ (0.01,0) [0|655.35] "V" IHM
+
+BO_ 2193620995 SMB_TX_CURRENTS: 8 SMB
+ SG_ fcs_output_current : 0|16@1- (0.01,0) [-327.68|327.67] "A" IHM
+ SG_ requested_fcs_current : 16|16@1+ (0.01,0) [0|655.35] "A" IHM
+ SG_ battery_output_current : 32|16@1- (0.01,0) [-327.68|327.67] "A" IHM
+ SG_ system_output_current : 48|16@1- (0.01,0) [-327.68|327.67] "A" IHM
+
+BO_ 2193620996 SMB_TX_VERSION: 6 SMB
+ SG_ software_version : 0|8@1+ (1,0) [0|255] "" IHM
+ SG_ software_subversion : 8|8@1+ (1,0) [0|255] "" IHM
+ SG_ software_subsubversion : 16|8@1+ (1,0) [0|255] "" IHM
+ SG_ buzzer_5_minutes_cnt : 24|16@1+ (1,0) [0|65535] "s" IHM
+ SG_ raz_erreur_ihm_flag : 40|8@1+ (1,0) [0|1] "" IHM
+
+BO_ 2193227777 SMB_TX_BAT_DETAILS: 8 SMB
+ SG_ ibs0_output_current : 0|16@1- (0.01,0) [-327.68|327.67] "A" IHM
+ SG_ ibs1_output_current : 16|16@1- (0.01,0) [-327.68|327.67] "A" IHM
+ SG_ ibs0_max_cell_temperature : 32|8@1- (1,0) [-128|127] "°C" IHM
+ SG_ ibs1_max_cell_temperature : 40|8@1- (1,0) [-128|127] "°C" IHM
+ SG_ ibs0_max_board_temperature : 48|8@1- (1,0) [-128|127] "°C" IHM
+ SG_ ibs1_max_board_temperature : 56|8@1- (1,0) [-128|127] "°C" IHM
+
+BO_ 2193227779 SMB_TX_BAT_RESERVED: 2 SMB
+
+BO_ 2365521959 SMB_FAN_CONTROL: 4 SMB
+ SG_ dcac_cooling_request : 0|8@1+ (1,0) [0|255] "%" IHM
+ SG_ ambiant_cooling_request : 8|8@1+ (1,0) [0|255] "%" IHM
+ SG_ dcdc_cooling_request : 16|8@1+ (1,0) [0|255] "%" IHM
+ SG_ fan_pwm : 24|8@1+ (1,0) [0|255] "%" IHM
+
+BO_ 2365522215 SMB_ENERGY_MANAGEMENT: 7 SMB
+ SG_ min_ems_current : 0|8@1+ (1,0) [0|255] "A" IHM
+ SG_ max_ems_current : 8|8@1+ (1,0) [0|255] "A" IHM
+ SG_ requested_fcs_current : 16|8@1+ (1,0) [0|255] "A" IHM
+ SG_ ibs0_max_charge_current : 24|16@1- (0.01,0) [-327.68|327.67] "A" IHM
+ SG_ ibs0_max_discharge_current : 40|16@1- (0.01,0) [-327.68|327.67] "A" IHM
+
+BO_ 2193628416 SMB_RX_FAN_SPEED: 2 IHM
+ SG_ maintenance_key : 0|8@1+ (1,0) [0|255] "" SMB
+ SG_ fan_speed : 8|8@1+ (1,0) [0|255] "%" SMB
+
+BO_ 2193628417 SMB_RX_DCAC_INPUT_RELAY: 2 IHM
+ SG_ maintenance_key : 0|8@1+ (1,0) [0|255] "" SMB
+ SG_ command : 8|8@1+ (1,0) [0|255] "" SMB
+
+BO_ 2193628418 SMB_RX_DCAC_PRECHARGE_RELAY: 2 IHM
+ SG_ maintenance_key : 0|8@1+ (1,0) [0|255] "" SMB
+ SG_ command : 8|8@1+ (1,0) [0|255] "" SMB
+
+BO_ 2193628419 SMB_RX_SUPPLY_PRECHARGE_RELAY: 2 IHM
+ SG_ maintenance_key : 0|8@1+ (1,0) [0|255] "" SMB
+ SG_ command : 8|8@1+ (1,0) [0|255] "" SMB
+
+BO_ 2193628420 SMB_RX_FCS_OUTPUT_RELAY: 2 IHM
+ SG_ maintenance_key : 0|8@1+ (1,0) [0|255] "" SMB
+ SG_ command : 8|8@1+ (1,0) [0|255] "" SMB
+
+BO_ 2193628421 SMB_RX_BUZZER: 2 IHM
+ SG_ maintenance_key : 0|8@1+ (1,0) [0|255] "" SMB
+ SG_ command : 8|8@1+ (1,0) [0|255] "" SMB
+
+BO_ 2193628422 SMB_RX_IHM_LEFT_BUTTON_LED: 2 IHM
+ SG_ maintenance_key : 0|8@1+ (1,0) [0|255] "" SMB
+ SG_ command : 8|8@1+ (1,0) [0|255] "" SMB
+
+BO_ 2193628423 SMB_RX_IHM_MIDDLE_BUTTON_LED: 2 IHM
+ SG_ maintenance_key : 0|8@1+ (1,0) [0|255] "" SMB
+ SG_ command : 8|8@1+ (1,0) [0|255] "" SMB
+
+BO_ 2193628424 SMB_RX_IHM_RIGHT_BUTTON_LED: 2 IHM
+ SG_ maintenance_key : 0|8@1+ (1,0) [0|255] "" SMB
+ SG_ command : 8|8@1+ (1,0) [0|255] "" SMB
+
+BO_ 2193625103 SMB_RX_MAINTENANCE_REQUEST: 8 IHM
+ SG_ maintenance_key : 0|8@1+ (1,0) [0|255] "" SMB
+ SG_ maintenance_confirm : 56|8@1+ (1,0) [0|255] "" SMB
+
+BO_ 2193625097 SMB_RX_RESET_ORDER: 1 IHM
+ SG_ reset_key : 0|8@1+ (1,0) [0|255] "" SMB
+
+BO_ 2187071488 SMB_RX_IHM_ERRORS_ACK: 1 IHM
+ SG_ ack : 0|8@1+ (1,0) [0|255] "" SMB
+
+BO_ 2566849232 IBS_CURRENT_0: 8 IBS
+ SG_ current : 7|32@0- (-1,0) [-3000|3000] "A" SMB
+ SG_ sop : 32|8@1+ (1,0) [0|255] "%" SMB
+
+BO_ 2566849488 IBS_CELL_TEMPERATURE_0: 8 IBS
+ SG_ min_cell_temperature : 7|16@0- (0.1,0) [-3276.8|3276.7000000000003] "°C" SMB
+ SG_ max_cell_temperature : 23|16@0- (0.1,0) [-3276.8|3276.7000000000003] "°C" SMB
+ SG_ avg_cell_temperature : 39|16@0- (0.1,0) [-3276.8|3276.7000000000003] "°C" SMB
+
+BO_ 2566849744 IBS_BOARD_TEMPERATURE_0: 8 IBS
+ SG_ min_board_temperature : 7|16@0- (0.1,0) [-3276.8|3276.7000000000003] "°C" SMB
+ SG_ max_board_temperature : 23|16@0- (0.1,0) [-3276.8|3276.7000000000003] "°C" SMB
+ SG_ avg_board_temperature : 39|16@0- (0.1,0) [-3276.8|3276.7000000000003] "°C" SMB
+
+BO_ 2566850000 IBS_STATE_0: 8 IBS
+ SG_ soc : 7|16@0+ (0.01,0) [0|655.35] "%" SMB
+ SG_ soh : 23|16@0+ (0.01,0) [0|655.35] "%" SMB
+
+BO_ 2566850512 IBS_INFO_0: 8 IBS
+ SG_ system_running_flag : 8|1@1+ (1,0) [0|1] "" SMB
+ SG_ balancing_flag : 9|1@1+ (1,0) [0|1] "" SMB
+ SG_ error_flag : 17|1@1+ (-1,1) [0|1] "" SMB
+ SG_ low_soc_warning_flag : 21|1@1+ (1,0) [0|1] "" SMB
+
+BO_ 2566851792 IBS_CURRENT_LIMITS_0: 8 IBS
+ SG_ max_discharge_current : 7|32@0- (-1,0) [-3000|3000] "A" SMB
+ SG_ max_charge_current : 39|32@0- (-1,0) [-3000|3000] "A" SMB
+
+BO_ 2550845440 IBS_RX_KEEP_ALIVE_0: 1 SMB
+ SG_ keep_alive : 0|8@1+ (1,0) [0|255] "" IBS
+
+BO_ 2566849233 IBS_CURRENT_1: 8 IBS
+ SG_ current : 7|32@0- (-1,0) [-3000|3000] "A" SMB
+ SG_ sop : 32|8@1+ (1,0) [0|255] "%" SMB
+
+BO_ 2566849489 IBS_CELL_TEMPERATURE_1: 8 IBS
+ SG_ min_cell_temperature : 7|16@0- (0.1,0) [-3276.8|3276.7000000000003] "°C" SMB
+ SG_ max_cell_temperature : 23|16@0- (0.1,0) [-3276.8|3276.7000000000003] "°C" SMB
+ SG_ avg_cell_temperature : 39|16@0- (0.1,0) [-3276.8|3276.7000000000003] "°C" SMB
+
+BO_ 2566849745 IBS_BOARD_TEMPERATURE_1: 8 IBS
+ SG_ min_board_temperature : 7|16@0- (0.1,0) [-3276.8|3276.7000000000003] "°C" SMB
+ SG_ max_board_temperature : 23|16@0- (0.1,0) [-3276.8|3276.7000000000003] "°C" SMB
+ SG_ avg_board_temperature : 39|16@0- (0.1,0) [-3276.8|3276.7000000000003] "°C" SMB
+
+BO_ 2566850001 IBS_STATE_1: 8 IBS
+ SG_ soc : 7|16@0+ (0.01,0) [0|655.35] "%" SMB
+ SG_ soh : 23|16@0+ (0.01,0) [0|655.35] "%" SMB
+
+BO_ 2566850513 IBS_INFO_1: 8 IBS
+ SG_ system_running_flag : 8|1@1+ (1,0) [0|1] "" SMB
+ SG_ balancing_flag : 9|1@1+ (1,0) [0|1] "" SMB
+ SG_ error_flag : 17|1@1+ (-1,1) [0|1] "" SMB
+ SG_ low_soc_warning_flag : 21|1@1+ (1,0) [0|1] "" SMB
+
+BO_ 2566851793 IBS_CURRENT_LIMITS_1: 8 IBS
+ SG_ max_discharge_current : 7|32@0- (-1,0) [-3000|3000] "A" SMB
+ SG_ max_charge_current : 39|32@0- (-1,0) [-3000|3000] "A" SMB
+
+BO_ 2550845696 IBS_RX_KEEP_ALIVE_1: 1 SMB
+ SG_ keep_alive : 0|8@1+ (1,0) [0|255] "" IBS
+
+BO_ 2197553152 FCCB_TX_GENERAL: 8 FCCB
+ SG_ STEP : 0|8@1+ (1,0) [0|255] "" SMB,IHM
+ SG_ critical_error_flag : 8|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ minor_error_flag : 9|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ ppmh2_error_flag : 10|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ check_h2_supply_warning_flag : 16|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_current_low_level_warning_flag : 17|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ dcdc_temperature_high_level_warning_flag : 18|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ purge_request_flag : 24|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ short_circuit_request_flag : 25|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ can_start_request_flag : 26|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ can_stop_request_flag : 27|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ can_critical_stop_request_flag : 28|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ instant_h2_consumption : 32|8@1+ (1,0) [0|255] "g/s" SMB,IHM
+ SG_ short_circuit_ongoing_flag : 40|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ spac_output_current : 48|16@1+ (0.01,0) [0|655.35] "A" SMB,IHM
+
+BO_ 2197553153 FCCB_TX_FLAGS: 8 FCCB
+ SG_ software_error_flag : 0|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_voltage_error_flag : 1|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_current_high_level_error_flag : 2|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_current_low_level_error_flag : 3|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_temperature_error_flag : 4|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ ppmh2_error_flag : 5|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ inlet_pressure_error_flag : 6|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ aux_voltage_error_flag : 7|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ stack_fan_error_flag : 8|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ master_watchdog_error_flag : 9|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ can_critical_stop_request_flag : 10|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ board_temperature_error_flag : 11|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ dcdc_temperature_error_flag : 12|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_delta_temperature_high_level_error_flag : 16|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ inlet_pressure_high_level_error_flag : 17|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ inlet_pressure_low_level_error_flag : 18|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ inlet_pressure_lost_error_flag : 19|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_voltage_high_level_error_flag : 24|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_voltage_low_level_error_flag : 25|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ ppmh2_high_level_error_flag : 26|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ ppmh2_lost_error_flag : 27|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ aux_voltage_high_level_error_flag : 28|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ aux_voltage_low_level_error_flag : 29|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ board_temperature_high_level_error_flag : 32|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ board_temperature_low_level_error_flag : 33|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ board_temperature_lost_error_flag : 34|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ dcdc_temperature_high_level_error_flag : 35|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ dcdc_temperature_low_level_error_flag : 36|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ dcdc_temperature_lost_error_flag : 37|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_top_temperature_high_level_error_flag : 40|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_top_temperature_low_level_error_flag : 41|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_top_temperature_lost_error_flag : 42|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_bot_temperature_high_level_error_flag : 43|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_bot_temperature_low_level_error_flag : 44|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_bot_temperature_lost_error_flag : 45|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ board_temperature_high_level_warning_flag : 48|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ dcdc_temperature_high_level_warning_flag : 49|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_top_temperature_high_level_warning_flag : 50|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ fc_bot_temperature_high_level_warning_flag : 51|1@1+ (1,0) [0|1] "" SMB,IHM
+
+BO_ 2197553154 FCCB_TX_ELECTRICAL: 8 FCCB
+ SG_ fc_current : 0|16@1+ (0.01,0) [0|655.35] "A" SMB,IHM
+ SG_ fc_voltage : 16|16@1+ (0.01,0) [0|655.35] "V" SMB,IHM
+ SG_ filtered_output_current_limit : 32|16@1+ (0.01,0) [0|655.35] "A" SMB,IHM
+ SG_ output_current_limit : 48|16@1+ (0.01,0) [0|655.35] "A" SMB,IHM
+
+BO_ 2197553155 FCCB_TX_TEMPERATURE: 8 FCCB
+ SG_ fc_top_temperature : 0|8@1- (1,0) [-128|127] "°C" SMB,IHM
+ SG_ fc_bot_temperature : 8|8@1- (1,0) [-128|127] "°C" SMB,IHM
+ SG_ board_temperature : 16|8@1- (1,0) [-128|127] "°C" SMB,IHM
+ SG_ dcdc_temperature : 24|8@1- (1,0) [-128|127] "°C" SMB,IHM
+ SG_ fc_optimum_temperature : 32|8@1- (1,0) [-128|127] "°C" SMB,IHM
+ SG_ filtered_stack_fans_duty_cycle : 48|8@1+ (0.5,0) [0|127.5] "%" SMB,IHM
+ SG_ ppmh2 : 56|8@1+ (1000,0) [0|255000] "ppm" SMB,IHM
+ SG_ fc_mean_temperature : 40|8@1- (1,0) [-128|127] "°C" SMB,IHM
+
+BO_ 2197553156 FCCB_TX_PURGE_CC_INFOS: 8 FCCB
+ SG_ purge_cnt : 0|16@1+ (1,0) [0|65535] "" SMB,IHM
+ SG_ short_circuit_cnt : 16|16@1+ (1,0) [0|65535] "" SMB,IHM
+ SG_ purge_interval_cnt : 32|16@1+ (1,0) [0|65535] "As" SMB,IHM
+ SG_ short_circuit_interval_cnt : 48|8@1+ (0.1,0) [0|25.5] "s" SMB,IHM
+ SG_ inlet_pressure : 56|8@1+ (10,0) [0|2550] "mbar" SMB,IHM
+
+BO_ 2197556480 FCCB_TX_D_GENERAL: 8 FCCB
+ SG_ _100ms_timer_ticks : 0|16@1+ (1,0) [0|65535] "" SMB,IHM
+ SG_ step_100ms_cnt : 16|16@1+ (1,0) [0|65535] "" SMB,IHM
+ SG_ aux_voltage : 32|16@1+ (0.01,0) [0|655.35] "V" SMB,IHM
+
+BO_ 2197556481 FCCB_TX_D_RAW1: 8 FCCB
+ SG_ FC_TOP_TEMP_RAW : 0|16@1+ (1,0) [0|65535] "" SMB,IHM
+ SG_ FC_BOT_TEMP_RAW : 16|16@1+ (1,0) [0|65535] "" SMB,IHM
+ SG_ BOARD_TEMP_RAW : 32|16@1+ (1,0) [0|65535] "" SMB,IHM
+ SG_ DCDC_TEMP_RAW : 48|16@1+ (1,0) [0|65535] "" SMB,IHM
+
+BO_ 2197556482 FCCB_TX_D_RAW2: 8 FCCB
+ SG_ FC_CURRENT_RAW : 0|16@1+ (1,0) [0|65535] "" SMB,IHM
+ SG_ FC_VOLTAGE_RAW : 16|16@1+ (1,0) [0|65535] "" SMB,IHM
+ SG_ AUX_VOLTAGE_RAW : 32|16@1+ (1,0) [0|65535] "" SMB,IHM
+
+BO_ 2197556483 FCCB_TX_D_RAW3: 8 FCCB
+ SG_ FC_INLET_PRESSURE_RAW : 0|16@1+ (1,0) [0|65535] "" SMB,IHM
+ SG_ PPMH2_SENSOR_RAW : 16|16@1+ (1,0) [0|65535] "" SMB,IHM
+ SG_ PURGE_EV_STATE_GetValue : 32|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ WATCHDOG_S_GetValue : 33|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ SECU_GetValue : 34|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ PURGE_EV_S_GetValue : 35|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ OUTPUT_RELAY_S_GetValue : 36|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ OUTPUT_RELAY_GetValue : 40|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ SUPPLY_EV_GetValue : 41|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ PURGE_EV_GetValue : 42|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ SHORT_CIRCUIT_GetValue : 43|1@1+ (1,0) [0|1] "" SMB,IHM
+ SG_ WATCHDOG_G_GetValue : 44|1@1+ (1,0) [0|1] "" SMB,IHM
+
+BO_ 2197556736 FCCB_TX_EEPROM1: 8 FCCB
+ SG_ software_version : 0|8@1+ (1,0) [0|255] "" SMB,IHM
+ SG_ software_subversion : 8|8@1+ (1,0) [0|255] "" SMB,IHM
+ SG_ total_startup_cnt : 16|16@1+ (1,0) [0|65535] "" SMB,IHM
+ SG_ critical_error_stop_cnt : 32|16@1+ (1,0) [0|65535] "" SMB,IHM
+ SG_ total_purge_cnt : 48|16@1+ (1,0) [0|65535] "" SMB,IHM
+
+BO_ 2197556737 FCCB_TX_EEPROM2: 8 FCCB
+ SG_ total_run_time : 0|32@1+ (1,0) [0|4294967295] "min" SMB,IHM
+ SG_ total_energy_produced : 32|32@1+ (1,0) [0|4294967295] "Amin" SMB,IHM
+
+BO_ 2197556738 FCCB_TX_EEPROM3: 8 FCCB
+
+BO_ 2197556739 FCCB_TX_EEPROM4: 8 FCCB
+
+BO_ 2197557248 FCCB_RX_KEEP_ALIVE: 2 SMB
+ SG_ smb_present : 8|8@1+ (1,0) [0|255] "" FCCB
+
+BO_ 2197557249 FCCB_RX_ON_OFF: 8 SMB
+ SG_ can_critical_stop_request : 0|8@1+ (1,0) [0|255] "" FCCB
+ SG_ can_stop_request : 8|8@1+ (1,0) [0|255] "" FCCB
+ SG_ can_start_request : 16|8@1+ (1,0) [0|255] "" FCCB
+ SG_ reset_errors_request : 24|8@1+ (1,0) [0|255] "" FCCB
+ SG_ command_confirm : 56|8@1+ (1,0) [0|255] "" FCCB
+
+BO_ 2197557250 FCCB_RX_OUPUT_CURRENT_LIMIT: 2 SMB
+ SG_ output_current_limit : 0|16@1+ (0.01,0) [0|655.35] "A" FCCB
+
+BO_ 2197557251 FCCB_RX_SHORT_CIRCUIT_REQUEST: 2 IHM
+ SG_ short_circuit_request_flag : 8|1@1+ (1,0) [0|1] "" FCCB
+
+BO_ 2197557252 FCCB_RX_PURGE_REQUEST: 2 IHM
+ SG_ purge_request_flag : 8|1@1+ (1,0) [0|1] "" FCCB
+
+BO_ 2197557253 FCCB_RX_EEPROM: 2 IHM
+ SG_ eeprom_data_request_flag : 8|1@1+ (1,0) [0|1] "" FCCB
+
+BO_ 2197553157 FCCB_TX_ACTUAL_RUN_DATA: 8 FCCB
+ SG_ run_time : 0|16@1+ (1,0) [0|65535] "min" SMB,IHM
+ SG_ energy_produced : 16|16@1+ (1,0) [0|65535] "Wh" SMB,IHM
+
+BO_ 2197553158 FCCB_TX_TOTAL_RUN_DATA: 8 FCCB
+ SG_ total_run_time : 0|32@1+ (1,0) [0|4294967295] "min" SMB,IHM
+ SG_ total_energy_produced : 32|32@1+ (1,0) [0|4294967295] "Wh" SMB,IHM
+
+BO_ 2197553163 FCCB_TX_DEBUG: 8 FCCB
+ SG_ fc_power : 0|16@1+ (1,0) [0|65535] "W" SMB,IHM
+ SG_ bus_voltage : 16|16@1+ (0.01,0) [0|655.35] "V" SMB,IHM
+
+
+CM_ "Base CAN du systeme BOXHY (SMB, FCCB, batteries IBS, IHM). Reference unique : les .DBF BUSMASTER et src/can_db.h sont generes par tools/candb_gen.py.";
+CM_ BO_ 2193227776 "Etat general des batteries IBS (SOC moyen, drapeaux, courant total).";
+CM_ BO_ 2192310272 "Mode et defauts de l'onduleur (reponses QMOD et QPIWS). Emise seulement onduleur en service.";
+CM_ SG_ 2192310272 bus_soft_fail_warning_flag "Recopie de bus_soft_fail_error_flag (comportement du firmware).";
+CM_ SG_ 2192310272 ac_output_apparent_power_very_high_error_flag "Surcharge de sortie detectee par la SMB.";
+CM_ BO_ 2192310273 "Mesures de l'onduleur (reponse QPIGS). ac_output_apparent_power est la moyenne sur 1 s.";
+CM_ BO_ 2193620992 "Etat de la machine d'etats SMB et drapeaux d'erreur.";
+CM_ BO_ 2193620993 "Entrees / sorties brutes de la carte et moyennes ADC brutes (points).";
+CM_ BO_ 2193620994 "Temperatures des sondes CTN et tensions mesurees.";
+CM_ BO_ 2193620995 "Courants pile, batterie, systeme et consigne de courant pile.";
+CM_ BO_ 2193620996 "Version logicielle et informations IHM.";
+CM_ BO_ 2193227777 "Detail par batterie IBS.";
+CM_ BO_ 2193227779 "Trame reservee, emise a zero.";
+CM_ BO_ 2365521959 "Demandes des trois regulateurs de refroidissement et PWM appliquee.";
+CM_ BO_ 2365522215 "Gestion energie. min/max_ems_current toujours a 0 (regulation dynamique desactivee).";
+CM_ BO_ 2193628416 "Mode maintenance : rapport cyclique des ventilateurs AC.";
+CM_ SG_ 2193628416 maintenance_key "Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.";
+CM_ BO_ 2193628417 "Mode maintenance : relais d'entree onduleur.";
+CM_ SG_ 2193628417 maintenance_key "Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.";
+CM_ BO_ 2193628418 "Mode maintenance : relais de precharge onduleur.";
+CM_ SG_ 2193628418 maintenance_key "Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.";
+CM_ BO_ 2193628419 "Mode maintenance : relais de precharge alimentation 24 V.";
+CM_ SG_ 2193628419 maintenance_key "Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.";
+CM_ BO_ 2193628420 "Mode maintenance : relais de sortie pile.";
+CM_ SG_ 2193628420 maintenance_key "Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.";
+CM_ BO_ 2193628421 "Mode maintenance : buzzer.";
+CM_ SG_ 2193628421 maintenance_key "Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.";
+CM_ BO_ 2193628422 "Mode maintenance : LED du bouton gauche.";
+CM_ SG_ 2193628422 maintenance_key "Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.";
+CM_ BO_ 2193628423 "Mode maintenance : LED du bouton central.";
+CM_ SG_ 2193628423 maintenance_key "Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.";
+CM_ BO_ 2193628424 "Mode maintenance : LED du bouton droit.";
+CM_ SG_ 2193628424 maintenance_key "Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.";
+CM_ BO_ 2193625103 "Entree en maintenance (etat 30, key 0x82, confirm 0xFF) ou sortie (etat 40, key 0x82).";
+CM_ BO_ 2193625097 "Acquittement du mode defaut (etat 250, key 0x82). Le firmware traite aussi cette trame comme SMB_RX_IHM_ERRORS_ACK (bug 3).";
+CM_ BO_ 2187071488 "L'IHM confirme la prise en compte de la RAZ des erreurs (ack = 1).";
+CM_ BO_ 2566849232 "Courant et SOP de la batterie 0.";
+CM_ SG_ 2566849232 current "Flottant IEEE 754 big-endian. L'IBS compte la decharge en negatif : facteur -1 pour un courant positif en decharge.";
+CM_ BO_ 2566849488 "Temperatures cellules de la batterie 0.";
+CM_ BO_ 2566849744 "Temperatures de la carte BMS de la batterie 0.";
+CM_ BO_ 2566850000 "Etat de charge et de sante de la batterie 0.";
+CM_ BO_ 2566850512 "Drapeaux de la batterie 0.";
+CM_ SG_ 2566850512 error_flag "Le bit IBS vaut 1 en l'absence d'erreur : facteur -1, offset 1.";
+CM_ BO_ 2566851792 "Limites de courant de la batterie 0. A VALIDER : l'ancien IBS.DBF decrivait deux U16 (x0.05, -1600 A) sur 4 octets ; le firmware decode deux flottants big-endian.";
+CM_ BO_ 2550845440 "Keep-alive envoye chaque seconde a la batterie 0 (alternance des deux trames).";
+CM_ BO_ 2566849233 "Courant et SOP de la batterie 1.";
+CM_ SG_ 2566849233 current "Flottant IEEE 754 big-endian. L'IBS compte la decharge en negatif : facteur -1 pour un courant positif en decharge.";
+CM_ BO_ 2566849489 "Temperatures cellules de la batterie 1.";
+CM_ BO_ 2566849745 "Temperatures de la carte BMS de la batterie 1.";
+CM_ BO_ 2566850001 "Etat de charge et de sante de la batterie 1.";
+CM_ BO_ 2566850513 "Drapeaux de la batterie 1.";
+CM_ SG_ 2566850513 error_flag "Le bit IBS vaut 1 en l'absence d'erreur : facteur -1, offset 1.";
+CM_ BO_ 2566851793 "Limites de courant de la batterie 1. A VALIDER : l'ancien IBS.DBF decrivait deux U16 (x0.05, -1600 A) sur 4 octets ; le firmware decode deux flottants big-endian.";
+CM_ BO_ 2550845696 "Keep-alive envoye chaque seconde a la batterie 1 (alternance des deux trames).";
+CM_ BO_ 2197553152 "Etat general de la FCCB.";
+CM_ SG_ 2197553152 ppmh2_error_flag "Lu par la SMB (octet 1 bit 2) ; absent de l'ancien BOXHY_FCCB.DBF.";
+CM_ SG_ 2197553152 short_circuit_ongoing_flag "Lu par la SMB (octet 5 bit 0) ; absent de l'ancien BOXHY_FCCB.DBF.";
+CM_ SG_ 2197553152 STEP "Valeurs d'etat reprises du firmware SMB (l'ancien DBF indiquait STANDBY = 48).";
+CM_ SG_ 2197553155 dcdc_temperature "Lu par la SMB pour la regulation des ventilateurs.";
+CM_ BO_ 2197557248 "Presence SMB envoyee a la FCCB (octet 1 = 1).";
+CM_ BO_ 2197557249 "Commandes SMB vers FCCB. Arret critique / arret / demarrage emis en DLC 3 ; maintenance et RAZ des erreurs emis en DLC 8 avec command_confirm = 0xFF.";
+CM_ BO_ 2197557250 "Consigne de courant pile envoyee par la SMB en mode hybride.";
+BA_DEF_  "BusType" STRING ;
+BA_DEF_ BO_  "VFrameFormat" ENUM  "StandardCAN","ExtendedCAN","reserved","J1939PG";
+BA_DEF_DEF_  "BusType" "CAN";
+BA_DEF_DEF_  "VFrameFormat" "ExtendedCAN";
+BA_ "VFrameFormat" BO_ 2193227776 1;
+BA_ "VFrameFormat" BO_ 2192310272 1;
+BA_ "VFrameFormat" BO_ 2192310273 1;
+BA_ "VFrameFormat" BO_ 2193620992 1;
+BA_ "VFrameFormat" BO_ 2193620993 1;
+BA_ "VFrameFormat" BO_ 2193620994 1;
+BA_ "VFrameFormat" BO_ 2193620995 1;
+BA_ "VFrameFormat" BO_ 2193620996 1;
+BA_ "VFrameFormat" BO_ 2193227777 1;
+BA_ "VFrameFormat" BO_ 2193227779 1;
+BA_ "VFrameFormat" BO_ 2365521959 1;
+BA_ "VFrameFormat" BO_ 2365522215 1;
+BA_ "VFrameFormat" BO_ 2193628416 1;
+BA_ "VFrameFormat" BO_ 2193628417 1;
+BA_ "VFrameFormat" BO_ 2193628418 1;
+BA_ "VFrameFormat" BO_ 2193628419 1;
+BA_ "VFrameFormat" BO_ 2193628420 1;
+BA_ "VFrameFormat" BO_ 2193628421 1;
+BA_ "VFrameFormat" BO_ 2193628422 1;
+BA_ "VFrameFormat" BO_ 2193628423 1;
+BA_ "VFrameFormat" BO_ 2193628424 1;
+BA_ "VFrameFormat" BO_ 2193625103 1;
+BA_ "VFrameFormat" BO_ 2193625097 1;
+BA_ "VFrameFormat" BO_ 2187071488 1;
+BA_ "VFrameFormat" BO_ 2566849232 1;
+BA_ "VFrameFormat" BO_ 2566849488 1;
+BA_ "VFrameFormat" BO_ 2566849744 1;
+BA_ "VFrameFormat" BO_ 2566850000 1;
+BA_ "VFrameFormat" BO_ 2566850512 1;
+BA_ "VFrameFormat" BO_ 2566851792 1;
+BA_ "VFrameFormat" BO_ 2550845440 1;
+BA_ "VFrameFormat" BO_ 2566849233 1;
+BA_ "VFrameFormat" BO_ 2566849489 1;
+BA_ "VFrameFormat" BO_ 2566849745 1;
+BA_ "VFrameFormat" BO_ 2566850001 1;
+BA_ "VFrameFormat" BO_ 2566850513 1;
+BA_ "VFrameFormat" BO_ 2566851793 1;
+BA_ "VFrameFormat" BO_ 2550845696 1;
+BA_ "VFrameFormat" BO_ 2197553152 1;
+BA_ "VFrameFormat" BO_ 2197553153 1;
+BA_ "VFrameFormat" BO_ 2197553154 1;
+BA_ "VFrameFormat" BO_ 2197553155 1;
+BA_ "VFrameFormat" BO_ 2197553156 1;
+BA_ "VFrameFormat" BO_ 2197556480 1;
+BA_ "VFrameFormat" BO_ 2197556481 1;
+BA_ "VFrameFormat" BO_ 2197556482 1;
+BA_ "VFrameFormat" BO_ 2197556483 1;
+BA_ "VFrameFormat" BO_ 2197556736 1;
+BA_ "VFrameFormat" BO_ 2197556737 1;
+BA_ "VFrameFormat" BO_ 2197556738 1;
+BA_ "VFrameFormat" BO_ 2197556739 1;
+BA_ "VFrameFormat" BO_ 2197557248 1;
+BA_ "VFrameFormat" BO_ 2197557249 1;
+BA_ "VFrameFormat" BO_ 2197557250 1;
+BA_ "VFrameFormat" BO_ 2197557251 1;
+BA_ "VFrameFormat" BO_ 2197557252 1;
+BA_ "VFrameFormat" BO_ 2197557253 1;
+BA_ "VFrameFormat" BO_ 2197553157 1;
+BA_ "VFrameFormat" BO_ 2197553158 1;
+BA_ "VFrameFormat" BO_ 2197553163 1;
+VAL_ 2192310272 inverter_mode 0 "UNDEFINED" 1 "FAULT" 2 "POWER_ON" 3 "STANDBY" 4 "AC_SOURCE" 5 "BATTERY" 6 "POWER_SAVING" ;
+VAL_ 2193620992 STEP 10 "INIT" 20 "AUTOCHECK" 30 "STANDBY" 40 "MAINTENANCE" 50 "DCAC_START_1" 52 "DCAC_START_2" 54 "DCAC_START_3" 100 "BATTERY_MODE" 120 "FCS_START_1" 122 "FCS_START_2" 150 "HYBRID_MODE" 200 "FC_STOP_1" 201 "FC_STOP_2" 210 "DCAC_STOP" 240 "STOPPING" 250 "EMERGENCY" ;
+VAL_ 2193620992 fcs_step 10 "INIT" 20 "AUTOCHECK" 30 "STANDBY" 40 "MAINTENANCE" 50 "START_PURGE" 52 "VOLTAGE_CHECK" 54 "RAMP_UP" 56 "WARM_UP" 100 "OPERATING" 200 "SHUTDOWN" 250 "EMERGENCY" ;
+VAL_ 2193628417 command 0 "OFF" 1 "TOGGLE" ;
+VAL_ 2193628418 command 0 "OFF" 1 "TOGGLE" ;
+VAL_ 2193628419 command 0 "OFF" 1 "TOGGLE" ;
+VAL_ 2193628420 command 0 "OFF" 1 "TOGGLE" ;
+VAL_ 2193628421 command 0 "OFF" 1 "TOGGLE" ;
+VAL_ 2193628422 command 0 "OFF" 1 "TOGGLE" ;
+VAL_ 2193628423 command 0 "OFF" 1 "TOGGLE" ;
+VAL_ 2193628424 command 0 "OFF" 1 "TOGGLE" ;
+VAL_ 2197553152 STEP 10 "INIT" 20 "AUTOCHECK" 30 "STANDBY" 40 "MAINTENANCE" 50 "START_PURGE" 52 "VOLTAGE_CHECK" 54 "RAMP_UP" 56 "WARM_UP" 100 "OPERATING" 200 "SHUTDOWN" 250 "EMERGENCY" ;
+VAL_ 2197557249 can_start_request 0 "NONE" 1 "START" 130 "MAINTENANCE" ;
+SIG_VALTYPE_ 2566849232 current : 1;
+SIG_VALTYPE_ 2566851792 max_discharge_current : 1;
+SIG_VALTYPE_ 2566851792 max_charge_current : 1;
+SIG_VALTYPE_ 2566849233 current : 1;
+SIG_VALTYPE_ 2566851793 max_discharge_current : 1;
+SIG_VALTYPE_ 2566851793 max_charge_current : 1;

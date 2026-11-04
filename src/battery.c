@@ -2,20 +2,16 @@
  * @file battery.c
  * @brief Batteries IBS (voir battery.h).
  */
-#include <math.h>
 #include <string.h>
 #include "battery.h"
+#include "can_db.h"
 #include "smb_config.h"
 #include "hal/can_port.h"
 
-#define IBS_KEEP_ALIVE_ID     0x180AD000UL
 #define IBS_INFO_ID_MASK      0xFFFF00FEUL /* 0x18FF xx D0/D1 : xx = index info, bit 0 = batterie */
 #define IBS_INFO_ID_BASE      0x18FF00D0UL
 
 sBatteryPack battery;
-
-static uint8_t keepalive_data[1];
-static CAN_MSG_OBJ keepalive_msg;
 
 /* Compteurs des supervisions SOC (non remis à zéro à l'acquittement, comme à l'origine) */
 static uint8_t soc_very_low_level_error_cpt;
@@ -23,105 +19,91 @@ static uint8_t soc_very_low_level_error_cpt;
  * jamais atteint et l'erreur SOC "très très haut" ne se déclenche jamais. Reproduit ci-dessous. */
 static uint8_t soc_very_very_high_level_error_cpt;
 
+/* ---- Trames IBS (même disposition pour les deux batteries, n = 0 ou 1) ------------------- */
+/* Unités firmware : courants 0,01 A ; températures 1 °C ; SOC et SOP 1 %. */
+#define IBS_RX_TABLES(n)                                                                                       \
+    static const sCanBinding ibs##n##_current[] CAN_ROM = {                                                    \
+        CAN_BIND(CANDB_IBS_CURRENT_##n##__CURRENT, &battery.ibs[n].output_current, CAN_VAR_I16, 0.01),         \
+        CAN_BIND(CANDB_IBS_CURRENT_##n##__SOP, &battery.ibs[n].sop, CAN_VAR_U8, 1),                            \
+    };                                                                                                         \
+    CAN_CHECK_BINDINGS(CANDB_IBS_CURRENT_##n, ibs##n##_current);                                               \
+    static const sCanBinding ibs##n##_cell_temperature[] CAN_ROM = {                                           \
+        CAN_BIND_NONE(CANDB_IBS_CELL_TEMPERATURE_##n##__MIN_CELL_TEMPERATURE),                                 \
+        CAN_BIND(CANDB_IBS_CELL_TEMPERATURE_##n##__MAX_CELL_TEMPERATURE, &battery.ibs[n].max_cell_temperature, CAN_VAR_I8, 1), \
+        CAN_BIND(CANDB_IBS_CELL_TEMPERATURE_##n##__AVG_CELL_TEMPERATURE, &battery.ibs[n].avg_cell_temperature, CAN_VAR_I8, 1), \
+    };                                                                                                         \
+    CAN_CHECK_BINDINGS(CANDB_IBS_CELL_TEMPERATURE_##n, ibs##n##_cell_temperature);                             \
+    static const sCanBinding ibs##n##_board_temperature[] CAN_ROM = {                                          \
+        CAN_BIND_NONE(CANDB_IBS_BOARD_TEMPERATURE_##n##__MIN_BOARD_TEMPERATURE),                               \
+        CAN_BIND(CANDB_IBS_BOARD_TEMPERATURE_##n##__MAX_BOARD_TEMPERATURE, &battery.ibs[n].max_board_temperature, CAN_VAR_I8, 1), \
+        CAN_BIND_NONE(CANDB_IBS_BOARD_TEMPERATURE_##n##__AVG_BOARD_TEMPERATURE),                               \
+    };                                                                                                         \
+    CAN_CHECK_BINDINGS(CANDB_IBS_BOARD_TEMPERATURE_##n, ibs##n##_board_temperature);                           \
+    static const sCanBinding ibs##n##_state[] CAN_ROM = {                                                      \
+        CAN_BIND(CANDB_IBS_STATE_##n##__SOC, &battery.ibs[n].soc, CAN_VAR_U8, 1),                              \
+        CAN_BIND_NONE(CANDB_IBS_STATE_##n##__SOH),                                                             \
+    };                                                                                                         \
+    CAN_CHECK_BINDINGS(CANDB_IBS_STATE_##n, ibs##n##_state);                                                   \
+    static const sCanBinding ibs##n##_info[] CAN_ROM = {                                                       \
+        CAN_BIND(CANDB_IBS_INFO_##n##__SYSTEM_RUNNING_FLAG, &battery.ibs[n].system_running_flag, CAN_VAR_BOOL, 1), \
+        CAN_BIND(CANDB_IBS_INFO_##n##__BALANCING_FLAG, &battery.ibs[n].balancing_flag, CAN_VAR_BOOL, 1),       \
+        CAN_BIND(CANDB_IBS_INFO_##n##__ERROR_FLAG, &battery.ibs[n].error_flag, CAN_VAR_BOOL, 1),               \
+        CAN_BIND(CANDB_IBS_INFO_##n##__LOW_SOC_WARNING_FLAG, &battery.ibs[n].low_soc_warning_flag, CAN_VAR_BOOL, 1), \
+    };                                                                                                         \
+    CAN_CHECK_BINDINGS(CANDB_IBS_INFO_##n, ibs##n##_info);                                                     \
+    static const sCanBinding ibs##n##_current_limits[] CAN_ROM = {                                             \
+        CAN_BIND(CANDB_IBS_CURRENT_LIMITS_##n##__MAX_DISCHARGE_CURRENT, &battery.ibs[n].max_discharge_current, CAN_VAR_I16, 0.01), \
+        CAN_BIND(CANDB_IBS_CURRENT_LIMITS_##n##__MAX_CHARGE_CURRENT, &battery.ibs[n].max_charge_current, CAN_VAR_I16, 0.01), \
+    };                                                                                                         \
+    CAN_CHECK_BINDINGS(CANDB_IBS_CURRENT_LIMITS_##n, ibs##n##_current_limits);                                 \
+    static const sCanBinding ibs##n##_keep_alive[] CAN_ROM = {                                                 \
+        CAN_BIND_CONST(CANDB_IBS_RX_KEEP_ALIVE_##n##__KEEP_ALIVE, 0),                                          \
+    };                                                                                                         \
+    CAN_CHECK_BINDINGS(CANDB_IBS_RX_KEEP_ALIVE_##n, ibs##n##_keep_alive)
+
+#define IBS_RX_MESSAGES(n)                                                                                     \
+    CAN_MESSAGE(CANDB_IBS_CURRENT_##n, ibs##n##_current),                                                      \
+    CAN_MESSAGE(CANDB_IBS_CELL_TEMPERATURE_##n, ibs##n##_cell_temperature),                                    \
+    CAN_MESSAGE(CANDB_IBS_BOARD_TEMPERATURE_##n, ibs##n##_board_temperature),                                  \
+    CAN_MESSAGE(CANDB_IBS_STATE_##n, ibs##n##_state),                                                          \
+    CAN_MESSAGE(CANDB_IBS_INFO_##n, ibs##n##_info),                                                            \
+    CAN_MESSAGE(CANDB_IBS_CURRENT_LIMITS_##n, ibs##n##_current_limits)
+
+IBS_RX_TABLES(0);
+IBS_RX_TABLES(1);
+
+static const sCanMessage ibs_rx_messages[] CAN_ROM = {
+    IBS_RX_MESSAGES(0),
+    IBS_RX_MESSAGES(1),
+};
+
+static const sCanMessage ibs_keep_alive[BATTERY_NB] CAN_ROM = {
+    CAN_MESSAGE(CANDB_IBS_RX_KEEP_ALIVE_0, ibs0_keep_alive),
+    CAN_MESSAGE(CANDB_IBS_RX_KEEP_ALIVE_1, ibs1_keep_alive),
+};
+
 void Battery_Init(void)
 {
     memset(&battery, 0, sizeof(battery));
     soc_very_low_level_error_cpt = 0;
     soc_very_very_high_level_error_cpt = 0;
-
-    keepalive_data[0] = 0;
-    keepalive_msg.msgId = IBS_KEEP_ALIVE_ID;
-    keepalive_msg.field.frameType = CAN_FRAME_DATA;
-    keepalive_msg.field.idType = CAN_FRAME_EXT;
-    keepalive_msg.field.dlc = CAN_DLC_1;
-    keepalive_msg.data = keepalive_data;
-}
-
-int16_t Battery_DecodeIbsCurrent(uint8_t data0, uint8_t data1, uint8_t data2)
-{
-    uFLAGSBYTE flags;
-    float expo_pow;
-    float mant_sum;
-
-    expo_pow = pow(2.0, (((data0 & 0x7F) << 1 | ((data1 & 0x80) >> 7)) - 127.0));
-
-    mant_sum = 1.0;
-    flags.byte = data1;
-    if (flags.sFLAGSBITS.b6) mant_sum += 0.50000000000000;
-    if (flags.sFLAGSBITS.b5) mant_sum += 0.25000000000000;
-    if (flags.sFLAGSBITS.b4) mant_sum += 0.12500000000000;
-    if (flags.sFLAGSBITS.b3) mant_sum += 0.06250000000000;
-    if (flags.sFLAGSBITS.b2) mant_sum += 0.03125000000000;
-    if (flags.sFLAGSBITS.b1) mant_sum += 0.01562500000000;
-    if (flags.sFLAGSBITS.b0) mant_sum += 0.00781250000000;
-    flags.byte = data2;
-    if (flags.sFLAGSBITS.b7) mant_sum += 0.00390625000000;
-    if (flags.sFLAGSBITS.b6) mant_sum += 0.00195312500000;
-    if (flags.sFLAGSBITS.b5) mant_sum += 0.00097656250000;
-    if (flags.sFLAGSBITS.b4) mant_sum += 0.00048828125000;
-
-    flags.byte = data0;
-    if (flags.sFLAGSBITS.b7)
-        return ((int16_t)(expo_pow * mant_sum * 100));
-    else
-        return ((int16_t)(expo_pow * mant_sum * (-100)));
-}
-
-/* Mot 16 bits big-endian signé (1/10) -> 1 unité */
-static int8_t decode_temperature_be(uint8_t hi, uint8_t lo)
-{
-    return (int8_t)(((int16_t)(lo | ((uint16_t)hi << 8))) / 10);
-}
-
-/* TODO(bug 5) : poids fort multiplié par 255 au lieu de 256 (origine conservée). */
-static int8_t decode_temperature_255(uint8_t hi, uint8_t lo)
-{
-    return (int8_t)(((int16_t)(lo + (uint16_t)hi * 255)) / 10);
 }
 
 bool Battery_HandleCanFrame(const CAN_MSG_OBJ *msg)
 {
-    uFLAGSBYTE flags;
-    const uint8_t *d = msg->data;
-    sIBS *ibs;
+    const sCanMessage *m;
 
     if ((msg->msgId & IBS_INFO_ID_MASK) != IBS_INFO_ID_BASE)
         return false;
 
-    ibs = &battery.ibs[msg->msgId & 0x01];
-
-    switch ((uint8_t)(msg->msgId >> 8))
+    m = CanMsg_Find(ibs_rx_messages, CAN_ARRAY_SIZE(ibs_rx_messages), msg->msgId);
+    if (m != NULL)
     {
-    case 0x02: /* courant, SOP */
-        ibs->output_current = Battery_DecodeIbsCurrent(d[0], d[1], d[2]);
-        ibs->sop = d[4];
-        ibs->watchdog.cnt = 0;
-        break;
-    case 0x03: /* températures cellules */
-        ibs->avg_cell_temperature = decode_temperature_be(d[4], d[5]);
-        ibs->max_cell_temperature = decode_temperature_255(d[2], d[3]);
-        break;
-    case 0x04: /* températures carte */
-        ibs->max_board_temperature = decode_temperature_255(d[2], d[3]);
-        break;
-    case 0x05: /* état */
-        ibs->soc = (uint8_t)(((int16_t)(d[1] | ((uint16_t)d[0] << 8))) / 100);
-        break;
-    case 0x07: /* infos */
-        flags.byte = d[1];
-        ibs->system_running_flag = flags.sFLAGSBITS.b0;
-        ibs->balancing_flag = flags.sFLAGSBITS.b1;
-        flags.byte = d[2];
-        ibs->error_flag = !flags.sFLAGSBITS.b1;
-        ibs->low_soc_warning_flag = flags.sFLAGSBITS.b5;
-        break;
-    case 0x0C: /* courants max */
-        ibs->max_discharge_current = Battery_DecodeIbsCurrent(d[0], d[1], d[2]);
-        ibs->max_charge_current = Battery_DecodeIbsCurrent(d[4], d[5], d[6]);
-        break;
-    default: /* 0x3C et autres : sans effet */
-        break;
+        CanMsg_Unpack(m, msg->data);
+        if ((m->id == CANDB_IBS_CURRENT_0_ID) || (m->id == CANDB_IBS_CURRENT_1_ID))
+            battery.ibs[msg->msgId & 0x01].watchdog.cnt = 0; /* la trame courant fait office de présence */
     }
+    /* autres identifiants IBS (0x3C...) : sans effet, mais consommés */
     return true;
 }
 
@@ -243,8 +225,8 @@ void Battery_Update1s(void)
     uint8_t i;
 
     battery.keep_alive_index = !battery.keep_alive_index;
-    keepalive_msg.msgId = IBS_KEEP_ALIVE_ID | ((uint16_t)battery.keep_alive_index << 8);
-    CanPort_Transmit(CAN_PRIORITY_HIGH, &keepalive_msg);
+    CanMsg_Send(&ibs_keep_alive[battery.keep_alive_index], ibs_keep_alive[battery.keep_alive_index].dlc,
+                CAN_PRIORITY_HIGH);
 
     for (i = 0; i < BATTERY_NB; i++)
         TimedFlag8_Update(&battery.ibs[i].watchdog, true, WATCHDOG_TIMEOUT);

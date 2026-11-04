@@ -8,11 +8,28 @@
 #include "maintenance.h"
 #include "hmi.h"
 #include "smb_state_machine.h"
+#include "can_db.h"
 #include "hal/can_port.h"
 
-#define SMB_RESET_ORDER_ID   0x2C01009UL
-#define IHM_RAZ_ERREUR_ID    0x25C1000UL
 #define MAINTENANCE_KEY      0x82
+#define IHM_ACK              1
+
+/* Ordres de l'IHM traités ici (les autres trames sont aiguillées vers leur module) */
+static uint8_t order_value;
+
+static const sCanBinding reset_order[] CAN_ROM = {
+    CAN_BIND(CANDB_SMB_RX_RESET_ORDER__RESET_KEY, &order_value, CAN_VAR_U8, 1),
+};
+CAN_CHECK_BINDINGS(CANDB_SMB_RX_RESET_ORDER, reset_order);
+static const sCanBinding ihm_errors_ack[] CAN_ROM = {
+    CAN_BIND(CANDB_SMB_RX_IHM_ERRORS_ACK__ACK, &order_value, CAN_VAR_U8, 1),
+};
+CAN_CHECK_BINDINGS(CANDB_SMB_RX_IHM_ERRORS_ACK, ihm_errors_ack);
+
+static const sCanMessage order_messages[] CAN_ROM = {
+    CAN_MESSAGE(CANDB_SMB_RX_RESET_ORDER, reset_order),
+    CAN_MESSAGE(CANDB_SMB_RX_IHM_ERRORS_ACK, ihm_errors_ack),
+};
 
 static uint8_t rx_data[8];
 static CAN_MSG_OBJ rx_msg;
@@ -42,18 +59,24 @@ void CanRx_Process(void)
     }
     else
     {
-        switch (rx_msg.msgId)
+        const sCanMessage *m = CanMsg_Find(order_messages, CAN_ARRAY_SIZE(order_messages), rx_msg.msgId);
+        if (m != NULL)
         {
-        case SMB_RESET_ORDER_ID: /* acquittement du défaut par la télémétrie */
-            Smb_SetResetOrder((smb.step == SMB_EMERGENCY) && (rx_data[0] == MAINTENANCE_KEY));
-            /* TODO(bug 3) : pas de break à l'origine, la trame est aussi traitée comme 0x25C1000 */
-            /* fall through */
-        case IHM_RAZ_ERREUR_ID: /* l'IHM a pris en compte la RAZ des erreurs */
-            if (rx_data[0] == 1)
-                hmi.raz_erreur_ihm_flag = 0;
-            break;
-        default:
-            break;
+            CanMsg_Unpack(m, rx_data);
+            switch (m->id)
+            {
+            case CANDB_SMB_RX_RESET_ORDER_ID: /* acquittement du défaut par la télémétrie */
+                Smb_SetResetOrder((smb.step == SMB_EMERGENCY) && (order_value == MAINTENANCE_KEY));
+                /* TODO(bug 3) : pas de break à l'origine, la trame est aussi traitée comme
+                 * SMB_RX_IHM_ERRORS_ACK (même octet 0) */
+                /* fall through */
+            case CANDB_SMB_RX_IHM_ERRORS_ACK_ID: /* l'IHM a pris en compte la RAZ des erreurs */
+                if (order_value == IHM_ACK)
+                    hmi.raz_erreur_ihm_flag = 0;
+                break;
+            default:
+                break;
+            }
         }
     }
 

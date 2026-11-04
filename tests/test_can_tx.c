@@ -274,10 +274,10 @@ TEST(trame_0x2C00003_courants)
     ASSERT_EQ_MEM(expected, find(0x2C00003)->data, 8);
 }
 
-TEST(trame_0x2C00004_version_current_behaviour)
+TEST(trame_0x2C00004_version)
 {
-    /* TODO(bug 4) : l'octet 4 vaut toujours 0 (cast avant décalage) ; TODO(bug 6) : version 1.2.7 */
-    const uint8_t expected[6] = {1, 2, 7, 0x2C, 0x00, 1};
+    /* Compteur 5 min sur 16 bits (bug 4 corrigé) ; TODO(bug 6) : version 1.2.7 */
+    const uint8_t expected[6] = {1, 2, 7, 0x2C, 0x01, 1};
     hmi.buzzer_5_minutes.cnt = 300; /* 0x012C */
     hmi.raz_erreur_ihm_flag = 1;
     cycle();
@@ -322,10 +322,10 @@ TEST(trame_0xCFF0027_refroidissement)
     ASSERT_EQ_MEM(expected, find(0xCFF0027)->data, 4);
 }
 
-TEST(trame_0xCFF0127_gestion_energie_current_behaviour)
+TEST(trame_0xCFF0127_gestion_energie)
 {
-    /* TODO(bug 4) : octet 2 = (uint8_t)5500 / 100 = 0x7C / 100 = 1 */
-    const uint8_t expected[7] = {0, 0, 1, 0x30, 0xF8, 0x64, 0x00};
+    /* Consigne pile en A : 5500 (0,01 A) -> 55 (bug 4 corrigé) */
+    const uint8_t expected[7] = {0, 0, 55, 0x30, 0xF8, 0x64, 0x00};
     ems.requested_fcs_current = 5500;
     battery.ibs[0].max_charge_current = -2000; /* 0xF830 */
     battery.ibs[0].max_discharge_current = 100;
@@ -361,10 +361,10 @@ TEST_MAIN_BEGIN()
     RUN_TEST(trame_0x2C00001_entrees_sorties_brutes);
     RUN_TEST(trame_0x2C00002_mesures_converties);
     RUN_TEST(trame_0x2C00003_courants);
-    RUN_TEST(trame_0x2C00004_version_current_behaviour);
+    RUN_TEST(trame_0x2C00004_version);
     RUN_TEST(trame_0x2BA0001_detail_batteries);
     RUN_TEST(trames_fixes_0x2BA0003_et_0x2FC1000);
     RUN_TEST(trame_0xCFF0027_refroidissement);
-    RUN_TEST(trame_0xCFF0127_gestion_energie_current_behaviour);
+    RUN_TEST(trame_0xCFF0127_gestion_energie);
     RUN_TEST(buffer_remis_a_zero_entre_les_trames);
 TEST_MAIN_END()

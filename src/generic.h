@@ -9,16 +9,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-/** Accès bit à bit à un octet (décodage / codage des trames CAN). */
-typedef union
-{
-    struct
-    {
-        bool b0 : 1, b1 : 1, b2 : 1, b3 : 1, b4 : 1, b5 : 1, b6 : 1, b7 : 1;
-    } sFLAGSBITS;
-    uint8_t byte;
-} uFLAGSBYTE;
-
 /* ---- Arithmétique ---------------------------------------------------------- */
 float Generic_MinF(float a, float b);
 float Generic_MaxF(float a, float b);

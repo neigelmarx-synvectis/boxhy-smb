@@ -32,17 +32,31 @@ static void supervise_n(int n, uint8_t step, uint16_t bus)
         Battery_Supervise100ms(step, bus);
 }
 
-/* ---- Décodage du courant IBS ------------------------------------------------- */
+/* ---- Décodage du courant IBS (flottant IEEE big-endian, signe inversé) ------------------- */
+static int16_t current_of(uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3)
+{
+    const uint8_t d[8] = {d0, d1, d2, d3, 0, 0, 0, 0};
+    frame(0x18FF02D0, d);
+    return battery.ibs[0].output_current;
+}
+
 TEST(decode_courant_ibs)
 {
-    ASSERT_EQ_INT(100, Battery_DecodeIbsCurrent(0xBF, 0x80, 0x00));   /* +1.00 A */
-    ASSERT_EQ_INT(150, Battery_DecodeIbsCurrent(0xBF, 0xC0, 0x00));   /* +1.50 A */
-    ASSERT_EQ_INT(-200, Battery_DecodeIbsCurrent(0x40, 0x00, 0x00));  /* -2.00 A */
-    ASSERT_EQ_INT(1025, Battery_DecodeIbsCurrent(0xC1, 0x24, 0x00));  /* +10.25 A */
-    ASSERT_EQ_INT(-6400, Battery_DecodeIbsCurrent(0x42, 0x80, 0x00)); /* -64.00 A : 2^6 */
-    /* bit de poids le plus faible de la mantisse : d2 b4 = 1/2048 -> 2^10 * (1 + 1/2048) * 100 = 102450 -> tronqué int16 */
-    ASSERT_EQ_INT((int16_t)(int32_t)102450, Battery_DecodeIbsCurrent(0xC4, 0x80, 0x10));
-    ASSERT_EQ_INT(0, Battery_DecodeIbsCurrent(0x80, 0x00, 0x00));     /* 2^-127 -> 0 */
+    ASSERT_EQ_INT(100, current_of(0xBF, 0x80, 0x00, 0x00));   /* -1.00 A IBS -> +1.00 A */
+    ASSERT_EQ_INT(150, current_of(0xBF, 0xC0, 0x00, 0x00));   /* +1.50 A */
+    ASSERT_EQ_INT(-200, current_of(0x40, 0x00, 0x00, 0x00));  /* -2.00 A */
+    ASSERT_EQ_INT(1025, current_of(0xC1, 0x24, 0x00, 0x00));  /* +10.25 A */
+    ASSERT_EQ_INT(-6400, current_of(0x42, 0x80, 0x00, 0x00)); /* -64.00 A : 2^6 */
+    /* hors plage int16 : même troncature que l'origine */
+    ASSERT_EQ_INT((int16_t)(int32_t)102450, current_of(0xC4, 0x80, 0x10, 0x00));
+    ASSERT_EQ_INT(0, current_of(0x80, 0x00, 0x00, 0x00));     /* -0.0 */
+}
+
+TEST(decode_courant_ibs_mantisse_complete)
+{
+    /* L'origine ignorait les 12 bits de poids faible de la mantisse : 0xC2C7FFF3 = -99.9999 A.
+     * Ancien décodage : 99.96 A (9996) ; décodage exact : 9999. */
+    ASSERT_EQ_INT(9999, current_of(0xC2, 0xC7, 0xFF, 0xF3));
 }
 
 /* ---- Décodage des trames ---------------------------------------------------- */
@@ -60,13 +74,13 @@ TEST(trame_courant_et_sop_D0_D1)
     ASSERT_EQ_INT(33, battery.ibs[1].sop);
 }
 
-TEST(trame_temperatures_cellules_current_behaviour_x255)
+TEST(trame_temperatures_cellules)
 {
-    /* d4..d5 : moyenne 25.6 °C = 256 (0x0100) ; d2..d3 : max = 0x01, 0x90 -> (0x90 + 1*255)/10 = 39 (TODO bug 5 ; 40 attendu avec *256) */
+    /* d4..d5 : moyenne 25.6 °C = 256 (0x0100) ; d2..d3 : max = 0x0190 = 40.0 °C (bug 5 corrigé : x256) */
     const uint8_t d[8] = {0, 0, 0x01, 0x90, 0x01, 0x00, 0, 0};
     ASSERT_TRUE(frame(0x18FF03D0, d));
     ASSERT_EQ_INT(25, battery.ibs[0].avg_cell_temperature);
-    ASSERT_EQ_INT(39, battery.ibs[0].max_cell_temperature);
+    ASSERT_EQ_INT(40, battery.ibs[0].max_cell_temperature);
 }
 
 TEST(trame_temperature_moyenne_negative)
@@ -78,9 +92,9 @@ TEST(trame_temperature_moyenne_negative)
 
 TEST(trame_temperature_carte)
 {
-    const uint8_t d[8] = {0, 0, 0x01, 0x2C, 0, 0, 0, 0}; /* (0x2C + 255)/10 = 29 */
+    const uint8_t d[8] = {0, 0, 0x01, 0x2C, 0, 0, 0, 0}; /* 0x012C = 30.0 °C */
     ASSERT_TRUE(frame(0x18FF04D0, d));
-    ASSERT_EQ_INT(29, battery.ibs[0].max_board_temperature);
+    ASSERT_EQ_INT(30, battery.ibs[0].max_board_temperature);
 }
 
 TEST(trame_soc)
@@ -302,8 +316,9 @@ TEST(reset_errors_efface_tout_sauf_les_avertissements)
 
 TEST_MAIN_BEGIN()
     RUN_TEST(decode_courant_ibs);
+    RUN_TEST(decode_courant_ibs_mantisse_complete);
     RUN_TEST(trame_courant_et_sop_D0_D1);
-    RUN_TEST(trame_temperatures_cellules_current_behaviour_x255);
+    RUN_TEST(trame_temperatures_cellules);
     RUN_TEST(trame_temperature_moyenne_negative);
     RUN_TEST(trame_temperature_carte);
     RUN_TEST(trame_soc);

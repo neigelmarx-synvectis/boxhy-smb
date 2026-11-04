@@ -34,3 +34,6 @@ cmake/**/.generated/
 
 # Tests unitaires hôte
 tests/build/
+
+# Python
+__pycache__/
