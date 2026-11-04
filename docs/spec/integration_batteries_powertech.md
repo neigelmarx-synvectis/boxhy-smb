@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Version | 0.2 – brouillon de travail |
+| Version | 0.3 – brouillon de travail |
 | Date | 2026-11-04 |
-| Statut | Topologie, mise sous tension et débit décidés (Q1 à Q5). Collision d'identifiants à trancher (Q16). Questions Q6 à Q17 ouvertes (§ 9) |
+| Statut | Topologie, mise sous tension, débit et broches SMB décidés (Q1 à Q5, Q14). Collision d'identifiants à trancher (Q16). Questions Q6 à Q13, Q15 à Q17 ouvertes (§ 9) |
 | Firmware de départ | SMB BOXHY 2.0.0 |
 
 ## 1. Objet
@@ -96,6 +96,7 @@ Les données ci-dessous sont tirées de [PM].
 | Batteries IBS | Remplacées définitivement : le firmware ne gère plus que les PowerModule. | Q3 |
 | Mise sous tension | Option switch (contact sec). Une clé manuelle et un relais piloté par la SMB sont câblés en parallèle sur le contact. | Q4, § 6.2 |
 | Débit CAN | 500 kbit/s : les PowerModule sont configurés à ce débit. Le bus BOXHY reste inchangé. | Q5 |
+| Broches SMB | Relais de maintien : broche 46 (RB7). Position de la clé : broche 47 (RC13). | Q14, PM-HW-6, PM-HW-7 |
 
 Dimensionnement en décharge, avec un module Standard :
 
@@ -162,10 +163,8 @@ parallèle sur cette entrée, selon un OU logique :
 - **un relais piloté par la SMB** : il maintient les batteries en marche lorsque la clé est sur arrêt mais que la
   machine d'états impose de les garder, par exemple pendant une séquence d'arrêt de la pile.
 
-Points en suspens :
-
-- la sortie de la SMB qui commande le relais, que l'utilisateur précisera (Q14) ;
-- les états dans lesquels le maintien est demandé (Q15).
+La SMB commande le relais par la broche 46 (RB7) et lit la position de la clé sur la broche 47 (RC13) (Q14).
+Point en suspens : les états dans lesquels le maintien est demandé (Q15).
 
 L'entrée switch n'est pas isolée. Cela reste conforme à [PM] pour un module seul ou deux modules en parallèle,
 sous 60 V.
@@ -188,7 +187,8 @@ Statuts :
 | PM-HW-3 | La mise sous tension des PowerModule passe par l'option switch. Le contact de la clé et le contact du relais de maintien SMB sont câblés en parallèle (§ 5.3). | Décidée |
 | PM-HW-4 | Un fusible de calibre inférieur à N × fusible interne protège chaque pôle de la batterie, conformément à [PM] § 4. | Proposée |
 | PM-HW-5 | Avec 2 modules, les câbles de puissance entre modules et hubs ont tous la même longueur, conformément à [PM] § 4.1. | Proposée |
-| PM-HW-6 | Le relais de maintien offre un contact sec, sans liaison galvanique avec la SMB, adapté au signal de l'entrée switch. Sa bobine est commandée par une sortie TOR de la SMB à définir (Q14). | À définir |
+| PM-HW-6 | Le relais de maintien offre un contact sec, sans liaison galvanique avec la SMB, adapté au signal de l'entrée switch. Sa bobine est commandée par la broche 46 du dsPIC (RB7), libre dans le firmware 2.0.0. La broche est déclarée dans MCC en sortie numérique, au niveau bas à l'initialisation, avec l'analogique AN25 désactivé. La commande du relais comporte un pull-down matériel : le relais reste ouvert tant que la broche est en haute impédance, c'est-à-dire du reset jusqu'à l'initialisation des ports. | Décidée |
+| PM-HW-7 | La position de la clé est lue sur la broche 47 du dsPIC (RC13), libre dans le firmware 2.0.0. La broche est déclarée dans MCC en entrée numérique, avec le pull-down interne activé : une clé ouverte ou débranchée se lit « arrêt ». La clé ramène le niveau haut (5 V) en position marche. L'entrée est protégée contre les surtensions et les décharges électrostatiques (à vérifier sur le schéma de la carte). L'état est filtré, sur le modèle des sélecteurs de mode (500 ms). | Décidée |
 | PM-CFG-1 | Le nombre de modules N (1 ou 2) est un paramètre de la SMB, `PM_MODULE_COUNT`. Proposition : constante de `src/smb_config.h`, avec contrôle à la compilation 1 ≤ N ≤ 2 (Q17). | Proposée |
 | PM-CFG-2 | La SMB vérifie que le Status 1 de chacun des N modules attendus est reçu. Proposition : Master, puis slave 1 si N = 2. Un module manquant ou un module en trop déclenche une alarme. La réaction, défaut ou mode dégradé, suit Q9. | Proposée |
 | PM-CFG-3 | Les tables de liaison CAN sont compilées pour 2 modules au plus. Seules les N premières sont exploitées. | Proposée |
@@ -199,7 +199,7 @@ Statuts :
 |---|---|---|
 | PM-PWR-1 | La clé seule démarre les batteries, donc le système, sans action de la SMB. | Décidée |
 | PM-PWR-2 | La SMB ferme le relais de maintien tant que la machine d'états exige que les batteries restent en marche, et l'ouvre sinon. Les états concernés sont à définir (Q15). Proposition : tous les états où l'onduleur ou la pile est en marche ou en cours d'arrêt, de `SMB_DCAC_START_1` à `SMB_STOPPING`, ainsi que `SMB_MAINTENANCE`. | À valider |
-| PM-PWR-3 | Le passage de la clé sur arrêt déclenche la séquence d'arrêt ordonnée du système : arrêt de la pile s'il y a lieu, puis `SMB_STOPPING`. La SMB ouvre le relais en fin de séquence. Cela suppose que la SMB lise la position de la clé sur une entrée TOR, à définir (Q14). Sinon, le relais maintiendrait le système indéfiniment. | À valider |
+| PM-PWR-3 | Le passage de la clé sur arrêt déclenche la séquence d'arrêt ordonnée du système : arrêt de la pile s'il y a lieu, puis `SMB_STOPPING`. La SMB ouvre le relais en fin de séquence. La position de la clé est lue sur la broche 47 (PM-HW-7). | À valider |
 | PM-PWR-4 | Le maintien après passage de la clé sur arrêt est limité à T_MAINTIEN_MAX. Au-delà, le relais est ouvert même si la séquence d'arrêt n'est pas terminée. Proposition : T_MAINTIEN_MAX = 5 min, à confirmer avec la durée maximale d'arrêt de la pile. | À valider |
 | PM-PWR-5 | Au reset de la SMB et dans `SMB_INIT`, la sortie du relais est au repos, contact ouvert. Une SMB bloquée ou redémarrée ne maintient donc pas les batteries. Elle reste sous tension tant que la clé est sur marche. | Proposée |
 | PM-PWR-6 | L'état du relais de maintien et la position de la clé sont émis en télémétrie (trame `SMB_TX_RAW1`, 0x02C00001). Le relais est commandable en mode maintenance par une trame `SMB_RX_BATTERY_HOLD_RELAY`, sur le modèle des autres relais (0x02C01D0x). | Proposée |
@@ -272,8 +272,8 @@ courant entrant, donc la charge : le signe est inversé.
 | `src/devices/battery.c/.h` | Remplacement des tables IBS par des tables PowerModule. Suppression du keep-alive. Nouveau watchdog et contrôle de présence des N modules. Nouvelles données : IMR, IMD, fin de charge, contacteur. |
 | `src/control/ems.c` | Consigne de courant pile fondée sur l'IMR (PM-CHG-1), prise en compte de la fin de charge. |
 | `src/system/smb_state_machine.c` | Erreurs critiques (PM-SAF-1). Fin de charge (PM-CHG-2). Maintien des batteries et arrêt sur clé (PM-PWR-2 à 4). Correction du bug 7. |
-| `hal/board_io.h` et son double de test | Sortie du relais de maintien et entrée de position de la clé (Q14), au repos au reset (PM-PWR-5). Ajout à `Board_RelaysSafeState` à décider avec Q15. |
-| MCC (`mcc_generated_files/pin_manager`) | Configuration des broches retenues en Q14. |
+| `hal/board_io.h` et son double de test | `Board_SetBatteryHoldRelay` / `Board_GetBatteryHoldRelay` (broche 46) et `Board_GetKeySwitch` (broche 47), au repos au reset (PM-PWR-5). Ajout à `Board_RelaysSafeState` à décider avec Q15. |
+| MCC (`test_dspic2.mc3`, `mcc_generated_files/pin_manager`) | RB7 : `BATTERY_HOLD_RELAY`, sortie numérique, niveau bas, `ANSELB` bit 7 à 0. RC13 : `KEY_SWITCH`, entrée numérique, pull-down (`CNPDC` bit 13). Régénération MCC, ou modification équivalente de `pin_manager.c/.h`. |
 | `src/smb_config.h` | `PM_MODULE_COUNT`, T_COM, T_MAINTIEN_MAX, seuils de SOC. Suppression des seuils SOP si Q6 le confirme. |
 | `src/can/can_tx.c`, `src/hmi/maintenance.c` | Télémétrie batterie (PM-TLM-1), état du relais et de la clé (PM-PWR-6), commande de maintenance du relais. |
 | `tests/` | Suites `test_battery`, `test_ems`, `test_can_tx`, `test_maintenance` et `test_smb_state_machine` à adapter. Nouveaux tests : maintien et clé, présence des N modules, non-collision des identifiants (PM-COM-1). |
@@ -312,7 +312,7 @@ courant entrant, donc la charge : le signe est inversé.
 | Q11 | La BOXHY doit-elle fonctionner sous 0 °C ? Si oui, qui pilote le chauffage, et avec quelle consigne ? | | |
 | Q12 | L'option Lifeline (arrêt d'urgence sur la ligne de communication) est-elle retenue ? | | |
 | Q13 | Quelles incohérences de [PM] faut-il faire confirmer par PowerTech ? | Les envoyer en une seule demande : unités de l'IMR et de l'IMD, identifiant cell balancing, DLC de maintenance, contenu de la commande 0x20F et procédure de passage à 500 kbit/s, liste des commandes globales (0x02C00xxx) utilisées ou réservées., recalcul de l'IMR et de l'IMD par le Master quand un module s'ouvre | |
-| Q14 | Quelle sortie de la SMB commande le relais de maintien ? La SMB dispose-t-elle d'une entrée pour lire la position de la clé ? | Sortie : précisée ultérieurement par l'utilisateur. Entrée clé : nécessaire pour PM-PWR-3. | Sortie : à préciser |
+| Q14 | Quelle sortie de la SMB commande le relais de maintien ? La SMB dispose-t-elle d'une entrée pour lire la position de la clé ? | Entrée clé : nécessaire pour PM-PWR-3. | **Relais : broche 46 (RB7). Clé : broche 47 (RC13).** |
 | Q15 | Dans quels états la SMB maintient-elle les batteries ? Que faire en mode défaut (`SMB_EMERGENCY`) ? | Maintien de `SMB_DCAC_START_1` à `SMB_STOPPING` et en `SMB_MAINTENANCE`. En défaut : maintien limité à T_MAINTIEN_MAX pour signaler l'erreur et laisser la pile s'arrêter. | |
 | Q16 | Quels nouveaux identifiants pour `SMB_TX_TEMPERATURE` et `SMB_TX_CURRENTS` (§ 5.1) ? | 0x02C00005 et 0x02C00006, sous réserve de la réponse de PowerTech à Q13. | |
 | Q17 | Le nombre de modules est-il fixé à la compilation, ou réglable sur le terrain, par commande CAN de maintenance enregistrée en EEPROM ? | À la compilation dans `smb_config.h` : plus simple, sans EEPROM. | |
@@ -323,3 +323,4 @@ courant entrant, donc la charge : le signe est inversé.
 |---|---|---|
 | 0.1 | 2026-11-04 | Premier brouillon : état des lieux, points bloquants, exigences proposées, questions ouvertes |
 | 0.2 | 2026-11-04 | Décisions Q1 à Q5 : 1 ou 2 modules Standard, nombre de modules paramétrable, sans SuperMaster, IBS remplacées, mise sous tension par clé et relais SMB en parallèle sur l'option switch, CAN à 500 kbit/s. Dimensionnement en décharge validé. Collision d'identifiants confirmée pour la configuration retenue. Nouvelles exigences PM-CFG et PM-PWR. Nouvelles questions Q14 à Q17. [PM-DBC] régénéré à 500 kbit/s. |
+| 0.3 | 2026-11-04 | Décision Q14 : relais de maintien sur la broche 46 (RB7), position de la clé sur la broche 47 (RC13). Nouvelle exigence PM-HW-7. Configuration MCC et HAL précisées. |
