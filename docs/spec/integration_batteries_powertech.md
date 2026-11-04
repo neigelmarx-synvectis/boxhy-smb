@@ -2,10 +2,11 @@
 
 | | |
 |---|---|
-| Version | 0.7 – brouillon de travail |
+| Version | 0.8 – brouillon de travail |
 | Date | 2026-11-04 |
-| Statut | Topologie, mise sous tension, débit et broches SMB décidés (Q1 à Q5, Q14). Bus CAN commun entre BOXHY décidé (Q19), avec un identifiant de BOXHY proposé dans les identifiants CAN (§ 6.10), qui résoudrait aussi la collision de Q16. Fonctionnement sans batterie (Q18) et configuration triphasée (Q20 à Q24) à définir. Questions Q6 à Q13, Q15, Q16, Q18, Q20 à Q26 ouvertes (§ 9) |
+| Statut | Décidés : topologie, mise sous tension, débit, broches SMB (Q1 à Q5, Q14), bus CAN commun (Q19), plan d'identifiants J1939 de la 2.2.1 (Q25, qui résout Q16), paramètres en flash (Q21, [MEM]), dsPIC33EV128GM106 (Q26), maître triphasé élu au démarrage (§ 6.9). Questions Q6 à Q13, Q15, Q18, Q20, Q22 à Q24, Q27 à Q30 ouvertes (§ 9) |
 | Firmware de départ | SMB BOXHY 2.0.0 |
+| Composant de référence | dsPIC33EV128GM106 (Q26) |
 
 ## 1. Objet
 
@@ -18,7 +19,10 @@ du point de vue de la carte SMB. Il couvre :
 - la gestion de la charge par la pile à combustible ;
 - la télémétrie vers l'IHM ;
 - le fonctionnement d'une BOXHY sans batterie (§ 6.8) ;
-- la configuration triphasée, où une BOXHY maître pilote la batterie partagée avec deux BOXHY esclaves (§ 6.9) ;
+- la configuration triphasée, où une BOXHY maître, élue au démarrage parmi celles qui ont une batterie, pilote la batterie partagée avec les BOXHY esclaves (§ 6.9) ;
+- le plan d'identifiants CAN des BOXHY sur un bus commun (§ 6.10).
+
+La mémoire persistante (paramètres, journal des défauts) fait l'objet d'un document séparé [MEM].
 - les impacts sur le firmware SMB et la manière de les vérifier.
 
 Il ne couvre pas le dimensionnement électrique de la batterie, le câblage de puissance interne ni la
@@ -33,6 +37,7 @@ configuration des chargeurs externes.
 | [BOXHY-DBC] | `can database/BOXHY.dbc` : trames actuelles de la SMB, de la FCCB, des IBS et de l'IHM |
 | [BUGS] | `docs/bugs.md` : anomalies connues du firmware SMB |
 | [V221] | `docs/analyse_smb_v2_2_1_triphase.md` : analyse du firmware SMB 2.2.1 triphasé (projets L1, L2, L3 de `assets/old versions/`) |
+| [MEM] | `docs/spec/memoire_persistante.md` : zone de flash persistante, paramètres de configuration et journal des défauts |
 | [FW] | Firmware SMB 2.0.0, en particulier `src/devices/battery.c`, `src/control/ems.c` et `src/system/smb_state_machine.c` |
 
 ## 3. Situation actuelle : batteries IBS
@@ -99,7 +104,9 @@ Les données ci-dessous sont tirées de [PM].
 | Batteries IBS | Remplacées définitivement : le firmware ne gère plus que les PowerModule. | Q3 |
 | Mise sous tension | Option switch (contact sec). Une clé manuelle et un relais piloté par la SMB sont câblés en parallèle sur le contact. | Q4, § 6.2 |
 | Débit CAN | 500 kbit/s : les PowerModule sont configurés à ce débit. Le bus BOXHY reste inchangé. | Q5 |
-| Configurations système | BOXHY seule (avec ou sans batterie), BOXHY triphasée maître ou esclave. Un seul logiciel, configuré uniquement par paramètres. | Q17, § 6.9 |
+| Configurations système | BOXHY seule (avec ou sans batterie), BOXHY triphasée. En triphasé, le maître est élu au démarrage parmi les BOXHY qui ont une batterie, les autres sont esclaves. Un seul logiciel, configuré uniquement par paramètres stockés en flash [MEM]. | Q17, Q21, § 6.9 |
+| Identifiants CAN | Plan J1939 de la 2.2.1 triphasée, pour toutes les BOXHY. `BOXHY_ID` de 0 à 2 dans l'adresse source. | Q25, § 6.10 |
+| Microcontrôleur | dsPIC33EV128GM106. | Q26 |
 | Broches SMB | Relais de maintien : broche 46 (RB7). Position de la clé : broche 47 (RC13). Les deux sont reliées au connecteur J24 de la SMB. | Q14, PM-HW-6, PM-HW-7 |
 
 Dimensionnement en décharge, avec un module Standard :
@@ -113,7 +120,7 @@ courant reste borné par l'IMR (PM-CHG-1).
 
 ## 5. Points bloquants identifiés
 
-### 5.1 Collision d'identifiants CAN
+### 5.1 Collision d'identifiants CAN — résolu
 
 Sans SuperMaster, les trames globales du PowerModule utilisent les mêmes identifiants que deux trames de
 télémétrie déjà émises par la SMB :
@@ -143,7 +150,7 @@ Solutions possibles :
    Proposition : 0x02C00005 et 0x02C00006, à la suite de `SMB_TX_VERSION`. Il faut aussi faire confirmer par PowerTech
    la liste des commandes globales utilisées ou réservées (Q13).
 2. ~~Adopter une topologie avec SuperMaster~~ : solution écartée par Q2.
-3. **Mettre les batteries sur un bus CAN séparé.** Le dsPIC33EV32GM106 de la SMB n'a qu'un contrôleur CAN :
+3. **Mettre les batteries sur un bus CAN séparé.** Le dsPIC33EV de la SMB n'a qu'un contrôleur CAN :
    il faudrait modifier la carte.
 
 Proposition : solution 1. Les nouveaux identifiants sont à valider (Q16).
@@ -151,6 +158,9 @@ Proposition : solution 1. Les nouveaux identifiants sont à valider (Q16).
 **Mise à jour v0.6 :** l'identifiant de BOXHY du § 6.10, placé dans les bits 14 et 15 avec une valeur de 1 à 3,
 décale toutes les trames de la BOXHY hors de l'espace des PowerModule. Il résout donc aussi cette collision,
 sans renommer de trame.
+
+**Mise à jour v0.8 : résolu.** Le plan J1939 retenu (Q25, § 6.10) place toutes les trames de la SMB, de la FCCB
+et de l'IHM hors de l'espace 0x02xxxxxx. La collision disparaît (Q16).
 
 ### 5.2 Débit CAN — résolu
 
@@ -198,11 +208,11 @@ Statuts :
 | PM-HW-5 | Avec 2 modules, les câbles de puissance entre modules et hubs ont tous la même longueur, conformément à [PM] § 4.1. | Proposée |
 | PM-HW-6 | Le relais de maintien offre un contact sec, sans liaison galvanique avec la SMB, adapté au signal de l'entrée switch. Sa bobine est commandée par la broche 46 du dsPIC (RB7), reliée au connecteur J24, libre dans le firmware 2.0.0. La broche est déclarée dans MCC en sortie numérique, au niveau bas à l'initialisation, avec l'analogique AN25 désactivé. La commande du relais comporte un pull-down matériel : le relais reste ouvert tant que la broche est en haute impédance, c'est-à-dire du reset jusqu'à l'initialisation des ports. | Décidée |
 | PM-HW-7 | La position de la clé est lue sur la broche 47 du dsPIC (RC13), reliée au connecteur J24, libre dans le firmware 2.0.0. La broche est déclarée dans MCC en entrée numérique, avec le pull-down interne activé : une clé ouverte ou débranchée se lit « arrêt ». La clé ramène le niveau haut (5 V) en position marche. L'entrée est protégée contre les surtensions et les décharges électrostatiques (à vérifier sur le schéma de la carte). L'état est filtré, sur le modèle des sélecteurs de mode (500 ms). | Décidée |
-| PM-CFG-1 | Le nombre de modules pilotés N (0, 1 ou 2) est un paramètre de configuration de la SMB, `PM_MODULE_COUNT`. N = 0 désigne une BOXHY seule sans batterie (§ 6.8) ou une BOXHY esclave (§ 6.9). | Décidée |
+| PM-CFG-1 | Le nombre de modules pilotés N (0, 1 ou 2) est un paramètre de configuration de la SMB, `PM_MODULE_COUNT`. N = 0 désigne une BOXHY sans batterie : seule (§ 6.8) ou triphasée, alors toujours esclave (§ 6.9). | Décidée |
 | PM-CFG-2 | Pour N ≥ 1, la SMB vérifie que le Status 1 de chacun des N modules attendus est reçu. Proposition : Master, puis slave 1 si N = 2. Un module manquant ou un module en trop déclenche une alarme. La réaction, défaut ou mode dégradé, suit Q9. | Proposée |
 | PM-CFG-3 | Les tables de liaison CAN sont compilées pour 2 modules au plus. Seules les N premières sont exploitées. | Proposée |
-| PM-CFG-4 | Un seul logiciel couvre toutes les configurations (§ 6.9). `SMB_ROLE`, `BOXHY_ID` (§ 6.10) et `PM_MODULE_COUNT` sont lus au démarrage depuis un support défini par Q21, et non fixés à la compilation. | Décidée |
-| PM-CFG-5 | Au démarrage, la SMB vérifie la cohérence des paramètres : `TRI_MAITRE` impose N ≥ 1, `TRI_ESCLAVE` impose N = 0, `TRI_MAITRE` et `SEULE` imposent `BOXHY_ID` = 1, et `TRI_ESCLAVE` impose `BOXHY_ID` = 2 ou 3. Une configuration absente ou incohérente maintient la SMB en défaut, relais en sécurité. | Proposée |
+| PM-CFG-4 | Un seul logiciel couvre toutes les configurations (§ 6.9). `SMB_ROLE`, `BOXHY_ID` (§ 6.10) et `PM_MODULE_COUNT` sont lus au démarrage depuis la zone de flash persistante [MEM], et non fixés à la compilation. | Décidée |
+| PM-CFG-5 | Au démarrage, la SMB vérifie la cohérence des paramètres : `SMB_ROLE` vaut `SEULE` ou `TRIPHASE`, `BOXHY_ID` vaut 0 à 2 et vaut 0 en `SEULE`, N vaut 0 à 2. Une configuration absente ou incohérente maintient la SMB en défaut, relais en sécurité, et le défaut est journalisé [MEM]. | Proposée |
 | PM-CFG-6 | Les paramètres de configuration sont émis en télémétrie, avec la version firmware (PM-TLM-2). | Proposée |
 
 ### 6.2 Mise sous tension et maintien
@@ -298,113 +308,182 @@ batterie est présente :
 | PM-NOB-4 | Avec N = 0, le rôle de la clé (broche 47) et du relais de maintien (broche 46) est défini par Q18. Le relais n'a plus de contact sec de batterie à maintenir. | À définir |
 | PM-NOB-5 | Les tests unitaires de la machine d'états, de l'onduleur, de l'IHM et de la gestion énergie sont exécutés pour N = 0, 1 et 2, et pour chaque rôle. | Proposée |
 
-### 6.9 Configuration triphasée : BOXHY maître et esclaves
+### 6.9 Configuration triphasée : maître élu et esclaves
 
-En fonctionnement triphasé, trois BOXHY partagent le même bus 48 V :
+En fonctionnement triphasé, trois BOXHY partagent le même bus 48 V et le même bus CAN (Q19) :
 
-- la **BOXHY maître** pilote le système batterie : lecture des PowerModule, relais de maintien, supervisions et
-  limites de charge et de décharge ;
-- les **deux BOXHY esclaves** se raccordent au bus 48 V du maître. Elles ont accès à la batterie mais ne la
+- la **BOXHY maître** pilote le système batterie : lecture des PowerModule, maintien, supervisions et limites
+  de charge et de décharge ;
+- les **BOXHY esclaves** se raccordent au bus 48 V du maître. Elles ont accès à la batterie mais ne la
   pilotent pas. Sur le bus CAN commun (§ 6.10), elles peuvent lire les trames PowerModule sans les commander ;
 - le maître autorise chaque esclave à fonctionner ou non, et fixe la puissance qu'il peut débiter.
 
-Le même logiciel gère la BOXHY seule, le maître et l'esclave. Le choix se fait uniquement par paramètres
-(Q17).
+**Le maître n'est pas désigné par paramètre : il est élu au démarrage** parmi les BOXHY triphasées qui ont un
+système batterie (N ≥ 1). Les autres fonctionnent ensuite en esclave. Une BOXHY sans batterie (N = 0) est
+toujours esclave. Le même logiciel gère tous les cas, choisis uniquement par paramètres (Q17).
 
-| Configuration | `SMB_ROLE` | `BOXHY_ID` | `PM_MODULE_COUNT` | Batterie |
+| Configuration | `SMB_ROLE` | `BOXHY_ID` | `PM_MODULE_COUNT` | Rôle effectif |
 |---|---|---|---|---|
-| BOXHY seule, avec batterie | `SEULE` | 1 | 1 ou 2 | pilotée |
-| BOXHY seule, sans batterie | `SEULE` | 1 | 0 | absente (§ 6.8) |
-| BOXHY triphasée maître | `TRI_MAITRE` | 1 | 1 ou 2 | pilotée, partagée avec les esclaves |
-| BOXHY triphasée esclave | `TRI_ESCLAVE` | 2 ou 3 | 0 | présente sur le bus 48 V, non pilotée |
+| BOXHY seule, avec batterie | `SEULE` | 0 | 1 ou 2 | pilote sa batterie |
+| BOXHY seule, sans batterie | `SEULE` | 0 | 0 | sans batterie (§ 6.8) |
+| BOXHY triphasée avec batterie | `TRIPHASE` | 0, 1 ou 2, unique sur le bus | 1 ou 2 | candidate : maître si elle est élue, esclave sinon |
+| BOXHY triphasée sans batterie | `TRIPHASE` | 0, 1 ou 2, unique sur le bus | 0 | toujours esclave |
+
+#### 6.9.1 Faisabilité de l'élection
+
+L'élection est possible, à trois conditions :
+
+1. **Identifiants uniques.** Chaque SMB applique la même règle aux mêmes informations : la plus petite valeur
+   de `BOXHY_ID` parmi les candidates. Le résultat est donc le même partout, sans négociation. Un
+   identifiant en double est détecté (TRI-7).
+2. **Un seul système PowerModule sur le bus CAN couplé.** Sans SuperMaster (Q2), le protocole PowerTech n'admet
+   qu'un module Master par bus. Deux systèmes indépendants émettraient les mêmes identifiants, par exemple le
+   Global Status 1 en 0x02C00002, et entreraient en collision. Si plusieurs BOXHY ont des modules, ces modules
+   sont de toute façon en parallèle sur le bus 48 V commun. Ils doivent donc être configurés comme **un seul
+   système** : un module Master, les autres en slave, numérotés sans doublon. Toutes les candidates lisent
+   alors le même Global Status, et chacune peut être maître (Q27).
+3. **Pas de préemption.** Un maître élu le reste tant qu'il est présent et éligible. Sinon, le maître changerait
+   à chaque redémarrage d'une BOXHY de plus petit identifiant, avec à chaque fois un risque d'arrêt des esclaves.
+
+Avec une seule BOXHY équipée de batterie, ce qui est le cas nominal, l'élection se réduit à la détection
+automatique du maître. Il n'y a plus de rôle maître ou esclave à saisir.
+
+#### 6.9.2 Trames de coordination
+
+| Trame | Identifiant | Émetteur | Période | Contenu |
+|---|---|---|---|---|
+| `SMB_TX_TRI_STATUS` | PGN 0xFF97, `0x18FF9710 + ID` : trame d'état de la 2.2.1, étendue | Toute SMB `TRIPHASE` | 100 ms | État de la machine d'états, candidate (oui ou non), maître (oui ou non), numéro de mandat (16 bits), N local, puissance prélevée sur le bus 48 V, résumé des défauts actifs, compteur de vie |
+| `SMB_TX_TRI_AUTH` | PGN 0xFF98, `0x18FF9810 + ID` : nouvelle | Le maître seul | 100 ms | Numéro de mandat, abdication, maintien batterie demandé. Pour chaque `BOXHY_ID` de 0 à 2 : autorisation de marche et puissance maximale (pas de 100 W). Compteur de vie. |
+
+`SMB_TX_TRI_AUTH` sert aussi de battement de cœur du maître. Les deux trames représentent 60 trames par seconde
+pour trois BOXHY, soit moins de 2 % de charge à 500 kbit/s.
+
+#### 6.9.3 Déroulement
+
+1. **Écoute.** Pendant T_ECOUTE après l'initialisation du CAN, chaque SMB `TRIPHASE` émet son état sans se
+   déclarer maître et écoute. Si elle reçoit une autorisation valide d'un maître, elle devient esclave.
+   Proposition : T_ECOUTE = 2 s.
+2. **Candidature.** Une SMB est éligible si les conditions suivantes sont toutes remplies :
+   - elle est `TRIPHASE` et N ≥ 1 ;
+   - le Global Status est reçu, sans erreur batterie critique ;
+   - la clé est sur marche ;
+   - elle n'a aucun défaut critique ;
+   - sa configuration est valide.
+
+   Elle le signale dans son état.
+3. **Élection.** À la fin de T_ECOUTE, sans maître entendu, la candidate de plus petit `BOXHY_ID` parmi les
+   candidates entendues, elle comprise, prend le mandat. Son numéro de mandat vaut le plus grand numéro entendu
+   plus un. Elle commence à émettre les autorisations. Les autres deviennent esclaves.
+4. **Démarrage décalé.** Une SMB qui démarre alors qu'un maître est actif devient esclave, même si son
+   identifiant est plus petit.
+5. **Perte du maître.** Sans autorisation pendant T_PERTE, les candidates relancent l'élection (étape 3).
+   Pendant ce temps, les esclaves gardent la dernière autorisation reçue, jusqu'à T_TRI. Si un nouveau maître est
+   élu avant T_TRI, le changement de maître passe inaperçu. Sinon, les esclaves exécutent leur séquence d'arrêt.
+   Proposition : T_PERTE = 500 ms et T_TRI = 2 s.
+6. **Abdication.** Un maître qui perd son éligibilité le signale dans sa trame d'autorisation, et l'élection
+   reprend aussitôt. Il peut s'agir d'une clé sur arrêt, d'une erreur batterie ou d'un défaut critique. Une erreur
+   batterie est vue par toutes les candidates : aucune n'est alors éligible, et les esclaves s'arrêtent.
+7. **Deux maîtres.** Ce cas se présente par exemple après une coupure, puis le rétablissement, du bus CAN. Le
+   mandat de plus grand numéro l'emporte, puis, à égalité, le plus petit `BOXHY_ID`. L'autre maître redevient
+   esclave immédiatement.
 
 | Id | Exigence | Statut |
 |---|---|---|
-| TRI-1 | Le rôle de la SMB, `SMB_ROLE` (`SEULE`, `TRI_MAITRE` ou `TRI_ESCLAVE`), et l'identifiant de BOXHY, `BOXHY_ID` (§ 6.10), sont des paramètres de configuration (PM-CFG-4). | Décidée |
-| TRI-2 | En `TRI_MAITRE`, la SMB émet périodiquement vers chaque esclave une autorisation qui contient l'ordre de marche ou d'arrêt et la puissance maximale que l'esclave peut prélever sur le bus 48 V. Proposition : période de 500 ms. | Décidée (contenu), À valider (période) |
-| TRI-3 | Le maître calcule les autorisations à partir de l'état de la batterie (erreur, SOC, IMD, IMR), de sa propre consommation et de l'état rapporté par chaque esclave. La règle de répartition est définie par Q20. | À définir |
-| TRI-4 | Le maître retire toutes les autorisations sur erreur batterie (PM-SAF-1), sur SOC très bas, et avant sa propre séquence d'arrêt. Le relais de maintien du maître reste fermé tant qu'un esclave n'a pas terminé son arrêt (Q15, Q23). | Proposée |
-| TRI-5 | En `TRI_ESCLAVE`, la SMB ne démarre son onduleur que si l'autorisation de marche est reçue. Sans autorisation, elle reste en `SMB_STANDBY` ou exécute sa séquence d'arrêt. | Proposée |
-| TRI-6 | En `TRI_ESCLAVE`, la SMB fait respecter la puissance autorisée. La SMB ne peut pas fixer de consigne de puissance à l'onduleur : le protocole RS232 actuel (QMOD, QPIWS, QPIGS) ne fait que l'interroger. Proposition : surveiller la puissance de sortie, et déconnecter l'onduleur par temporisation si l'autorisation est dépassée, sur le modèle de la surveillance de surcharge existante (Q22). | À valider |
-| TRI-7 | En `TRI_ESCLAVE`, la perte des autorisations du maître pendant T_TRI déclenche la séquence d'arrêt et une alarme. Proposition : T_TRI = 2 s. | Proposée |
-| TRI-8 | En `TRI_ESCLAVE`, la SMB envoie son état au maître : état de la machine d'états, puissance prélevée sur le bus, courant de sa pile, erreurs. | Proposée |
-| TRI-9 | En `TRI_ESCLAVE`, les décisions qui utilisaient le SOC (mode hybride, déconnexion de l'onduleur, bips) utilisent les données transmises par le maître, ou sont désactivées (Q20). | À définir |
-| TRI-10 | Le maître et les esclaves communiquent par le bus CAN commun (Q19). Chaque BOXHY est distinguée par son `BOXHY_ID` (§ 6.10). | Décidée |
+| TRI-1 | `SMB_ROLE` (`SEULE` ou `TRIPHASE`) et `BOXHY_ID` (§ 6.10) sont des paramètres de configuration, stockés en flash [MEM]. Les rôles maître et esclave ne sont plus des paramètres. | Décidée |
+| TRI-2 | En `TRIPHASE`, le maître est élu au démarrage parmi les SMB éligibles (§ 6.9.3, étape 2). Une SMB avec N = 0 n'est jamais candidate. | Décidée (principe), Proposée (critères) |
+| TRI-3 | L'élection suit le § 6.9.3 : écoute pendant T_ECOUTE, puis plus petit `BOXHY_ID` parmi les candidates. Le numéro de mandat croît à chaque élection. | Proposée |
+| TRI-4 | Pas de préemption : un maître actif conserve son mandat tant qu'il est éligible et que sa trame d'autorisation est reçue. | Proposée |
+| TRI-5 | Perte du maître pendant T_PERTE : nouvelle élection. Abdication : nouvelle élection immédiate. Les esclaves conservent la dernière autorisation jusqu'à T_TRI. | Proposée |
+| TRI-6 | Deux maîtres : le mandat de plus grand numéro l'emporte, puis le plus petit `BOXHY_ID`. Le perdant redevient esclave et l'événement est journalisé [MEM]. | Proposée |
+| TRI-7 | Une SMB qui reçoit, avec sa propre adresse source, une trame d'un PGN qu'elle émet elle-même (télémétrie SMB, `SMB_TX_TRI_STATUS`, `SMB_TX_TRI_AUTH`) en déduit un `BOXHY_ID` en double. Elle passe en défaut (code de la famille 0x06 [MEM]), n'est plus candidate et ne débite pas. | Proposée |
+| TRI-8 | Le maître émet toutes les 100 ms `SMB_TX_TRI_AUTH`. Pour chaque BOXHY, la trame porte l'ordre de marche ou d'arrêt et la puissance maximale que la BOXHY peut prélever sur le bus 48 V. | Décidée (contenu), Proposée (période) |
+| TRI-9 | Le maître calcule les autorisations à partir de l'état de la batterie (erreur, SOC, IMD, IMR), de sa propre consommation et de l'état rapporté par chaque esclave. La règle de répartition est définie par Q20. | À définir |
+| TRI-10 | Le maître retire toutes les autorisations sur erreur batterie (PM-SAF-1), sur SOC très bas, et avant sa propre séquence d'arrêt (Q15, Q23). | Proposée |
+| TRI-11 | Un esclave ne démarre son onduleur que si l'autorisation de marche est reçue. Sans autorisation, il reste en `SMB_STANDBY` ou exécute sa séquence d'arrêt. | Proposée |
+| TRI-12 | Un esclave fait respecter la puissance autorisée. La SMB ne peut pas fixer de consigne de puissance à l'onduleur : le protocole RS232 actuel (QMOD, QPIWS, QPIGS) ne fait que l'interroger. Proposition : surveiller la puissance de sortie, et déconnecter l'onduleur par temporisation si l'autorisation est dépassée, sur le modèle de la surveillance de surcharge existante (Q22). | À valider |
+| TRI-13 | Un esclave sans autorisation valide pendant T_TRI exécute sa séquence d'arrêt et lève une alarme « perte du maître ». Sans maître élu après T_ATTENTE à la mise sous tension, l'esclave reste en `SMB_STANDBY` avec l'alarme « pas de maître ». Proposition : T_ATTENTE = 10 s. | Proposée |
+| TRI-14 | Toute SMB `TRIPHASE` émet `SMB_TX_TRI_STATUS` toutes les 100 ms (§ 6.9.2). | Proposée |
+| TRI-15 | Chez un esclave, les décisions qui utilisaient le SOC (mode hybride, déconnexion de l'onduleur, bips) utilisent les données du maître, ou sont désactivées (Q20). | À définir |
+| TRI-16 | Si des modules sont répartis sur plusieurs BOXHY (Q27), chaque BOXHY équipée garde la commande de sa clé et de son relais de maintien. Elle maintient ses modules tant que le maître demande le maintien batterie, dans la limite de T_MAINTIEN_MAX après la perte du maître. | À valider |
+| TRI-17 | Le maître et les esclaves communiquent par le bus CAN commun (Q19), avec le plan d'identifiants du § 6.10. | Décidée |
 
-### 6.10 Identifiant de BOXHY et partage du bus CAN
+### 6.10 Identifiant de BOXHY et plan d'identifiants CAN
 
 En configuration triphasée, les trois BOXHY partagent le même bus CAN (Q19). Le firmware 2.0.0 n'a pas
 d'identifiant de BOXHY : tous les identifiants sont des constantes fixes de [BOXHY-DBC]. Sur un bus commun,
 deux conséquences :
 
 - les trois BOXHY émettraient les mêmes trames, que ce soit côté SMB, FCCB ou IHM ;
-- chaque équipement obéirait aux commandes des autres BOXHY, par exemple l'ordre de marche de la pile
-  `FCCB_RX_ON_OFF`.
+- chaque équipement obéirait aux commandes des autres BOXHY, par exemple l'ordre de marche de la pile.
+
+**Décision Q25 : le plan d'identifiants de type J1939 du firmware 2.2.1 triphasé [V221] est retenu**, pour toutes
+les BOXHY, seules ou triphasées. Le champ sur les bits 14 et 15 proposé en v0.6 est abandonné.
+
+Identifiant 29 bits = priorité (3 bits) | PGN propriétaire 0xFFxx | adresse source (8 bits). L'identifiant de
+BOXHY est porté par l'adresse source :
+
+| Équipement | Adresse source | Remarque |
+|---|---|---|
+| FCCB de la BOXHY n | `0x00 + n` | n est un paramètre propre de la FCCB, dans son EEPROM (ID-4) |
+| SMB de la BOXHY n | `0x10 + n` | |
+| Commandes de la SMB vers la FCCB n (PGN 0xFF02, 0xFF12, 0xFF22) | `0x00 + n` | Convention de la 2.2.1 conservée : l'adresse est celle de la FCCB destinataire |
+| IHM et outil de maintenance vers la SMB n | 0x10 dans la 2.2.1, `0x10 + n` proposé | Q29. Les PGN des commandes IHM (0xFFx7) diffèrent de ceux de la SMB (0xFFx6) : pas de collision. |
+| PowerModule | protocole PowerTech | Identifiants 0x02xxxxxx inchangés |
+
+`BOXHY_ID` prend les valeurs 0, 1 ou 2, comme dans la 2.2.1. Une BOXHY seule vaut 0. La table complète des
+trames est au § 5.2 de [V221].
 
 Les trames se répartissent en trois familles :
 
 | Famille | Exemples | Règle |
 |---|---|---|
-| Interne à une BOXHY | SMB, FCCB, IHM : télémétrie, commandes, maintenance | Porte l'identifiant de sa BOXHY. Chaque équipement ignore les trames qui portent un autre identifiant. |
-| Entre BOXHY | Autorisations du maître (TRI-2), état des esclaves (TRI-8) | Nouvelles trames, qui portent l'identifiant de la BOXHY émettrice. Chaque esclave ne retient que l'autorisation qui le concerne. |
-| PowerModule | Global Status, Status, commandes | Inchangées, car le protocole est fixé par PowerTech. Le bus ne porte qu'un système batterie : seul le maître le commande, les esclaves peuvent lire ses trames. |
+| Interne à une BOXHY | SMB, FCCB, IHM : télémétrie, commandes, maintenance | Porte l'adresse source de son équipement. Chaque équipement ignore les trames d'une autre BOXHY. |
+| Entre BOXHY | `SMB_TX_TRI_STATUS`, `SMB_TX_TRI_AUTH` (§ 6.9.2) | Portent l'adresse source de la SMB émettrice. Chaque esclave ne retient que la partie de l'autorisation qui le concerne. |
+| PowerModule | Global Status, Status, commandes | Inchangées, car le protocole est fixé par PowerTech. Le bus ne porte qu'un système batterie (§ 6.9.1) : seul le maître le commande, les autres SMB peuvent lire ses trames. |
 
-**Champ proposé : bits 14 et 15 de l'identifiant 29 bits**, de valeur `BOXHY_ID` ∈ {1, 2, 3}, la valeur 0
-étant interdite. L'identifiant émis vaut l'identifiant de base de [BOXHY-DBC] plus `BOXHY_ID` × 0x4000.
+Conséquences vérifiées :
 
-| Trame | Base ([BOXHY-DBC]) | `BOXHY_ID` = 1 | `BOXHY_ID` = 2 | `BOXHY_ID` = 3 |
-|---|---|---|---|---|
-| `SMB_TX_GENERAL` | 0x02C00000 | 0x02C04000 | 0x02C08000 | 0x02C0C000 |
-| `SMB_TX_TEMPERATURE` | 0x02C00002 | 0x02C04002 | 0x02C08002 | 0x02C0C002 |
-| `SMB_RX_RESET_ORDER` | 0x02C01009 | 0x02C05009 | 0x02C09009 | 0x02C0D009 |
-| `FCCB_RX_ON_OFF` | 0x02FC1001 | 0x02FC5001 | 0x02FC9001 | 0x02FCD001 |
-| `SMB_FAN_CONTROL` | 0x0CFF0027 | 0x0CFF4027 | 0x0CFF8027 | 0x0CFFC027 |
-
-Raisons de ce choix :
-
-- les bits 14 et 15 valent 0 dans toutes les trames actuelles de la SMB, de la FCCB et de l'IHM ;
-- avec les valeurs 1 à 3, aucun identifiant ne correspond à une trame PowerModule. C'est vérifié par comparaison
-  avec [PM-DBC] pour 1 à 31 modules sans SuperMaster, et pour 16 stacks de 8 modules avec SuperMaster ;
-- la valeur 0 étant interdite, **la collision du § 5.1 disparaît sans renommer de trame** (Q16) ;
-- le filtre de réception CAN configuré par MCC ne compare que les bits 24 et 26 de l'identifiant (`C1RXM0`,
-  `C1RXF0`). Il laisse donc passer les trois valeurs ;
-- l'identifiant se lit directement dans le quatrième chiffre hexadécimal.
-
-**Mise à jour v0.7 : schéma existant.** Le firmware 2.2.1 triphasé [V221] utilise déjà un autre plan, de type J1939.
-L'identifiant de BOXHY y est porté par l'adresse source : `0x10 + ID` pour la SMB, `0x00 + ID` pour la FCCB, IBS en
-`0xD0` à `0xDF`. Les FCCB et IHM des BOXHY triphasées le comprennent donc déjà, et il est lui aussi sans collision
-avec les PowerModule. Le choix entre ce plan et le champ ci-dessus est l'objet de Q25.
+- **Plus de collision avec les PowerModule.** Toutes les trames de la SMB, de la FCCB et de l'IHM quittent
+  l'espace 0x02xxxxxx, en priorité 3 (0x0C…) ou 6 (0x18…). La collision du § 5.1 disparaît (Q16). Vérifié
+  par comparaison avec [PM-DBC] pour 1 à 31 modules, et pour 16 stacks de 8 modules avec SuperMaster.
+- **Filtre de réception.** Le filtre MCC, identique dans la 2.0.0 et la 2.2.1, n'accepte que les identifiants
+  dont les bits 24 et 26 valent 0. Il laisse passer la priorité 6 (0x18…) et les PowerModule, mais rejette
+  la priorité 3 (0x0C…). Aujourd'hui, seule `SMB_TX_GENERAL` (0x0CFF0610 + ID) est en priorité 3, et la SMB ne
+  fait que l'émettre.
 
 | Id | Exigence | Statut |
 |---|---|---|
-| ID-1 | `BOXHY_ID` (1, 2 ou 3) est un paramètre de configuration (PM-CFG-4). En triphasé, le maître vaut 1 et les esclaves 2 et 3. Une BOXHY seule vaut 1. Ce paramètre remplace le numéro d'esclave `SMB_SLAVE_ID`. | Proposée |
-| ID-2 | La SMB émet toutes ses trames avec le champ `BOXHY_ID`, sauf les commandes PowerModule, qui suivent le protocole PowerTech. | Décidée (principe), Proposée (champ) |
-| ID-3 | La SMB ignore toute trame interne reçue avec un autre `BOXHY_ID`, par exemple les ordres d'une autre IHM ou les données d'une autre FCCB. | Décidée (principe), Proposée (champ) |
-| ID-4 | La FCCB et l'IHM appliquent les mêmes règles, avec le même `BOXHY_ID` que la SMB de leur BOXHY. Il faut faire évoluer leurs logiciels (Q24). | À valider |
-| ID-5 | [BOXHY-DBC] conserve les identifiants de base, champ à 0. `tools/candb_gen.py` génère les `.DBF` BUSMASTER pour chaque `BOXHY_ID`. Le test PM-COM-1 vérifie l'absence de collision pour les trois valeurs, entre BOXHY et avec [PM-DBC]. | Proposée |
-| ID-6 | La couche CAN générique applique le champ à l'exécution, sans dupliquer les tables en flash. À l'émission, l'identifiant de base reçoit `BOXHY_ID` << 14. À la réception, le champ est extrait et comparé, puis la trame est recherchée sur son identifiant de base. | Proposée |
+| ID-1 | `BOXHY_ID` (0, 1 ou 2) est un paramètre de configuration de la SMB, stocké en flash [MEM]. Une BOXHY seule vaut 0. Les valeurs sont uniques sur un bus couplé. | Décidée |
+| ID-2 | La SMB émet ses trames selon le plan J1939 de [V221], adresse source `0x10 + BOXHY_ID`, et les commandes FCCB en adresse source `0x00 + BOXHY_ID`. Les commandes PowerModule suivent le protocole PowerTech. | Décidée |
+| ID-3 | La SMB ignore toute trame interne d'une autre BOXHY : elle compare le PGN et l'adresse source attendue (`0x00 + BOXHY_ID` pour la FCCB, adresse de l'IHM selon Q29). La priorité n'est pas comparée, comme dans la 2.2.1. | Décidée |
+| ID-4 | La FCCB tient son `BOXHY_ID` comme un paramètre propre, dans son EEPROM. Elle ne le reçoit pas de la SMB : sur un bus couplé, la SMB ne peut pas savoir quelle FCCB est dans sa BOXHY. L'IHM suit la même règle (Q29). | Décidée (FCCB), À valider (IHM) |
+| ID-5 | [BOXHY-DBC] est réécrit selon le plan J1939, avec l'adresse source de `BOXHY_ID` = 0. `tools/candb_gen.py` génère les `.DBF` BUSMASTER pour chaque `BOXHY_ID`. Le test PM-COM-1 vérifie l'absence de collision pour les trois valeurs, entre BOXHY et avec [PM-DBC]. | Proposée |
+| ID-6 | La couche CAN générique applique l'identifiant à l'exécution, sans dupliquer les tables en flash. À l'émission, l'adresse source de base reçoit `+ BOXHY_ID`. À la réception, la trame est recherchée sur son PGN, puis l'adresse source est contrôlée. | Proposée |
 | ID-7 | La charge du bus commun est évaluée pour trois BOXHY et la batterie à 500 kbit/s. Les périodes d'émission sont ajoutées à [BOXHY-DBC], où elles manquent aujourd'hui (attribut `GenMsgCycleTime`). Proposition : charge inférieure à 40 %. | Proposée |
 | ID-8 | Le bus commun est une ligne unique, terminée par 120 Ω à ses deux extrémités seulement. Les terminaisons des BOXHY intermédiaires sont désactivées. | Proposée |
+| ID-9 | Toute trame que la SMB doit recevoir est émise en priorité 6 (0x18…). Sinon, le filtre de réception est revu. Le test PM-COM-1 vérifie chaque trame reçue de [BOXHY-DBC] contre le masque et le filtre MCC. | Proposée |
+| ID-10 | Mise en service : la SMB et la FCCB d'une BOXHY reçoivent le même `BOXHY_ID`, bus CAN de la BOXHY isolé. La SMB signale alors en maintenance les adresses FCCB qu'elle entend. Une seule doit apparaître, `0x00 + BOXHY_ID`. Une fois le bus couplé, une inversion d'identifiants entre deux FCCB n'est plus détectable par la SMB. | Proposée |
 
 ## 7. Impacts sur le firmware SMB
 
 | Élément | Impact |
 |---|---|
-| `can database/BOXHY.dbc` | Ajout des trames PowerModule lues ou émises par la SMB, pour 2 modules, sur le modèle de [PM-DBC]. Changement d'identifiant des deux trames en collision (§ 5.1). Retrait des trames IBS. Redéfinition de la télémétrie batterie. Nouvelle trame de maintenance du relais de maintien. |
-| `tools/candb_gen.py` | `.DBF` BUSMASTER générés pour chaque `BOXHY_ID` (ID-5). Répartition des messages `PM_` dans un `.DBF` BUSMASTER dédié. Suppression de `IBS.DBF`. Contrôle de non-collision avec [PM-DBC] (PM-COM-1). |
+| `can database/BOXHY.dbc` | Réécriture selon le plan J1939 de [V221], avec `BOXHY_ID` = 0 (ID-5). Ajout des trames PowerModule lues ou émises par la SMB, pour 2 modules, sur le modèle de [PM-DBC]. Ajout de `SMB_TX_TRI_STATUS` et `SMB_TX_TRI_AUTH` (§ 6.9.2), des trames de paramètres et de journal [MEM]. Retrait des trames IBS. Redéfinition de la télémétrie batterie. Nouvelle trame de maintenance du relais de maintien. |
+| `tools/candb_gen.py` | `.DBF` BUSMASTER générés pour chaque `BOXHY_ID` (ID-5). Répartition des messages `PM_` dans un `.DBF` BUSMASTER dédié. Suppression de `IBS.DBF`. Contrôles de non-collision avec [PM-DBC] et de passage du filtre de réception (PM-COM-1, ID-9). |
 | `src/devices/battery.c/.h` | Remplacement des tables IBS par des tables PowerModule. Suppression du keep-alive. Nouveau watchdog et contrôle de présence des N modules. Nouvelles données : IMR, IMD, fin de charge, contacteur. |
 | `src/control/ems.c` | Consigne de courant pile fondée sur l'IMR (PM-CHG-1), prise en compte de la fin de charge. |
 | `src/system/smb_state_machine.c` | Erreurs critiques (PM-SAF-1). Fin de charge (PM-CHG-2). Maintien des batteries et arrêt sur clé (PM-PWR-2 à 4). Correction du bug 7. |
 | `hal/board_io.h` et son double de test | `Board_SetBatteryHoldRelay` / `Board_GetBatteryHoldRelay` (broche 46) et `Board_GetKeySwitch` (broche 47), au repos au reset (PM-PWR-5). Ajout à `Board_RelaysSafeState` à décider avec Q15. |
-| MCC (`test_dspic2.mc3`, `mcc_generated_files/pin_manager`) | RB7 : `BATTERY_HOLD_RELAY`, sortie numérique, niveau bas, `ANSELB` bit 7 à 0. RC13 : `KEY_SWITCH`, entrée numérique, pull-down (`CNPDC` bit 13). Régénération MCC, ou modification équivalente de `pin_manager.c/.h`. |
-| Nouveau module de configuration (`src/system/config.c/.h`) | Lecture et contrôle de `SMB_ROLE`, `BOXHY_ID` et `PM_MODULE_COUNT` au démarrage (PM-CFG-4, PM-CFG-5). Toutes les décisions dépendantes de la configuration passent par lui. |
-| Nouveau module de liaison triphasée | Autorisations du maître, état des esclaves, watchdog T_TRI, répartition de la puissance (TRI-2 à TRI-8), sur le bus CAN commun. |
-| `src/can/can_signal.c/.h`, `can_tx.c`, `can_rx.c` | Champ `BOXHY_ID` appliqué à l'émission, extrait et contrôlé à la réception (ID-2, ID-3, ID-6). |
-| Logiciels FCCB et IHM | Prise en compte du `BOXHY_ID` (ID-4, Q24). |
-| `src/smb_config.h` | T_COM, T_MAINTIEN_MAX, T_TRI, seuils de SOC. Suppression des seuils SOP si Q6 le confirme. |
+| MCC (`test_dspic2.mc3`, `mcc_generated_files/`) | Passage au dsPIC33EV128GM106 (Q26) : régénération MCC, horloge à fixer (la 2.2.1 tourne à 15 MIPS), configuration de build et script de build à mettre à jour. RB7 : `BATTERY_HOLD_RELAY`, sortie numérique, niveau bas, `ANSELB` bit 7 à 0. RC13 : `KEY_SWITCH`, entrée numérique, pull-down (`CNPDC` bit 13). Gestionnaire de trappes adapté aux erreurs ECC de la zone persistante [MEM] (MEM-RT-4). |
+| Nouveau module de configuration (`src/system/config.c/.h`) | Lecture des paramètres en flash [MEM] et contrôle de `SMB_ROLE`, `BOXHY_ID` et `PM_MODULE_COUNT` au démarrage (PM-CFG-4, PM-CFG-5). Toutes les décisions dépendantes de la configuration passent par lui. |
+| Nouveau module de liaison triphasée | Élection du maître, mandat, abdication, conflit, détection d'identifiant en double (TRI-2 à TRI-7). Autorisations du maître, état des SMB, watchdogs T_PERTE et T_TRI, répartition de la puissance, maintien batterie (TRI-8 à TRI-16). |
+| `src/can/can_signal.c/.h`, `can_tx.c`, `can_rx.c` | Adresse source `+ BOXHY_ID` à l'émission. Recherche sur le PGN et contrôle de l'adresse source à la réception (ID-2, ID-3, ID-6). |
+| Logiciels FCCB et IHM | Plan J1939 de la 2.2.1 pour toutes les BOXHY, y compris seules (Q28). `BOXHY_ID` en paramètre propre de la FCCB (ID-4). Adresse de l'IHM (Q29). |
+| `src/smb_config.h` | T_COM, T_MAINTIEN_MAX, T_ECOUTE, T_PERTE, T_TRI, T_ATTENTE, seuils de SOC. Suppression des seuils SOP si Q6 le confirme. |
 | `src/can/can_tx.c`, `src/hmi/maintenance.c` | Télémétrie batterie (PM-TLM-1), état du relais et de la clé (PM-PWR-6), commande de maintenance du relais. |
+| Nouveaux modules `src/system/nvm.c/.h` et `src/system/faults.c/.h` | Accès à la flash persistante, paramètres, journal des défauts, catalogue des codes [MEM]. |
 | `tests/` | Suites `test_battery`, `test_ems`, `test_can_tx`, `test_maintenance` et `test_smb_state_machine` à adapter. Nouveaux tests : maintien et clé, présence des N modules, non-collision des identifiants (PM-COM-1). |
-| Mémoire | Flash utilisée à 81 %, soit 5 976 octets libres. Le retrait de la gestion IBS (Q3) libère de la place pour la gestion PowerModule. **Point de vigilance** : la gestion PowerModule, les rôles maître et esclave et le stockage des paramètres doivent tenir dans ce budget. Le dsPIC33EV32GM106 n'a pas d'EEPROM de données : une page de flash réservée aux paramètres coûterait 1 536 octets (une page effaçable de 512 instructions), plus le code d'écriture (Q21). |
+| Mémoire | Avec le dsPIC33EV128GM106, la zone de code compte environ 117 Ko une fois la zone persistante réservée (8 pages, 12 Ko, [MEM] § 4). Pour comparaison, la 2.0.0 occupe environ 27 Ko et la 2.2.1 environ 35 Ko. La contrainte de place du 32GM106 disparaît. |
 
 ## 8. Vérification
 
@@ -414,7 +493,9 @@ avec les PowerModule. Le choix entre ce plan et le champ ci-dessus est l'objet d
    - Consigne pile bornée par l'IMR. Transitions sur erreur et sur fin de charge.
    - Commande du relais de maintien dans chaque état. Arrêt sur clé et temporisation T_MAINTIEN_MAX.
    - Non-collision des identifiants, pour chaque `BOXHY_ID` et avec [PM-DBC].
-   - Champ `BOXHY_ID` appliqué à l'émission. Trames d'une autre BOXHY ignorées à la réception.
+   - Adresse source `+ BOXHY_ID` appliquée à l'émission. Trames d'une autre BOXHY ignorées à la réception.
+   - Passage du filtre de réception pour chaque trame reçue (ID-9).
+   - Élection simulée sur PC avec trois instances : démarrages simultanés et décalés, perte et retour du maître, abdication, deux maîtres, identifiant en double, aucune candidate.
 2. **Banc CAN.** BUSMASTER, ou un équivalent, chargé avec [BOXHY-DBC] mis à jour. Simulation des trames
    PowerModule, à 500 kbit/s, et contrôle des réactions de la SMB.
 3. **Essais sur batterie réelle, avec 1 module puis 2.**
@@ -424,7 +505,10 @@ avec les PowerModule. Le choix entre ce plan et le champ ci-dessus est l'objet d
    - Coupure d'un module, perte du bus CAN, fonctionnement à froid si applicable.
 4. **Essais sur une BOXHY sans batterie (N = 0).** Mise sous tension, démarrage et arrêt selon le parcours défini en Q18, absence d'erreur batterie.
 5. **Essais triphasés, avec trois BOXHY.**
-   - Démarrage du maître, puis des esclaves sur autorisation.
+   - Élection : une seule BOXHY équipée, puis deux. Démarrages simultanés et décalés. Le maître élu est le même vu de chaque BOXHY.
+   - Coupure de la BOXHY maître en fonctionnement : nouvelle élection avant T_TRI, sans arrêt des esclaves, si une autre candidate existe.
+   - Coupure puis rétablissement du bus CAN entre BOXHY : un seul maître subsiste.
+   - Démarrage des esclaves sur autorisation.
    - Respect de la puissance autorisée par chaque esclave.
    - Retrait des autorisations sur erreur batterie et sur SOC très bas.
    - Perte de la liaison : arrêt des esclaves après T_TRI.
@@ -451,17 +535,21 @@ avec les PowerModule. Le choix entre ce plan et le champ ci-dessus est l'objet d
 | Q13 | Quelles incohérences de [PM] faut-il faire confirmer par PowerTech ? | Les envoyer en une seule demande : unités de l'IMR et de l'IMD, identifiant cell balancing, DLC de maintenance, contenu de la commande 0x20F et procédure de passage à 500 kbit/s, liste des commandes globales (0x02C00xxx) utilisées ou réservées., recalcul de l'IMR et de l'IMD par le Master quand un module s'ouvre | |
 | Q14 | Quelle sortie de la SMB commande le relais de maintien ? La SMB dispose-t-elle d'une entrée pour lire la position de la clé ? | Entrée clé : nécessaire pour PM-PWR-3. | **Relais : broche 46 (RB7). Clé : broche 47 (RC13).** |
 | Q15 | Dans quels états la SMB maintient-elle les batteries ? Que faire en mode défaut (`SMB_EMERGENCY`) ? | Maintien de `SMB_DCAC_START_1` à `SMB_STOPPING` et en `SMB_MAINTENANCE`. En défaut : maintien limité à T_MAINTIEN_MAX pour signaler l'erreur et laisser la pile s'arrêter. | |
-| Q16 | Quels nouveaux identifiants pour `SMB_TX_TEMPERATURE` et `SMB_TX_CURRENTS` (§ 5.1) ? | 0x02C00005 et 0x02C00006, sous réserve de la réponse de PowerTech à Q13. **v0.6 :** l'identifiant de BOXHY du § 6.10 (valeurs 1 à 3, bits 14 et 15) résout la collision sans renommer de trame. | |
+| Q16 | Quels nouveaux identifiants pour `SMB_TX_TEMPERATURE` et `SMB_TX_CURRENTS` (§ 5.1) ? | 0x02C00005 et 0x02C00006, sous réserve de la réponse de PowerTech à Q13. **v0.6 :** l'identifiant de BOXHY du § 6.10 (valeurs 1 à 3, bits 14 et 15) résout la collision sans renommer de trame. | **Résolu par le plan J1939 (Q25) : aucune trame SMB n'est renommée dans l'espace PowerModule.** |
 | Q17 | Le nombre de modules est-il fixé à la compilation, ou réglable sur le terrain, par commande CAN de maintenance enregistrée en EEPROM ? | À la compilation dans `smb_config.h` : plus simple, sans EEPROM. | **Un seul logiciel pour toutes les configurations (BOXHY seule, triphasée maître ou esclave), réglé uniquement par paramètres.** Les paramètres sont donc lus au démarrage, sur un support défini en Q21. |
 | Q18 | Comment fonctionne une BOXHY sans batterie ? (a) Quelle source alimente la SMB, la FCCB et le démarrage de la pile (24 V, précharges) ? (b) Quel parcours de la machine d'états : démarrage de la pile puis de l'onduleur, sans `SMB_BATTERY_MODE` ? (c) La pile suit-elle seule les appels de charge de l'onduleur, et quelle consigne de courant lui envoyer ? (d) Quel rôle pour la clé et le relais de maintien ? (e) Quelle surveillance remplace celle du SOC (tension du bus, par exemple) ? | À définir avec l'architecture électrique de la version sans batterie. | |
 | Q19 | Par quelle liaison le maître et les esclaves communiquent-ils ? | Un bus CAN commun aux trois BOXHY est exclu tel quel : SMB, FCCB et IHM de chaque BOXHY émettent les mêmes identifiants. Il faudrait que tous les équipements, FCCB comprise, prennent des identifiants qui dépendent du numéro de BOXHY. Piste proposée : liaison série dédiée entre SMB, sur l'UART2 du dsPIC (l'UART1 sert à l'onduleur), routée sur des broches remappables libres, avec un émetteur-récepteur RS-485 à ajouter sur la carte. Alternative minimale : autorisation de marche en TOR, et puissance autorisée en PWM ou en analogique. | **Bus CAN commun aux BOXHY. Chaque BOXHY reçoit un identifiant, intégré à ses identifiants de trame (§ 6.10).** |
 | Q20 | Comment le maître répartit-il la puissance entre lui et les esclaves ? Les piles des esclaves peuvent-elles charger la batterie du maître, et dans quelle limite (IMR) ? Les esclaves ont-ils besoin du SOC, par exemple pour leur mode hybride ? | Répartition égale de l'IMD disponible entre les BOXHY en marche, moins une marge. Charge par les piles des esclaves bornée par une part de l'IMR, transmise dans l'autorisation. | |
-| Q21 | Où sont stockés les paramètres de configuration (`SMB_ROLE`, `BOXHY_ID`, `PM_MODULE_COUNT`) ? | Trois options. (a) Straps ou cavaliers sur des broches libres : simple, sans code d'écriture, mais il faut un câblage ou une modification de carte. (b) Page de flash réservée, écrite par une commande CAN de maintenance : sans matériel, mais 1 536 octets de flash en moins. (c) Envoi par l'IHM à chaque démarrage : pas de stockage dans la SMB, mais la SMB dépend de l'IHM pour démarrer. Proposition : (a) si la carte le permet. | |
+| Q21 | Où sont stockés les paramètres de configuration (`SMB_ROLE`, `BOXHY_ID`, `PM_MODULE_COUNT`) ? | Trois options. (a) Straps ou cavaliers sur des broches libres : simple, sans code d'écriture, mais il faut un câblage ou une modification de carte. (b) Page de flash réservée, écrite par une commande CAN de maintenance : sans matériel, mais 1 536 octets de flash en moins. (c) Envoi par l'IHM à chaque démarrage : pas de stockage dans la SMB, mais la SMB dépend de l'IHM pour démarrer. Proposition : (a) si la carte le permet. | **Page de flash réservée, sur le dsPIC33EV128GM106 : zone persistante de 8 pages, préservée à la reprogrammation, qui contient aussi le journal des défauts [MEM].** |
 | Q22 | Comment l'esclave fait-il respecter la puissance autorisée, alors que la SMB n'envoie aucune consigne à l'onduleur ? | Surveillance de la puissance de sortie (QPIGS), avertissement sonore, puis déconnexion temporisée de l'onduleur au-delà de l'autorisation. À vérifier : l'onduleur accepte-t-il une commande de limitation de puissance ? | |
-| Q23 | Comment s'enchaînent le démarrage et l'arrêt triphasés ? La clé du maître arrête-t-elle tout le système ? Les esclaves ont-ils leur propre clé, et quel rôle ont leur relais de maintien (broche 46), puisqu'ils ne pilotent pas de contact sec de batterie ? | La clé du maître arrête tout : le maître retire les autorisations, attend la fin de l'arrêt des esclaves, puis ouvre son relais de maintien. La clé d'un esclave n'arrête que cet esclave. | |
-| Q24 | Qui fait évoluer les logiciels de la FCCB et de l'IHM pour qu'ils prennent en compte le `BOXHY_ID` (ID-4) ? Comment ces équipements reçoivent-ils leur identifiant : paramètre propre, ou valeur transmise par la SMB ? | Même support de configuration que la SMB (Q21) pour chaque équipement. Sinon, la SMB annonce son `BOXHY_ID` au démarrage. | |
-| Q25 | Quel plan d'identifiants CAN pour l'identifiant de BOXHY : le champ sur les bits 14 et 15 (§ 6.10), ou le plan J1939 de la 2.2.1 triphasée [V221], déjà compris par les FCCB et IHM triphasées ? | Plan J1939 de la 2.2.1 si les FCCB et IHM triphasées doivent rester compatibles ; il faudra alors l'étendre à la BOXHY seule et décrire ces trames dans [BOXHY-DBC]. | |
-| Q26 | Quel microcontrôleur équipe chaque carte SMB en service ? La 2.2.1 triphasée vise le dsPIC33EV128GM106, avec une horloge à 15 MIPS, et ne tient pas dans le 32GM106 [V221]. Le firmware unique doit-il cibler les deux composants ? | Recenser les cartes. Si les deux composants coexistent, garder un seul code source et deux configurations de build, la HAL absorbant les écarts d'horloge. | |
+| Q23 | Comment s'enchaînent le démarrage et l'arrêt triphasés ? La clé du maître arrête-t-elle tout le système ? Les esclaves ont-ils leur propre clé, et quel rôle ont leur relais de maintien (broche 46), puisqu'ils ne pilotent pas de contact sec de batterie ? | La clé du maître arrête tout, sauf si une autre candidate peut reprendre le mandat (abdication, § 6.9.3). Sinon, le maître retire les autorisations, attend la fin de l'arrêt des esclaves, puis ouvre son relais de maintien. La clé d'un esclave n'arrête que cet esclave. | |
+| Q24 | Qui fait évoluer les logiciels de la FCCB et de l'IHM pour qu'ils prennent en compte le `BOXHY_ID` (ID-4) ? Comment ces équipements reçoivent-ils leur identifiant : paramètre propre, ou valeur transmise par la SMB ? | Même support de configuration que la SMB (Q21) pour chaque équipement. Sinon, la SMB annonce son `BOXHY_ID` au démarrage. | **En partie : la FCCB tient son `BOXHY_ID` comme paramètre propre (EEPROM). La SMB ne peut pas le fournir, car sur un bus couplé elle ne sait pas quelle FCCB est dans sa BOXHY.** Reste : qui fait évoluer les logiciels, et le cas de l'IHM (Q29). |
+| Q25 | Quel plan d'identifiants CAN pour l'identifiant de BOXHY : le champ sur les bits 14 et 15 (§ 6.10), ou le plan J1939 de la 2.2.1 triphasée [V221], déjà compris par les FCCB et IHM triphasées ? | Plan J1939 de la 2.2.1 si les FCCB et IHM triphasées doivent rester compatibles ; il faudra alors l'étendre à la BOXHY seule et décrire ces trames dans [BOXHY-DBC]. | **Plan J1939 de la 2.2.1 retenu, pour toutes les BOXHY (§ 6.10).** |
+| Q26 | Quel microcontrôleur équipe chaque carte SMB en service ? La 2.2.1 triphasée vise le dsPIC33EV128GM106, avec une horloge à 15 MIPS, et ne tient pas dans le 32GM106 [V221]. Le firmware unique doit-il cibler les deux composants ? | Recenser les cartes. Si les deux composants coexistent, garder un seul code source et deux configurations de build, la HAL absorbant les écarts d'horloge. | **dsPIC33EV128GM106 comme référence.** |
+| Q27 | Plusieurs BOXHY d'un même ensemble triphasé peuvent-elles avoir des PowerModule ? Si oui, leurs modules forment-ils un seul système PowerModule (un module Master, les autres en slave, numérotation unique) ? Sans SuperMaster, deux systèmes indépendants ne peuvent pas partager le bus CAN (§ 6.9.1). PowerTech doit aussi confirmer le comportement du système quand les modules d'une BOXHY sont coupés par sa clé, en particulier le module Master. | Un seul système PowerModule par bus couplé. Le maître élu contrôle la présence de la somme des N annoncés par les candidates. Le module Master est placé dans la BOXHY qui est en pratique toujours en service. | |
+| Q28 | Les BOXHY seules en service ont des FCCB et des IHM qui utilisent l'ancien plan d'identifiants (0x02FCxxxx, 0x02C01Dxx). Faut-il les mettre à jour, ou la SMB doit-elle aussi accepter l'ancien plan ? | Un seul plan : mise à jour des FCCB et IHM des BOXHY seules vers les logiciels triphasés, avec `BOXHY_ID` = 0. Deux plans dans la SMB doubleraient les tables CAN et les tests. | |
+| Q29 | Quelle adresse source pour l'IHM de chaque BOXHY ? La 2.2.1 utilise 0x10 fixe, et seule la BOXHY d'identifiant 0 accepte ses commandes ([V221], anomalie A5). Y a-t-il une IHM par BOXHY, ou une IHM commune à l'ensemble triphasé ? | Une IHM par BOXHY, en adresse source `0x10 + BOXHY_ID`, avec son `BOXHY_ID` comme paramètre propre. C'est compatible avec la 2.2.1 pour l'identifiant 0. | |
+| Q30 | Que fait un esclave quand aucun maître n'est élu (aucune BOXHY avec batterie, ou toutes en défaut) : arrêt, ou fonctionnement sans batterie selon Q18 ? | Arrêt, et alarme « pas de maître » (TRI-13), tant que Q18 n'est pas défini. | |
 
 ## 10. Historique
 
@@ -474,3 +562,4 @@ avec les PowerModule. Le choix entre ce plan et le champ ci-dessus est l'objet d
 | 0.5 | 2026-11-04 | Configuration triphasée (§ 6.9) : BOXHY maître qui pilote la batterie partagée, esclaves autorisés par le maître (marche et puissance), exigences TRI. Décision Q17 : un seul logiciel configuré par paramètres (`SMB_ROLE`, `SMB_SLAVE_ID`, `PM_MODULE_COUNT`), exigences PM-CFG-4 à 6. Nouvelles questions Q19 à Q23. Correction : la mention « 0 module » était ajoutée à la mauvaise ligne du § 4.2. |
 | 0.6 | 2026-11-04 | Décision Q19 : bus CAN commun aux BOXHY, avec un identifiant de BOXHY dans les trames. Nouvelle section 6.10 : champ `BOXHY_ID` proposé sur les bits 14 et 15, valeurs 1 à 3, sans collision avec les PowerModule ; il résout aussi Q16. Exigences ID-1 à ID-8. `SMB_SLAVE_ID` remplacé par `BOXHY_ID`. Nouvelle question Q24. |
 | 0.7 | 2026-11-04 | Référence [V221] : analyse du firmware 2.2.1 triphasé. Note sur son plan d'identifiants J1939 au § 6.10. Nouvelles questions Q25 (plan d'identifiants) et Q26 (microcontrôleur). |
+| 0.8 | 2026-11-04 | Décision Q25 : plan d'identifiants J1939 de la 2.2.1 pour toutes les BOXHY, `BOXHY_ID` de 0 à 2 dans l'adresse source. § 6.10 réécrit, champ des bits 14 et 15 abandonné, Q16 résolue. Décision Q26 : dsPIC33EV128GM106 de référence. Décision Q21 : paramètres en flash, spécifiés avec le journal des défauts dans le nouveau document [MEM]. Q24 en partie décidée : `BOXHY_ID` en paramètre propre de la FCCB. Triphasé (§ 6.9) : maître élu au démarrage parmi les BOXHY qui ont une batterie, `SMB_ROLE` réduit à `SEULE` ou `TRIPHASE`, trames de coordination, exigences TRI-1 à TRI-17. PM-CFG-5 réécrite. Nouvelles questions Q27 à Q30. |

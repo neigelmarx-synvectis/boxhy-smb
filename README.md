@@ -63,7 +63,8 @@ et de l'IHM (boutons, LEDs, buzzer).
 │   ├── bugs.md                   Bugs ouverts et corrigés (avec correctif et version de correction)
 │   ├── analyse_smb_v2_2_1_triphase.md   Analyse du firmware 2.2.1 triphasé (écarts, anomalies)
 │   └── spec/
-│       └── integration_batteries_powertech.md   Spécification d'intégration des PowerModule (brouillon)
+│       ├── integration_batteries_powertech.md   Spécification d'intégration des PowerModule (brouillon)
+│       └── memoire_persistante.md   Zone flash persistante : paramètres et journal des défauts (brouillon)
 ├── can database/
 │   ├── BOXHY.dbc                   BASE CAN DE RÉFÉRENCE : 60 messages, 311 signaux
 │   ├── BOXHY_SMB.DBF, BOXHY_FCCB.DBF, IBS.DBF   GÉNÉRÉS pour BUSMASTER
