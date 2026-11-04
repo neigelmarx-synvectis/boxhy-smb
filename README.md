@@ -62,9 +62,11 @@ et de l'IHM (boutons, LEDs, buzzer).
 ├── can database/
 │   ├── BOXHY.dbc                   BASE CAN DE RÉFÉRENCE : 60 messages, 311 signaux
 │   ├── BOXHY_SMB.DBF, BOXHY_FCCB.DBF, IBS.DBF   GÉNÉRÉS pour BUSMASTER
-│   └── BOXHY_CONFIG_1.1.0.cfx      Configuration BUSMASTER (charge les trois .DBF)
+│   ├── BOXHY_CONFIG_1.1.0.cfx      Configuration BUSMASTER (charge les trois .DBF)
+│   └── POWERMODULE.dbc             GÉNÉRÉ : batteries PowerTech PowerModule (manuel V0.2)
 ├── tools/
-│   └── candb_gen.py              Générateur : .dbc -> src/can/can_db.h + .DBF (option --check)
+│   ├── candb_gen.py              Générateur : .dbc -> src/can/can_db.h + .DBF (option --check)
+│   └── powermodule_dbc.py        Générateur du .dbc PowerModule selon la topologie (option --check)
 ├── nbproject/, Makefile          Projet MPLAB X
 ├── cmake/, .vscode/              Projet pour l'extension MPLAB de VS Code
 ├── test_dspic2.mc3               Projet MCC
@@ -147,6 +149,44 @@ Pour modifier une trame :
 4. `make -C tests` vérifie que les fichiers générés sont à jour, puis lance les tests.
 
 Les `.DBF` sont répartis par préfixe de nom de message : `SMB_`, `FCCB_` et `IBS_`.
+
+### Batteries PowerModule
+
+`can database/POWERMODULE.dbc` décrit le protocole CAN des batteries PowerTech PowerModule, d'après le
+chapitre 10 du manuel « PowerModule – Installation et manuel utilisateur » V0.2 du 29/04/26. Il est
+indépendant de `BOXHY.dbc` et n'est pas utilisé par le firmware.
+
+Les identifiants PowerModule ne sont pas fixes. Ils encodent l'émetteur (master, slave ou SuperMaster),
+le numéro de module (1 à 31) et le numéro de stack (1 à 31). Le fichier est donc généré pour une
+topologie donnée par `tools/powermodule_dbc.py`. Par défaut, il s'agit d'un master et d'un slave en
+parallèle, sans SuperMaster : 30 messages et 221 signaux.
+
+```sh
+python3 tools/powermodule_dbc.py                                   # master + 1 slave (défaut)
+python3 tools/powermodule_dbc.py --modules 6                       # master + 5 slaves en parallèle
+python3 tools/powermodule_dbc.py --supermaster --stacks 3 --modules 4 --output pm_3s4p.dbc
+```
+
+Pour chaque module, le fichier contient Status 1 et 2, Error/Warning, les tensions de cellules,
+l'équilibrage et les paramètres. Il contient aussi les commandes du contrôleur externe : maintenance,
+contacteur, chauffage, lecture et écriture des paramètres. S'y ajoutent les Global Status 1 et 2 du master
+ou du MainMaster et, avec SuperMaster, les Status 1 et 2 et l'Error/Warning de chaque SuperMaster.
+Les messages internes non décrits par le manuel (Master command, Numbering, Total slave, mises à jour)
+ne sont pas inclus.
+
+Points du manuel à faire confirmer par PowerTech :
+
+- **Unités variables de l'IMR et de l'IMD (Global Status 1) :** un bit d'unité multiplie la valeur par 10.
+  Un `.dbc` ne sait pas exprimer ce facteur variable. Les signaux sont décrits dans l'unité fine,
+  et le commentaire du signal rappelle la correction.
+- **Cell balancing :** le manuel donne l'identifiant `0x1Ayyy209`, avec le bit 27 à 1 alors qu'il n'est pas
+  utilisé dans le format d'identifiant. Il est repris tel quel.
+- **Maintenance :** le manuel indique un DLC de 1, mais les demandes de status utilisent les bits 12
+  et 13. Le DLC est porté à 2.
+- **Exemple de maintenance du §10.2.4.2 (`0x13021605`) :** le type de trame y vaut « Rx », alors que
+  le §10.2.4.1 utilise « Dreq » (`0x13041A05`). Le fichier suit le §10.2.4.1.
+- **Exemple de décodage du §10.2.3.3 :** le SOC annoncé (49,78 %) est une erreur de calcul. 0x130E
+  vaut 4878, soit 48,78 %. Les autres valeurs de l'exemple sont retrouvées.
 
 ## Compiler
 
@@ -267,7 +307,7 @@ Le regroupement des sources en dossiers et l'ajout des commentaires n'ont pas mo
 ## Tests unitaires
 
 ```sh
-make -C tests          # vérifie la base CAN générée, compile et exécute toutes les suites
+make -C tests          # vérifie les bases CAN générées, compile et exécute toutes les suites
 make -C tests clean
 ```
 

@@ -1,0 +1,593 @@
+VERSION ""
+
+
+NS_ :
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	BA_DEF_DEF_
+
+BS_:
+
+BU_: CONTROLLER PM_MASTER PM_S1M2
+
+
+BO_ 2193620994 PM_GLOBAL_STATUS1_MASTER: 7 PM_MASTER
+ SG_ soc_system : 0|16@1+ (0.01,0) [0|655.35] "%" CONTROLLER
+ SG_ imr_system : 16|13@1+ (0.1,0) [0|819.1] "A" CONTROLLER
+ SG_ imr_unit : 29|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ imd_system : 30|11@1+ (1,0) [0|2047] "A" CONTROLLER
+ SG_ imd_unit : 41|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ status_system : 42|4@1+ (1,0) [0|15] "" CONTROLLER
+ SG_ error_system : 46|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_system : 47|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ end_of_charge_system : 48|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ floating_system : 49|1@1+ (1,0) [0|1] "" CONTROLLER
+
+BO_ 2193620995 PM_GLOBAL_STATUS2_MASTER: 6 PM_MASTER
+ SG_ current_system : 0|16@1- (0.1,0) [-3276.8|3276.7] "A" CONTROLLER
+ SG_ voltage_system : 16|16@1+ (0.025,0) [0|1638.375] "V" CONTROLLER
+ SG_ soh_system : 32|16@1+ (0.01,0) [0|655.35] "%" CONTROLLER
+
+BO_ 2462191648 PM_STATUS1_MASTER: 8 PM_MASTER
+ SG_ voltage : 0|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ current : 16|16@1- (0.01,0) [-327.68|327.67] "A" CONTROLLER
+ SG_ soc : 32|16@1+ (0.01,0) [0|655.35] "%" CONTROLLER
+ SG_ soh : 48|16@1+ (0.01,0) [0|655.35] "%" CONTROLLER
+
+BO_ 2462191649 PM_STATUS2_MASTER: 8 PM_MASTER
+ SG_ open_power_contactor_manually : 0|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ status_power_contactor : 1|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ reserved : 2|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ nb_cells_in_balancing : 3|5@1+ (1,0) [0|31] "" CONTROLLER
+ SG_ status_balancing_active : 8|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ end_of_charge : 9|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ status_heater : 10|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ floating_mode : 11|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ imr : 16|16@1+ (0.1,0) [0|6553.5] "A" CONTROLLER
+ SG_ imd : 32|8@1+ (1,0) [0|255] "A" CONTROLLER
+ SG_ temp_board : 40|8@1+ (1,-40) [-40|215] "°C" CONTROLLER
+ SG_ temp_pack_1 : 48|8@1+ (1,-40) [-40|215] "°C" CONTROLLER
+ SG_ temp_pack_2 : 56|8@1+ (1,-40) [-40|215] "°C" CONTROLLER
+
+BO_ 2193756194 PM_ERRWARN_MASTER: 8 PM_MASTER
+ SG_ err_output_current : 0|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_input_current : 1|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_cell_over_voltage : 2|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_cell_under_voltage : 3|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_cell_over_temp : 4|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_cell_under_temp : 5|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_bms_board_over_temp : 6|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_bms_board_under_temp : 7|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_power_contactor : 8|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_lose_comm_master : 9|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_lose_comm_slave : 10|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_current_inconsistency : 12|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_voltage_bus : 13|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_heater : 14|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_stack : 15|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_lifeline : 16|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_ground : 17|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_imr : 18|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_imd : 19|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_output_current : 32|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_input_current : 33|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_cell_over_voltage : 34|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_cell_under_voltage : 35|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_cell_over_temp : 36|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_cell_under_temp : 37|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_bms_board_over_temp : 38|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_bms_board_under_temp : 39|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_imr : 40|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_imd : 41|1@1+ (1,0) [0|1] "" CONTROLLER
+
+BO_ 2462191875 PM_CELLV_1_4_MASTER: 8 PM_MASTER
+ SG_ cell_voltage_1 : 0|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_2 : 16|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_3 : 32|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_4 : 48|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+
+BO_ 2462191876 PM_CELLV_5_8_MASTER: 8 PM_MASTER
+ SG_ cell_voltage_5 : 0|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_6 : 16|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_7 : 32|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_8 : 48|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+
+BO_ 2462191881 PM_CELLV_9_12_MASTER: 8 PM_MASTER
+ SG_ cell_voltage_9 : 0|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_10 : 16|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_11 : 32|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_12 : 48|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+
+BO_ 2462191888 PM_CELLV_13_16_MASTER: 8 PM_MASTER
+ SG_ cell_voltage_13 : 0|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_14 : 16|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_15 : 32|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_16 : 48|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+
+BO_ 2596409865 PM_CELL_BALANCING_MASTER: 2 PM_MASTER
+ SG_ bal_cell_1 : 0|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_2 : 1|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_3 : 2|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_4 : 3|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_5 : 4|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_6 : 5|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_7 : 6|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_8 : 7|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_9 : 8|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_10 : 9|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_11 : 10|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_12 : 11|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_13 : 12|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_14 : 13|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_15 : 14|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_16 : 15|1@1+ (1,0) [0|1] "" CONTROLLER
+
+BO_ 2462192128 PM_PARAMETERS_MASTER: 8 PM_MASTER
+ SG_ address_parameter : 0|8@1+ (1,0) [0|255] "" CONTROLLER
+ SG_ number_parameter : 8|8@1+ (1,0) [0|255] "" CONTROLLER
+ SG_ parameter_1 : 16|16@1+ (1,0) [0|65535] "" CONTROLLER
+ SG_ parameter_2 : 32|16@1+ (1,0) [0|65535] "" CONTROLLER
+ SG_ parameter_3 : 48|16@1+ (1,0) [0|65535] "" CONTROLLER
+
+BO_ 2466388485 PM_CMD_MAINTENANCE_MASTER: 2 CONTROLLER
+ SG_ req_cell_voltage : 0|1@1+ (1,0) [0|1] "" PM_MASTER
+ SG_ req_cell_balancing : 1|1@1+ (1,0) [0|1] "" PM_MASTER
+ SG_ req_all_slave_status : 2|1@1+ (1,0) [0|1] "" PM_MASTER
+ SG_ req_time : 3|1@1+ (1,0) [0|1] "" PM_MASTER
+ SG_ req_renumber_slave : 4|1@1+ (1,0) [0|1] "" PM_MASTER
+ SG_ req_reboot_all : 5|1@1+ (1,0) [0|1] "" PM_MASTER
+ SG_ req_slave_error_warning : 6|1@1+ (1,0) [0|1] "" PM_MASTER
+ SG_ req_slave_status_3 : 7|1@1+ (1,0) [0|1] "" PM_MASTER
+ SG_ req_slave_status_1 : 12|1@1+ (1,0) [0|1] "" PM_MASTER
+ SG_ req_slave_status_2 : 13|1@1+ (1,0) [0|1] "" PM_MASTER
+
+BO_ 2197952012 PM_CMD_CONTACTOR_MASTER: 1 CONTROLLER
+ SG_ close_power_contactor : 0|1@1+ (1,0) [0|1] "" PM_MASTER
+ SG_ open_power_contactor : 1|1@1+ (1,0) [0|1] "" PM_MASTER
+ SG_ close_all_power_contactor : 2|1@1+ (1,0) [0|1] "" PM_MASTER
+ SG_ open_all_power_contactor : 3|1@1+ (1,0) [0|1] "" PM_MASTER
+
+BO_ 2197953041 PM_CMD_HEATER_MASTER: 4 CONTROLLER
+ SG_ ctl_heat : 0|8@1+ (1,0) [0|255] "" PM_MASTER
+ SG_ temp_heat : 8|8@1+ (1,-40) [-20|60] "°C" PM_MASTER
+ SG_ rate_heat : 16|8@1+ (1,0) [1|10] "" PM_MASTER
+ SG_ delay_heat : 24|8@1+ (1,0) [0|255] "min" PM_MASTER
+
+BO_ 2466387456 PM_CMD_SET_PARAM_MASTER: 3 CONTROLLER
+ SG_ address_parameter : 0|8@1+ (1,0) [0|255] "" PM_MASTER
+ SG_ data_1 : 8|8@1+ (1,0) [0|255] "" PM_MASTER
+ SG_ data_2 : 16|8@1+ (1,0) [0|255] "" PM_MASTER
+
+BO_ 2466388480 PM_CMD_REQUEST_PARAM_MASTER: 0 CONTROLLER
+
+BO_ 2458128416 PM_STATUS1_S1M2: 8 PM_S1M2
+ SG_ voltage : 0|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ current : 16|16@1- (0.01,0) [-327.68|327.67] "A" CONTROLLER
+ SG_ soc : 32|16@1+ (0.01,0) [0|655.35] "%" CONTROLLER
+ SG_ soh : 48|16@1+ (0.01,0) [0|655.35] "%" CONTROLLER
+
+BO_ 2458128417 PM_STATUS2_S1M2: 8 PM_S1M2
+ SG_ open_power_contactor_manually : 0|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ status_power_contactor : 1|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ reserved : 2|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ nb_cells_in_balancing : 3|5@1+ (1,0) [0|31] "" CONTROLLER
+ SG_ status_balancing_active : 8|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ end_of_charge : 9|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ status_heater : 10|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ floating_mode : 11|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ imr : 16|16@1+ (0.1,0) [0|6553.5] "A" CONTROLLER
+ SG_ imd : 32|8@1+ (1,0) [0|255] "A" CONTROLLER
+ SG_ temp_board : 40|8@1+ (1,-40) [-40|215] "°C" CONTROLLER
+ SG_ temp_pack_1 : 48|8@1+ (1,-40) [-40|215] "°C" CONTROLLER
+ SG_ temp_pack_2 : 56|8@1+ (1,-40) [-40|215] "°C" CONTROLLER
+
+BO_ 2189692962 PM_ERRWARN_S1M2: 8 PM_S1M2
+ SG_ err_output_current : 0|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_input_current : 1|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_cell_over_voltage : 2|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_cell_under_voltage : 3|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_cell_over_temp : 4|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_cell_under_temp : 5|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_bms_board_over_temp : 6|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_bms_board_under_temp : 7|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_power_contactor : 8|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_lose_comm_master : 9|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_lose_comm_slave : 10|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_current_inconsistency : 12|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_voltage_bus : 13|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_heater : 14|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_stack : 15|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_lifeline : 16|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_ground : 17|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_imr : 18|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ err_imd : 19|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_output_current : 32|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_input_current : 33|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_cell_over_voltage : 34|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_cell_under_voltage : 35|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_cell_over_temp : 36|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_cell_under_temp : 37|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_bms_board_over_temp : 38|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_bms_board_under_temp : 39|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_imr : 40|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ warn_imd : 41|1@1+ (1,0) [0|1] "" CONTROLLER
+
+BO_ 2458128643 PM_CELLV_1_4_S1M2: 8 PM_S1M2
+ SG_ cell_voltage_1 : 0|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_2 : 16|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_3 : 32|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_4 : 48|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+
+BO_ 2458128644 PM_CELLV_5_8_S1M2: 8 PM_S1M2
+ SG_ cell_voltage_5 : 0|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_6 : 16|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_7 : 32|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_8 : 48|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+
+BO_ 2458128649 PM_CELLV_9_12_S1M2: 8 PM_S1M2
+ SG_ cell_voltage_9 : 0|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_10 : 16|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_11 : 32|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_12 : 48|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+
+BO_ 2458128656 PM_CELLV_13_16_S1M2: 8 PM_S1M2
+ SG_ cell_voltage_13 : 0|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_14 : 16|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_15 : 32|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+ SG_ cell_voltage_16 : 48|16@1+ (0.001,0) [0|65.535] "V" CONTROLLER
+
+BO_ 2592346633 PM_CELL_BALANCING_S1M2: 2 PM_S1M2
+ SG_ bal_cell_1 : 0|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_2 : 1|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_3 : 2|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_4 : 3|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_5 : 4|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_6 : 5|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_7 : 6|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_8 : 7|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_9 : 8|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_10 : 9|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_11 : 10|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_12 : 11|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_13 : 12|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_14 : 13|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_15 : 14|1@1+ (1,0) [0|1] "" CONTROLLER
+ SG_ bal_cell_16 : 15|1@1+ (1,0) [0|1] "" CONTROLLER
+
+BO_ 2458128896 PM_PARAMETERS_S1M2: 8 PM_S1M2
+ SG_ address_parameter : 0|8@1+ (1,0) [0|255] "" CONTROLLER
+ SG_ number_parameter : 8|8@1+ (1,0) [0|255] "" CONTROLLER
+ SG_ parameter_1 : 16|16@1+ (1,0) [0|65535] "" CONTROLLER
+ SG_ parameter_2 : 32|16@1+ (1,0) [0|65535] "" CONTROLLER
+ SG_ parameter_3 : 48|16@1+ (1,0) [0|65535] "" CONTROLLER
+
+BO_ 2466519557 PM_CMD_MAINTENANCE_S1M2: 2 CONTROLLER
+ SG_ req_cell_voltage : 0|1@1+ (1,0) [0|1] "" PM_S1M2
+ SG_ req_cell_balancing : 1|1@1+ (1,0) [0|1] "" PM_S1M2
+ SG_ req_all_slave_status : 2|1@1+ (1,0) [0|1] "" PM_S1M2
+ SG_ req_time : 3|1@1+ (1,0) [0|1] "" PM_S1M2
+ SG_ req_renumber_slave : 4|1@1+ (1,0) [0|1] "" PM_S1M2
+ SG_ req_reboot_all : 5|1@1+ (1,0) [0|1] "" PM_S1M2
+ SG_ req_slave_error_warning : 6|1@1+ (1,0) [0|1] "" PM_S1M2
+ SG_ req_slave_status_3 : 7|1@1+ (1,0) [0|1] "" PM_S1M2
+ SG_ req_slave_status_1 : 12|1@1+ (1,0) [0|1] "" PM_S1M2
+ SG_ req_slave_status_2 : 13|1@1+ (1,0) [0|1] "" PM_S1M2
+
+BO_ 2198083084 PM_CMD_CONTACTOR_S1M2: 1 CONTROLLER
+ SG_ close_power_contactor : 0|1@1+ (1,0) [0|1] "" PM_S1M2
+ SG_ open_power_contactor : 1|1@1+ (1,0) [0|1] "" PM_S1M2
+ SG_ close_all_power_contactor : 2|1@1+ (1,0) [0|1] "" PM_S1M2
+ SG_ open_all_power_contactor : 3|1@1+ (1,0) [0|1] "" PM_S1M2
+
+BO_ 2198084113 PM_CMD_HEATER_S1M2: 4 CONTROLLER
+ SG_ ctl_heat : 0|8@1+ (1,0) [0|255] "" PM_S1M2
+ SG_ temp_heat : 8|8@1+ (1,-40) [-20|60] "°C" PM_S1M2
+ SG_ rate_heat : 16|8@1+ (1,0) [1|10] "" PM_S1M2
+ SG_ delay_heat : 24|8@1+ (1,0) [0|255] "min" PM_S1M2
+
+BO_ 2466518528 PM_CMD_SET_PARAM_S1M2: 3 CONTROLLER
+ SG_ address_parameter : 0|8@1+ (1,0) [0|255] "" PM_S1M2
+ SG_ data_1 : 8|8@1+ (1,0) [0|255] "" PM_S1M2
+ SG_ data_2 : 16|8@1+ (1,0) [0|255] "" PM_S1M2
+
+BO_ 2466519552 PM_CMD_REQUEST_PARAM_S1M2: 0 CONTROLLER
+
+
+CM_ "Batteries PowerTech PowerModule - protocole CAN du manuel V0.2 (29/04/26), chapitre 10. CAN 2.0B, identifiants etendus, format Intel, 250 kbit/s par defaut. Topologie : master + 1 slave(s) en parallele, sans SuperMaster. FICHIER GENERE par tools/powermodule_dbc.py : ne pas modifier a la main.";
+CM_ BU_ CONTROLLER "Controleur externe (outil, device 0b11) : envoie les commandes et lit les status.";
+CM_ BO_ 2193620994 "Global Status 1 emis par le Master : SOC, IMR, IMD et etat du systeme.";
+CM_ SG_ 2193620994 soc_system "Etat de charge du systeme.";
+CM_ SG_ 2193620994 imr_system "Courant de charge maximal (IMR). Unite 0,1 A si imr_unit = 0 ; si imr_unit = 1 l'unite est 1 A : multiplier la valeur physique par 10.";
+CM_ SG_ 2193620994 imr_unit "0 : imr_system en 100 mA ; 1 : imr_system en 1 A.";
+CM_ SG_ 2193620994 imd_system "Courant de decharge maximal (IMD). Unite 1 A si imd_unit = 0 ; si imd_unit = 1 l'unite est 10 A : multiplier la valeur physique par 10.";
+CM_ SG_ 2193620994 imd_unit "0 : imd_system en 1 A ; 1 : imd_system en 10 A.";
+CM_ SG_ 2193620994 status_system "Etat du systeme. 3 (Precharge) n'existe que pour un SuperMaster.";
+CM_ SG_ 2193620994 error_system "Au moins un module (ou un rack) en erreur.";
+CM_ SG_ 2193620994 warn_system "Au moins un module (ou un rack) en warning.";
+CM_ SG_ 2193620994 end_of_charge_system "Fin de charge du systeme : chaque charge doit se terminer par ce signal.";
+CM_ SG_ 2193620994 floating_system "Systeme en floating.";
+CM_ BO_ 2193620995 "Global Status 2 emis par le Master : courant, tension et SOH du systeme.";
+CM_ SG_ 2193620995 current_system "Courant total du systeme.";
+CM_ SG_ 2193620995 voltage_system "Tension totale du systeme.";
+CM_ SG_ 2193620995 soh_system "Etat de sante du systeme.";
+CM_ BO_ 2462191648 "Status 1 du master : tension, courant, SOC, SOH.";
+CM_ SG_ 2462191648 voltage "Tension du pack.";
+CM_ SG_ 2462191648 current "Courant du module : positif en charge (entrant), negatif en decharge (sortant).";
+CM_ SG_ 2462191648 soc "Etat de charge.";
+CM_ SG_ 2462191648 soh "Etat de sante.";
+CM_ BO_ 2462191649 "Status 2 du master : contacteur, equilibrage, IMR, IMD, temperatures.";
+CM_ SG_ 2462191649 open_power_contactor_manually "Contacteur ouvert manuellement par la commande 0x20C.";
+CM_ SG_ 2462191649 status_power_contactor "1 : contacteur de puissance ferme ; 0 : ouvert.";
+CM_ SG_ 2462191649 nb_cells_in_balancing "Nombre de cellules en equilibrage (0 a 16).";
+CM_ SG_ 2462191649 status_balancing_active "Au moins un slave en equilibrage (emis par le Master seulement).";
+CM_ SG_ 2462191649 end_of_charge "Fin de charge : batterie pleine.";
+CM_ SG_ 2462191649 status_heater "Chauffage actif.";
+CM_ SG_ 2462191649 floating_mode "Mode floating.";
+CM_ SG_ 2462191649 imr "Courant de charge maximal recommande.";
+CM_ SG_ 2462191649 imd "Courant de decharge maximal recommande.";
+CM_ SG_ 2462191649 temp_board "Temperature de la carte BMS.";
+CM_ SG_ 2462191649 temp_pack_1 "Temperature du banc de cellules 1.";
+CM_ SG_ 2462191649 temp_pack_2 "Temperature du banc de cellules 2.";
+CM_ BO_ 2193756194 "Erreurs et warnings du master. Emis toutes les 500 ms tant qu'un evenement est present, puis deux fois a 0. Une erreur ouvre le contacteur de puissance ; un warning est informatif.";
+CM_ SG_ 2193756194 err_output_current "#1 : courant de sortie > 300 A, ou > 260 A pendant 30 s, ou > 200 A pendant 300 s.";
+CM_ SG_ 2193756194 err_input_current "#2 : courant d'entree > 110 A, ou > 105 A pendant 30 s.";
+CM_ SG_ 2193756194 err_cell_over_voltage "#3 : une cellule > 3850 mV.";
+CM_ SG_ 2193756194 err_cell_under_voltage "#4 : une cellule < 2700 mV.";
+CM_ SG_ 2193756194 err_cell_over_temp "#5 : pack > 60 °C.";
+CM_ SG_ 2193756194 err_cell_under_temp "#6 : pack < 0 °C en charge ou < -20 °C en decharge.";
+CM_ SG_ 2193756194 err_bms_board_over_temp "#7 : carte BMS > 75 °C.";
+CM_ SG_ 2193756194 err_bms_board_under_temp "#8 : carte BMS < -20 °C.";
+CM_ SG_ 2193756194 err_power_contactor "#19 : contacteur ouvert 3 fois / 3 erreurs en 15 minutes.";
+CM_ SG_ 2193756194 err_lose_comm_master "#9 : le slave a perdu la communication avec le master.";
+CM_ SG_ 2193756194 err_lose_comm_slave "#20 : le master a perdu la communication avec un slave.";
+CM_ SG_ 2193756194 err_current_inconsistency "#10 : courant du slave incoherent avec celui des autres slaves.";
+CM_ SG_ 2193756194 err_voltage_bus "#21 : erreur de tension de bus.";
+CM_ SG_ 2193756194 err_heater "#22 : erreur de chauffage.";
+CM_ SG_ 2193756194 err_stack "#23 : erreur dans le stack ou erreur de tension de bus du stack.";
+CM_ SG_ 2193756194 err_lifeline "#24 : Lifeline deconnectee (0 si connectee ou option absente).";
+CM_ SG_ 2193756194 err_ground "#25 : defaut de masse detecte dans le stack.";
+CM_ SG_ 2193756194 err_imr "#26 : courant d'entree > IMR avec temperature negative.";
+CM_ SG_ 2193756194 err_imd "#27 : courant de sortie > IMD avec temperature negative.";
+CM_ SG_ 2193756194 warn_output_current "#11 : courant de sortie > 200 A.";
+CM_ SG_ 2193756194 warn_input_current "#12 : courant d'entree > 105 A.";
+CM_ SG_ 2193756194 warn_cell_over_voltage "#13 : une cellule > 3680 mV.";
+CM_ SG_ 2193756194 warn_cell_under_voltage "#14 : une cellule < 3000 mV.";
+CM_ SG_ 2193756194 warn_cell_over_temp "#15 : pack > 58 °C.";
+CM_ SG_ 2193756194 warn_cell_under_temp "#16 : pack < 2 °C en charge ou < -18 °C en decharge.";
+CM_ SG_ 2193756194 warn_bms_board_over_temp "#17 : carte BMS > 58 °C.";
+CM_ SG_ 2193756194 warn_bms_board_under_temp "#18 : carte BMS < -18 °C.";
+CM_ SG_ 2193756194 warn_imr "#28 : courant d'entree > IMR.";
+CM_ SG_ 2193756194 warn_imd "#29 : courant de sortie > IMD.";
+CM_ BO_ 2462191875 "Tensions des cellules 1 a 4 du master (sur demande de maintenance).";
+CM_ SG_ 2462191875 cell_voltage_1 "Tension de la cellule 1.";
+CM_ SG_ 2462191875 cell_voltage_2 "Tension de la cellule 2.";
+CM_ SG_ 2462191875 cell_voltage_3 "Tension de la cellule 3.";
+CM_ SG_ 2462191875 cell_voltage_4 "Tension de la cellule 4.";
+CM_ BO_ 2462191876 "Tensions des cellules 5 a 8 du master (sur demande de maintenance).";
+CM_ SG_ 2462191876 cell_voltage_5 "Tension de la cellule 5.";
+CM_ SG_ 2462191876 cell_voltage_6 "Tension de la cellule 6.";
+CM_ SG_ 2462191876 cell_voltage_7 "Tension de la cellule 7.";
+CM_ SG_ 2462191876 cell_voltage_8 "Tension de la cellule 8.";
+CM_ BO_ 2462191881 "Tensions des cellules 9 a 12 du master (sur demande de maintenance).";
+CM_ SG_ 2462191881 cell_voltage_9 "Tension de la cellule 9.";
+CM_ SG_ 2462191881 cell_voltage_10 "Tension de la cellule 10.";
+CM_ SG_ 2462191881 cell_voltage_11 "Tension de la cellule 11.";
+CM_ SG_ 2462191881 cell_voltage_12 "Tension de la cellule 12.";
+CM_ BO_ 2462191888 "Tensions des cellules 13 a 16 du master (sur demande de maintenance).";
+CM_ SG_ 2462191888 cell_voltage_13 "Tension de la cellule 13.";
+CM_ SG_ 2462191888 cell_voltage_14 "Tension de la cellule 14.";
+CM_ SG_ 2462191888 cell_voltage_15 "Tension de la cellule 15.";
+CM_ SG_ 2462191888 cell_voltage_16 "Tension de la cellule 16.";
+CM_ BO_ 2596409865 "Cellules en equilibrage du master. Identifiant 0x1Ayyy209 repris tel quel du manuel (bit 27 a 1).";
+CM_ SG_ 2596409865 bal_cell_1 "1 : cellule 1 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_2 "1 : cellule 2 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_3 "1 : cellule 3 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_4 "1 : cellule 4 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_5 "1 : cellule 5 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_6 "1 : cellule 6 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_7 "1 : cellule 7 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_8 "1 : cellule 8 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_9 "1 : cellule 9 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_10 "1 : cellule 10 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_11 "1 : cellule 11 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_12 "1 : cellule 12 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_13 "1 : cellule 13 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_14 "1 : cellule 14 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_15 "1 : cellule 15 en equilibrage.";
+CM_ SG_ 2596409865 bal_cell_16 "1 : cellule 16 en equilibrage.";
+CM_ BO_ 2462192128 "Parametres E2PROM du master, en reponse a PM_CMD_REQUEST_PARAM. DLC 3 (un parametre) ou 8 (trois).";
+CM_ SG_ 2462192128 address_parameter "Adresse du premier parametre en E2PROM.";
+CM_ SG_ 2462192128 number_parameter "Nombre de parametres dans la trame (1 : DLC 3 ; 3 : DLC 8).";
+CM_ BO_ 2466388485 "Demande de maintenance adressee du master. Le manuel indique un DLC de 1, mais les demandes de status utilisent les bits 12 et 13.";
+CM_ SG_ 2466388485 req_cell_voltage "Demande l'envoi des tensions de cellules.";
+CM_ SG_ 2466388485 req_cell_balancing "Demande l'envoi de l'etat d'equilibrage des cellules.";
+CM_ SG_ 2466388485 req_all_slave_status "Demande au SuperMaster les Status 1 et 2 de tous les slaves.";
+CM_ SG_ 2466388485 req_time "Reserve SuperMaster.";
+CM_ SG_ 2466388485 req_renumber_slave "Reserve SuperMaster.";
+CM_ SG_ 2466388485 req_reboot_all "Reserve SuperMaster.";
+CM_ SG_ 2466388485 req_slave_error_warning "Demande au SuperMaster les messages Error/Warning des slaves.";
+CM_ SG_ 2466388485 req_slave_status_3 "Min/max de tension et de courant batterie.";
+CM_ SG_ 2466388485 req_slave_status_1 "Demande au SuperMaster le Status 1 d'un slave.";
+CM_ SG_ 2466388485 req_slave_status_2 "Demande au SuperMaster le Status 2 d'un slave.";
+CM_ BO_ 2197952012 "Ouverture / fermeture du contacteur de puissance du master. Apres 3 ouvertures sur erreur en 15 minutes, le contacteur reste ouvert 15 minutes.";
+CM_ SG_ 2197952012 close_power_contactor "1 : ferme le contacteur de puissance (s'il n'y a pas d'erreur).";
+CM_ SG_ 2197952012 open_power_contactor "1 : ouvre le contacteur de puissance.";
+CM_ SG_ 2197952012 close_all_power_contactor "Reserve.";
+CM_ SG_ 2197952012 open_all_power_contactor "Reserve.";
+CM_ BO_ 2197953041 "Gestion du chauffage du master.";
+CM_ SG_ 2197953041 ctl_heat "Active ou desactive le chauffage.";
+CM_ SG_ 2197953041 temp_heat "Temperature cible (brut 20 a 100, soit -20 a 60 °C).";
+CM_ SG_ 2197953041 rate_heat "Taux d'activation du chauffage (1 a 10).";
+CM_ SG_ 2197953041 delay_heat "Maintien du chauffage apres atteinte de la temperature cible.";
+CM_ BO_ 2466387456 "Ecriture d'un parametre E2PROM du master.";
+CM_ SG_ 2466387456 address_parameter "Adresse E2PROM a ecrire.";
+CM_ SG_ 2466387456 data_1 "Octet 1 de la nouvelle valeur.";
+CM_ SG_ 2466387456 data_2 "Octet 2 de la nouvelle valeur.";
+CM_ BO_ 2466388480 "Demande de tous les parametres E2PROM du master (sans donnees).";
+CM_ BO_ 2458128416 "Status 1 du slave 2 du stack 1 : tension, courant, SOC, SOH.";
+CM_ SG_ 2458128416 voltage "Tension du pack.";
+CM_ SG_ 2458128416 current "Courant du module : positif en charge (entrant), negatif en decharge (sortant).";
+CM_ SG_ 2458128416 soc "Etat de charge.";
+CM_ SG_ 2458128416 soh "Etat de sante.";
+CM_ BO_ 2458128417 "Status 2 du slave 2 du stack 1 : contacteur, equilibrage, IMR, IMD, temperatures.";
+CM_ SG_ 2458128417 open_power_contactor_manually "Contacteur ouvert manuellement par la commande 0x20C.";
+CM_ SG_ 2458128417 status_power_contactor "1 : contacteur de puissance ferme ; 0 : ouvert.";
+CM_ SG_ 2458128417 nb_cells_in_balancing "Nombre de cellules en equilibrage (0 a 16).";
+CM_ SG_ 2458128417 status_balancing_active "Au moins un slave en equilibrage (emis par le Master seulement).";
+CM_ SG_ 2458128417 end_of_charge "Fin de charge : batterie pleine.";
+CM_ SG_ 2458128417 status_heater "Chauffage actif.";
+CM_ SG_ 2458128417 floating_mode "Mode floating.";
+CM_ SG_ 2458128417 imr "Courant de charge maximal recommande.";
+CM_ SG_ 2458128417 imd "Courant de decharge maximal recommande.";
+CM_ SG_ 2458128417 temp_board "Temperature de la carte BMS.";
+CM_ SG_ 2458128417 temp_pack_1 "Temperature du banc de cellules 1.";
+CM_ SG_ 2458128417 temp_pack_2 "Temperature du banc de cellules 2.";
+CM_ BO_ 2189692962 "Erreurs et warnings du slave 2 du stack 1. Emis toutes les 500 ms tant qu'un evenement est present, puis deux fois a 0. Une erreur ouvre le contacteur de puissance ; un warning est informatif.";
+CM_ SG_ 2189692962 err_output_current "#1 : courant de sortie > 300 A, ou > 260 A pendant 30 s, ou > 200 A pendant 300 s.";
+CM_ SG_ 2189692962 err_input_current "#2 : courant d'entree > 110 A, ou > 105 A pendant 30 s.";
+CM_ SG_ 2189692962 err_cell_over_voltage "#3 : une cellule > 3850 mV.";
+CM_ SG_ 2189692962 err_cell_under_voltage "#4 : une cellule < 2700 mV.";
+CM_ SG_ 2189692962 err_cell_over_temp "#5 : pack > 60 °C.";
+CM_ SG_ 2189692962 err_cell_under_temp "#6 : pack < 0 °C en charge ou < -20 °C en decharge.";
+CM_ SG_ 2189692962 err_bms_board_over_temp "#7 : carte BMS > 75 °C.";
+CM_ SG_ 2189692962 err_bms_board_under_temp "#8 : carte BMS < -20 °C.";
+CM_ SG_ 2189692962 err_power_contactor "#19 : contacteur ouvert 3 fois / 3 erreurs en 15 minutes.";
+CM_ SG_ 2189692962 err_lose_comm_master "#9 : le slave a perdu la communication avec le master.";
+CM_ SG_ 2189692962 err_lose_comm_slave "#20 : le master a perdu la communication avec un slave.";
+CM_ SG_ 2189692962 err_current_inconsistency "#10 : courant du slave incoherent avec celui des autres slaves.";
+CM_ SG_ 2189692962 err_voltage_bus "#21 : erreur de tension de bus.";
+CM_ SG_ 2189692962 err_heater "#22 : erreur de chauffage.";
+CM_ SG_ 2189692962 err_stack "#23 : erreur dans le stack ou erreur de tension de bus du stack.";
+CM_ SG_ 2189692962 err_lifeline "#24 : Lifeline deconnectee (0 si connectee ou option absente).";
+CM_ SG_ 2189692962 err_ground "#25 : defaut de masse detecte dans le stack.";
+CM_ SG_ 2189692962 err_imr "#26 : courant d'entree > IMR avec temperature negative.";
+CM_ SG_ 2189692962 err_imd "#27 : courant de sortie > IMD avec temperature negative.";
+CM_ SG_ 2189692962 warn_output_current "#11 : courant de sortie > 200 A.";
+CM_ SG_ 2189692962 warn_input_current "#12 : courant d'entree > 105 A.";
+CM_ SG_ 2189692962 warn_cell_over_voltage "#13 : une cellule > 3680 mV.";
+CM_ SG_ 2189692962 warn_cell_under_voltage "#14 : une cellule < 3000 mV.";
+CM_ SG_ 2189692962 warn_cell_over_temp "#15 : pack > 58 °C.";
+CM_ SG_ 2189692962 warn_cell_under_temp "#16 : pack < 2 °C en charge ou < -18 °C en decharge.";
+CM_ SG_ 2189692962 warn_bms_board_over_temp "#17 : carte BMS > 58 °C.";
+CM_ SG_ 2189692962 warn_bms_board_under_temp "#18 : carte BMS < -18 °C.";
+CM_ SG_ 2189692962 warn_imr "#28 : courant d'entree > IMR.";
+CM_ SG_ 2189692962 warn_imd "#29 : courant de sortie > IMD.";
+CM_ BO_ 2458128643 "Tensions des cellules 1 a 4 du slave 2 du stack 1 (sur demande de maintenance).";
+CM_ SG_ 2458128643 cell_voltage_1 "Tension de la cellule 1.";
+CM_ SG_ 2458128643 cell_voltage_2 "Tension de la cellule 2.";
+CM_ SG_ 2458128643 cell_voltage_3 "Tension de la cellule 3.";
+CM_ SG_ 2458128643 cell_voltage_4 "Tension de la cellule 4.";
+CM_ BO_ 2458128644 "Tensions des cellules 5 a 8 du slave 2 du stack 1 (sur demande de maintenance).";
+CM_ SG_ 2458128644 cell_voltage_5 "Tension de la cellule 5.";
+CM_ SG_ 2458128644 cell_voltage_6 "Tension de la cellule 6.";
+CM_ SG_ 2458128644 cell_voltage_7 "Tension de la cellule 7.";
+CM_ SG_ 2458128644 cell_voltage_8 "Tension de la cellule 8.";
+CM_ BO_ 2458128649 "Tensions des cellules 9 a 12 du slave 2 du stack 1 (sur demande de maintenance).";
+CM_ SG_ 2458128649 cell_voltage_9 "Tension de la cellule 9.";
+CM_ SG_ 2458128649 cell_voltage_10 "Tension de la cellule 10.";
+CM_ SG_ 2458128649 cell_voltage_11 "Tension de la cellule 11.";
+CM_ SG_ 2458128649 cell_voltage_12 "Tension de la cellule 12.";
+CM_ BO_ 2458128656 "Tensions des cellules 13 a 16 du slave 2 du stack 1 (sur demande de maintenance).";
+CM_ SG_ 2458128656 cell_voltage_13 "Tension de la cellule 13.";
+CM_ SG_ 2458128656 cell_voltage_14 "Tension de la cellule 14.";
+CM_ SG_ 2458128656 cell_voltage_15 "Tension de la cellule 15.";
+CM_ SG_ 2458128656 cell_voltage_16 "Tension de la cellule 16.";
+CM_ BO_ 2592346633 "Cellules en equilibrage du slave 2 du stack 1. Identifiant 0x1Ayyy209 repris tel quel du manuel (bit 27 a 1).";
+CM_ SG_ 2592346633 bal_cell_1 "1 : cellule 1 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_2 "1 : cellule 2 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_3 "1 : cellule 3 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_4 "1 : cellule 4 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_5 "1 : cellule 5 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_6 "1 : cellule 6 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_7 "1 : cellule 7 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_8 "1 : cellule 8 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_9 "1 : cellule 9 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_10 "1 : cellule 10 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_11 "1 : cellule 11 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_12 "1 : cellule 12 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_13 "1 : cellule 13 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_14 "1 : cellule 14 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_15 "1 : cellule 15 en equilibrage.";
+CM_ SG_ 2592346633 bal_cell_16 "1 : cellule 16 en equilibrage.";
+CM_ BO_ 2458128896 "Parametres E2PROM du slave 2 du stack 1, en reponse a PM_CMD_REQUEST_PARAM. DLC 3 (un parametre) ou 8 (trois).";
+CM_ SG_ 2458128896 address_parameter "Adresse du premier parametre en E2PROM.";
+CM_ SG_ 2458128896 number_parameter "Nombre de parametres dans la trame (1 : DLC 3 ; 3 : DLC 8).";
+CM_ BO_ 2466519557 "Demande de maintenance adressee du slave 2 du stack 1. Le manuel indique un DLC de 1, mais les demandes de status utilisent les bits 12 et 13.";
+CM_ SG_ 2466519557 req_cell_voltage "Demande l'envoi des tensions de cellules.";
+CM_ SG_ 2466519557 req_cell_balancing "Demande l'envoi de l'etat d'equilibrage des cellules.";
+CM_ SG_ 2466519557 req_all_slave_status "Demande au SuperMaster les Status 1 et 2 de tous les slaves.";
+CM_ SG_ 2466519557 req_time "Reserve SuperMaster.";
+CM_ SG_ 2466519557 req_renumber_slave "Reserve SuperMaster.";
+CM_ SG_ 2466519557 req_reboot_all "Reserve SuperMaster.";
+CM_ SG_ 2466519557 req_slave_error_warning "Demande au SuperMaster les messages Error/Warning des slaves.";
+CM_ SG_ 2466519557 req_slave_status_3 "Min/max de tension et de courant batterie.";
+CM_ SG_ 2466519557 req_slave_status_1 "Demande au SuperMaster le Status 1 d'un slave.";
+CM_ SG_ 2466519557 req_slave_status_2 "Demande au SuperMaster le Status 2 d'un slave.";
+CM_ BO_ 2198083084 "Ouverture / fermeture du contacteur de puissance du slave 2 du stack 1. Apres 3 ouvertures sur erreur en 15 minutes, le contacteur reste ouvert 15 minutes.";
+CM_ SG_ 2198083084 close_power_contactor "1 : ferme le contacteur de puissance (s'il n'y a pas d'erreur).";
+CM_ SG_ 2198083084 open_power_contactor "1 : ouvre le contacteur de puissance.";
+CM_ SG_ 2198083084 close_all_power_contactor "Reserve.";
+CM_ SG_ 2198083084 open_all_power_contactor "Reserve.";
+CM_ BO_ 2198084113 "Gestion du chauffage du slave 2 du stack 1.";
+CM_ SG_ 2198084113 ctl_heat "Active ou desactive le chauffage.";
+CM_ SG_ 2198084113 temp_heat "Temperature cible (brut 20 a 100, soit -20 a 60 °C).";
+CM_ SG_ 2198084113 rate_heat "Taux d'activation du chauffage (1 a 10).";
+CM_ SG_ 2198084113 delay_heat "Maintien du chauffage apres atteinte de la temperature cible.";
+CM_ BO_ 2466518528 "Ecriture d'un parametre E2PROM du slave 2 du stack 1.";
+CM_ SG_ 2466518528 address_parameter "Adresse E2PROM a ecrire.";
+CM_ SG_ 2466518528 data_1 "Octet 1 de la nouvelle valeur.";
+CM_ SG_ 2466518528 data_2 "Octet 2 de la nouvelle valeur.";
+CM_ BO_ 2466519552 "Demande de tous les parametres E2PROM du slave 2 du stack 1 (sans donnees).";
+BA_DEF_  "BusType" STRING ;
+BA_DEF_  "Baudrate" INT 0 1000000;
+BA_DEF_ BO_  "VFrameFormat" ENUM  "StandardCAN","ExtendedCAN","reserved","J1939PG";
+BA_DEF_ BO_  "GenMsgCycleTime" INT 0 65535;
+BA_DEF_DEF_  "BusType" "CAN";
+BA_DEF_DEF_  "Baudrate" 250000;
+BA_DEF_DEF_  "VFrameFormat" "ExtendedCAN";
+BA_DEF_DEF_  "GenMsgCycleTime" 0;
+BA_ "Baudrate" 250000;
+BA_ "VFrameFormat" BO_ 2193620994 1;
+BA_ "GenMsgCycleTime" BO_ 2193620994 1000;
+BA_ "VFrameFormat" BO_ 2193620995 1;
+BA_ "GenMsgCycleTime" BO_ 2193620995 1000;
+BA_ "VFrameFormat" BO_ 2462191648 1;
+BA_ "GenMsgCycleTime" BO_ 2462191648 1000;
+BA_ "VFrameFormat" BO_ 2462191649 1;
+BA_ "GenMsgCycleTime" BO_ 2462191649 1000;
+BA_ "VFrameFormat" BO_ 2193756194 1;
+BA_ "GenMsgCycleTime" BO_ 2193756194 500;
+BA_ "VFrameFormat" BO_ 2462191875 1;
+BA_ "VFrameFormat" BO_ 2462191876 1;
+BA_ "VFrameFormat" BO_ 2462191881 1;
+BA_ "VFrameFormat" BO_ 2462191888 1;
+BA_ "VFrameFormat" BO_ 2596409865 1;
+BA_ "VFrameFormat" BO_ 2462192128 1;
+BA_ "VFrameFormat" BO_ 2466388485 1;
+BA_ "VFrameFormat" BO_ 2197952012 1;
+BA_ "VFrameFormat" BO_ 2197953041 1;
+BA_ "VFrameFormat" BO_ 2466387456 1;
+BA_ "VFrameFormat" BO_ 2466388480 1;
+BA_ "VFrameFormat" BO_ 2458128416 1;
+BA_ "GenMsgCycleTime" BO_ 2458128416 1000;
+BA_ "VFrameFormat" BO_ 2458128417 1;
+BA_ "GenMsgCycleTime" BO_ 2458128417 1000;
+BA_ "VFrameFormat" BO_ 2189692962 1;
+BA_ "GenMsgCycleTime" BO_ 2189692962 500;
+BA_ "VFrameFormat" BO_ 2458128643 1;
+BA_ "VFrameFormat" BO_ 2458128644 1;
+BA_ "VFrameFormat" BO_ 2458128649 1;
+BA_ "VFrameFormat" BO_ 2458128656 1;
+BA_ "VFrameFormat" BO_ 2592346633 1;
+BA_ "VFrameFormat" BO_ 2458128896 1;
+BA_ "VFrameFormat" BO_ 2466519557 1;
+BA_ "VFrameFormat" BO_ 2198083084 1;
+BA_ "VFrameFormat" BO_ 2198084113 1;
+BA_ "VFrameFormat" BO_ 2466518528 1;
+BA_ "VFrameFormat" BO_ 2466519552 1;
+VAL_ 2193620994 status_system 0 "Idle" 1 "Operative" 2 "Error" 3 "Precharge" 4 "Part_operative" ;
+VAL_ 2197953041 ctl_heat 0 "Disable" 1 "Active" ;
+VAL_ 2198084113 ctl_heat 0 "Disable" 1 "Active" ;

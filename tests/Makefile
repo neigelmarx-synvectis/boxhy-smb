@@ -24,6 +24,7 @@ all: candb-check $(TESTS:%=run-%)
 # src/can/can_db.h et les .DBF doivent correspondre à can database/BOXHY.dbc
 candb-check:
 	@$(PYTHON) ../tools/candb_gen.py --check
+	@$(PYTHON) ../tools/powermodule_dbc.py --check
 
 $(TESTS:%=run-%): run-%: $(BUILD)/test_%
 	@./$<

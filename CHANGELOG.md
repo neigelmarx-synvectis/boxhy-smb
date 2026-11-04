@@ -39,6 +39,10 @@ respecte le [Semantic Versioning](https://semver.org/lang/fr/).
   `measures/`, `control/`, `hmi/` et `utils/`. `main.c` et `smb_config.h` restent à la racine de `src/`.
   Les `#include` sont écrits depuis la racine du dépôt. Les projets MPLAB X et VS Code, le Makefile de
   tests et le générateur CAN sont mis à jour. Le firmware produit est identique octet pour octet.
+- Base CAN des batteries PowerTech PowerModule, `can database/POWERMODULE.dbc`, d'après le chapitre 10
+  du manuel V0.2 du 29/04/26. Elle est générée pour une topologie donnée par `tools/powermodule_dbc.py`,
+  car les identifiants encodent l'émetteur, le module et le stack. Par défaut : master + 1 slave,
+  30 messages, 221 signaux. `make -C tests` vérifie qu'elle est à jour. Elle n'est pas utilisée par le firmware.
 - README : arborescence commentée du dépôt, rapport mémoire de l'éditeur de liens XC16 tel qu'affiché,
   sortie des tests unitaires et couverture de chaque suite.
 - Commentaires ajoutés dans tous les fichiers de `src/` et `hal/` : rôle de chaque module, cadence
