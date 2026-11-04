@@ -1,4 +1,4 @@
-# BOXHY SMB – Firmware v1.3.0
+# BOXHY SMB – Firmware v2.0.0
 
 Firmware de la carte **SMB** (System Management Board) du système **BOXHY** (H2SYS).
 La SMB pilote la logique de haut niveau du système : gestion de la pile à combustible
@@ -59,6 +59,10 @@ et de l'IHM (boutons, LEDs, buzzer).
 │   ├── test_framework.h            Cadre de test maison (aucune dépendance)
 │   ├── mocks/hal/                  Doubles de test de la HAL (remplacent hal/ à la compilation)
 │   └── test_<module>.c             Une suite par module
+├── docs/
+│   ├── bugs.md                   Bugs ouverts et corrigés (avec correctif et version de correction)
+│   └── spec/
+│       └── integration_batteries_powertech.md   Spécification d'intégration des PowerModule (brouillon)
 ├── can database/
 │   ├── BOXHY.dbc                   BASE CAN DE RÉFÉRENCE : 60 messages, 311 signaux
 │   ├── BOXHY_SMB.DBF, BOXHY_FCCB.DBF, IBS.DBF   GÉNÉRÉS pour BUSMASTER
@@ -71,7 +75,7 @@ et de l'IHM (boutons, LEDs, buzzer).
 ├── cmake/, .vscode/              Projet pour l'extension MPLAB de VS Code
 ├── test_dspic2.mc3               Projet MCC
 ├── README.md
-└── CHANGELOG.md                  Historique, anomalies connues et points à valider
+└── CHANGELOG.md                  Historique des versions
 ```
 
 Les dossiers de sortie (`build/`, `dist/`, `debug/`, `_build/`, `out/`, `tests/build/`), les fichiers
@@ -101,7 +105,7 @@ privés MPLAB (`nbproject/private/`) et les sauvegardes MCC (`*.mc3.bak*`) sont 
 `INIT → AUTOCHECK → STANDBY → DCAC_START_1/2/3 → BATTERY_MODE → FCS_START_1/2 → HYBRID_MODE`,
 avec les états de sortie `FC_STOP_1/2`, `STOPPING`, et les états particuliers `MAINTENANCE` et
 `EMERGENCY`. Le passage en mode batterie ou hybride se fait par les boutons `BATTERY_MODE_BUTTON` et
-`HYBRID_MODE_BUTTON`. L'état `DCAC_STOP` existe mais n'est jamais atteint (anomalie 14 du CHANGELOG).
+`HYBRID_MODE_BUTTON`. L'état `DCAC_STOP` existe mais n'est jamais atteint (bug 14, voir [`docs/bugs.md`](docs/bugs.md)).
 
 ### Interfaces
 
@@ -284,7 +288,7 @@ Une unité PC (« PC units ») vaut 1,5 octet de flash : une instruction de 24 b
 
 ### Évolution de l'occupation mémoire
 
-| | v1.3.0 fichier unique | v1.3.0 modulaire | + CAN générique (DBC) |
+| | v1.3.0 d'origine | Découpage en modules | v2.0.0 (CAN générique) |
 |---|---|---|---|
 | Flash | 31 659 octets (96 %) | 26 559 octets (80 %) | 26 856 octets (81 %) |
 | RAM | 1 414 octets | 1 254 octets | 1 204 octets (29 %) |
@@ -314,7 +318,7 @@ make -C tests clean
 Les modules sont compilés avec `gcc -std=c99 -Wall -Wextra -Werror` et les doubles de la HAL
 (`tests/mocks/hal/`) à la place de l'implémentation cible. Chaque suite `tests/test_<module>.c`
 fige le comportement du firmware d'origine, y compris les anomalies connues (tests nommés
-`..._current_behaviour_...`, voir CHANGELOG). Le cadre de test `tests/test_framework.h` est
+`..._current_behaviour_...`, voir [`docs/bugs.md`](docs/bugs.md)). Le cadre de test `tests/test_framework.h` est
 autonome (pas de dépendance externe).
 
 ### Résultat
@@ -382,10 +386,12 @@ code de retour non nul et affiche le fichier, la ligne, la valeur attendue et la
 
 - Sources en UTF-8 avec fins de ligne LF ; les deux projets (MPLAB X et VS Code) sont déclarés en UTF-8.
 - Toute modification de périphérique doit passer par MCC (`test_dspic2.mc3`) puis régénération de `mcc_generated_files/`.
-- Les anomalies du firmware d'origine ont été volontairement **conservées** lors du découpage
-  (comportement identique) ; elles sont repérées par des commentaires `TODO(bug n)` dans le code
-  et listées dans le CHANGELOG. Les anomalies d'encodage CAN 4 et 5 ont été corrigées lors du
-  passage aux signaux DBC.
+- Les anomalies connues sont suivies dans [`docs/bugs.md`](docs/bugs.md). Les bugs ouverts sont repérés dans
+  le code par `TODO(bug n)` et figés par des tests `current_behaviour`. Les bugs corrigés y restent, avec le
+  détail du correctif et la version de correction.
+- La version du firmware est définie dans `src/smb_config.h` (`SMB_VERSION`, `SMB_SUBVERSION`,
+  `SMB_SUBSUBVERSION`) et émise dans la trame 0x2C00004. Elle se met à jour avec le CHANGELOG.
+  Les noms de projet IDE (`BOXHY_SMB_V1_3_0`) sont conservés, pour ne pas casser les projets MPLAB X et VS Code.
 
 ## Auteurs
 

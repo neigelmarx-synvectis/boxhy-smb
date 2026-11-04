@@ -276,8 +276,8 @@ TEST(trame_0x2C00003_courants)
 
 TEST(trame_0x2C00004_version)
 {
-    /* Compteur 5 min sur 16 bits (bug 4 corrigé) ; TODO(bug 6) : version 1.2.7 */
-    const uint8_t expected[6] = {1, 2, 7, 0x2C, 0x01, 1};
+    /* Version 2.0.0 (bug 6 corrigé) ; compteur 5 min sur 16 bits (bug 4 corrigé) */
+    const uint8_t expected[6] = {2, 0, 0, 0x2C, 0x01, 1};
     hmi.buzzer_5_minutes.cnt = 300; /* 0x012C */
     hmi.raz_erreur_ihm_flag = 1;
     cycle();

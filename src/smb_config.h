@@ -17,10 +17,12 @@
 #define SMB_CONFIG_H
 
 /* ---- Version logicielle (trame CAN 0x2C00004) ------------------------------ */
-/* TODO(bug 6) : le firmware est la v1.3.0 mais la télémétrie annonce 1.2.7 (valeur d'origine conservée). */
-#define SMB_VERSION                    1
-#define SMB_SUBVERSION                 2
-#define SMB_SUBSUBVERSION              7
+/* Version du firmware, émise telle quelle dans la télémétrie (majeure.mineure.correctif).
+ * À mettre à jour à chaque version publiée, avec le CHANGELOG (bug 6 corrigé en 2.0.0 :
+ * la v1.3.0 annonçait 1.2.7). */
+#define SMB_VERSION                    2
+#define SMB_SUBVERSION                 0
+#define SMB_SUBSUBVERSION              0
 
 /* ---- Watchdogs de communication (ticks de 1 s) ---------------------------- */
 /* Un équipement est déclaré perdu s'il n'a envoyé aucune trame depuis TIMEOUT + 1 secondes. */

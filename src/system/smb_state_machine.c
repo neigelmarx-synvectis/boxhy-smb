@@ -14,7 +14,7 @@
  *
  * Les erreurs sont agrégées par update_error_flags() à chaque tour, avant l'état courant.
  * La logique reproduit le firmware v1.3.0 d'origine, y compris ses anomalies connues
- * (repérées par TODO(bug n) et listées dans le CHANGELOG).
+ * (repérées par TODO(bug n) et décrites dans docs/bugs.md).
  */
 #include "src/system/smb_state_machine.h"
 #include "src/smb_config.h"

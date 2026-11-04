@@ -3,7 +3,7 @@
  * @file main.c
  *
  * @author Julian VERNIER, Neigel MARX, Gael GRZELAK
- * @version 1.3.0
+ * @version 2.0.0
  *
  * Rôle : initialiser le matériel et les modules, brancher les routines d'interruption, puis
  * exécuter indéfiniment la boucle principale (ordonnanceur coopératif sans RTOS).
