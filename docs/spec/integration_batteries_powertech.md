@@ -96,7 +96,7 @@ Les données ci-dessous sont tirées de [PM].
 | Batteries IBS | Remplacées définitivement : le firmware ne gère plus que les PowerModule. | Q3 |
 | Mise sous tension | Option switch (contact sec). Une clé manuelle et un relais piloté par la SMB sont câblés en parallèle sur le contact. | Q4, § 6.2 |
 | Débit CAN | 500 kbit/s : les PowerModule sont configurés à ce débit. Le bus BOXHY reste inchangé. | Q5 |
-| Broches SMB | Relais de maintien : broche 46 (RB7). Position de la clé : broche 47 (RC13). | Q14, PM-HW-6, PM-HW-7 |
+| Broches SMB | Relais de maintien : broche 46 (RB7). Position de la clé : broche 47 (RC13). Les deux sont reliées au connecteur J24 de la SMB. | Q14, PM-HW-6, PM-HW-7 |
 
 Dimensionnement en décharge, avec un module Standard :
 
@@ -164,6 +164,7 @@ parallèle sur cette entrée, selon un OU logique :
   machine d'états impose de les garder, par exemple pendant une séquence d'arrêt de la pile.
 
 La SMB commande le relais par la broche 46 (RB7) et lit la position de la clé sur la broche 47 (RC13) (Q14).
+Ces deux broches sont reliées au connecteur J24 de la SMB, qui reçoit donc le câblage du relais et de la clé.
 Point en suspens : les états dans lesquels le maintien est demandé (Q15).
 
 L'entrée switch n'est pas isolée. Cela reste conforme à [PM] pour un module seul ou deux modules en parallèle,
@@ -187,8 +188,8 @@ Statuts :
 | PM-HW-3 | La mise sous tension des PowerModule passe par l'option switch. Le contact de la clé et le contact du relais de maintien SMB sont câblés en parallèle (§ 5.3). | Décidée |
 | PM-HW-4 | Un fusible de calibre inférieur à N × fusible interne protège chaque pôle de la batterie, conformément à [PM] § 4. | Proposée |
 | PM-HW-5 | Avec 2 modules, les câbles de puissance entre modules et hubs ont tous la même longueur, conformément à [PM] § 4.1. | Proposée |
-| PM-HW-6 | Le relais de maintien offre un contact sec, sans liaison galvanique avec la SMB, adapté au signal de l'entrée switch. Sa bobine est commandée par la broche 46 du dsPIC (RB7), libre dans le firmware 2.0.0. La broche est déclarée dans MCC en sortie numérique, au niveau bas à l'initialisation, avec l'analogique AN25 désactivé. La commande du relais comporte un pull-down matériel : le relais reste ouvert tant que la broche est en haute impédance, c'est-à-dire du reset jusqu'à l'initialisation des ports. | Décidée |
-| PM-HW-7 | La position de la clé est lue sur la broche 47 du dsPIC (RC13), libre dans le firmware 2.0.0. La broche est déclarée dans MCC en entrée numérique, avec le pull-down interne activé : une clé ouverte ou débranchée se lit « arrêt ». La clé ramène le niveau haut (5 V) en position marche. L'entrée est protégée contre les surtensions et les décharges électrostatiques (à vérifier sur le schéma de la carte). L'état est filtré, sur le modèle des sélecteurs de mode (500 ms). | Décidée |
+| PM-HW-6 | Le relais de maintien offre un contact sec, sans liaison galvanique avec la SMB, adapté au signal de l'entrée switch. Sa bobine est commandée par la broche 46 du dsPIC (RB7), reliée au connecteur J24, libre dans le firmware 2.0.0. La broche est déclarée dans MCC en sortie numérique, au niveau bas à l'initialisation, avec l'analogique AN25 désactivé. La commande du relais comporte un pull-down matériel : le relais reste ouvert tant que la broche est en haute impédance, c'est-à-dire du reset jusqu'à l'initialisation des ports. | Décidée |
+| PM-HW-7 | La position de la clé est lue sur la broche 47 du dsPIC (RC13), reliée au connecteur J24, libre dans le firmware 2.0.0. La broche est déclarée dans MCC en entrée numérique, avec le pull-down interne activé : une clé ouverte ou débranchée se lit « arrêt ». La clé ramène le niveau haut (5 V) en position marche. L'entrée est protégée contre les surtensions et les décharges électrostatiques (à vérifier sur le schéma de la carte). L'état est filtré, sur le modèle des sélecteurs de mode (500 ms). | Décidée |
 | PM-CFG-1 | Le nombre de modules N (1 ou 2) est un paramètre de la SMB, `PM_MODULE_COUNT`. Proposition : constante de `src/smb_config.h`, avec contrôle à la compilation 1 ≤ N ≤ 2 (Q17). | Proposée |
 | PM-CFG-2 | La SMB vérifie que le Status 1 de chacun des N modules attendus est reçu. Proposition : Master, puis slave 1 si N = 2. Un module manquant ou un module en trop déclenche une alarme. La réaction, défaut ou mode dégradé, suit Q9. | Proposée |
 | PM-CFG-3 | Les tables de liaison CAN sont compilées pour 2 modules au plus. Seules les N premières sont exploitées. | Proposée |
@@ -323,4 +324,4 @@ courant entrant, donc la charge : le signe est inversé.
 |---|---|---|
 | 0.1 | 2026-11-04 | Premier brouillon : état des lieux, points bloquants, exigences proposées, questions ouvertes |
 | 0.2 | 2026-11-04 | Décisions Q1 à Q5 : 1 ou 2 modules Standard, nombre de modules paramétrable, sans SuperMaster, IBS remplacées, mise sous tension par clé et relais SMB en parallèle sur l'option switch, CAN à 500 kbit/s. Dimensionnement en décharge validé. Collision d'identifiants confirmée pour la configuration retenue. Nouvelles exigences PM-CFG et PM-PWR. Nouvelles questions Q14 à Q17. [PM-DBC] régénéré à 500 kbit/s. |
-| 0.3 | 2026-11-04 | Décision Q14 : relais de maintien sur la broche 46 (RB7), position de la clé sur la broche 47 (RC13). Nouvelle exigence PM-HW-7. Configuration MCC et HAL précisées. |
+| 0.3 | 2026-11-04 | Décision Q14 : relais de maintien sur la broche 46 (RB7), position de la clé sur la broche 47 (RC13). Les deux broches sont reliées au connecteur J24. Nouvelle exigence PM-HW-7. Configuration MCC et HAL précisées. |
