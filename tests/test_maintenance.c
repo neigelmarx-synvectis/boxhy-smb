@@ -1,9 +1,9 @@
 /**
  * @file test_maintenance.c
- * @brief Tests du mode maintenance (src/maintenance.c).
+ * @brief Tests du mode maintenance (src/hmi/maintenance.c).
  */
 #include "test_framework.h"
-#include "maintenance.h"
+#include "src/hmi/maintenance.h"
 #include "hal/board_io.h"
 
 static uint8_t rx_data[8];

@@ -1,9 +1,9 @@
 /**
  * @file test_ctn_sensor.c
- * @brief Tests de la sonde CTN (src/ctn_sensor.c).
+ * @brief Tests de la sonde CTN (src/measures/ctn_sensor.c).
  */
 #include "test_framework.h"
-#include "ctn_sensor.h"
+#include "src/measures/ctn_sensor.h"
 
 static sCTN_SENSOR s;
 

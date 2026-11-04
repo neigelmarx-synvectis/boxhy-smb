@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "generic.h"
+#include "src/utils/generic.h"
 #include "mcc_generated_files/can_types.h"
 
 /* États de la carte FCCB (octet 0 de la trame 0x2FC0000) */

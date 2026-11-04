@@ -2,13 +2,13 @@
  * @file can_rx.c
  * @brief Réception CAN (voir can_rx.h).
  */
-#include "can_rx.h"
-#include "battery.h"
-#include "fcs.h"
-#include "maintenance.h"
-#include "hmi.h"
-#include "smb_state_machine.h"
-#include "can_db.h"
+#include "src/can/can_rx.h"
+#include "src/devices/battery.h"
+#include "src/devices/fcs.h"
+#include "src/hmi/maintenance.h"
+#include "src/hmi/hmi.h"
+#include "src/system/smb_state_machine.h"
+#include "src/can/can_db.h"
 #include "hal/can_port.h"
 
 #define MAINTENANCE_KEY      0x82

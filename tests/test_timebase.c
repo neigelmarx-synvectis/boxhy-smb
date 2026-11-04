@@ -1,9 +1,9 @@
 /**
  * @file test_timebase.c
- * @brief Tests de la base de temps (src/timebase.c).
+ * @brief Tests de la base de temps (src/system/timebase.c).
  */
 #include "test_framework.h"
-#include "timebase.h"
+#include "src/system/timebase.h"
 
 static void test_setup(void) { Timebase_Init(); }
 

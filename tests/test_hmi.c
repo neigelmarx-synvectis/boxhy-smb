@@ -1,12 +1,12 @@
 /**
  * @file test_hmi.c
- * @brief Tests de l'IHM (src/hmi.c).
+ * @brief Tests de l'IHM (src/hmi/hmi.c).
  */
 #include "test_framework.h"
-#include "hmi.h"
-#include "battery.h"
-#include "inverter.h"
-#include "fcs.h"
+#include "src/hmi/hmi.h"
+#include "src/devices/battery.h"
+#include "src/devices/inverter.h"
+#include "src/devices/fcs.h"
 #include "hal/board_io.h"
 #include "hal/can_port.h"
 

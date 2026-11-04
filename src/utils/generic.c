@@ -2,7 +2,7 @@
  * @file generic.c
  * @brief Fonctions génériques réutilisées dans le firmware (voir generic.h).
  */
-#include "generic.h"
+#include "src/utils/generic.h"
 
 float Generic_MinF(float a, float b)
 {

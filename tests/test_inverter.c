@@ -1,10 +1,10 @@
 /**
  * @file test_inverter.c
- * @brief Tests de l'onduleur RS232 (src/inverter.c).
+ * @brief Tests de l'onduleur RS232 (src/devices/inverter.c).
  */
 #include "test_framework.h"
-#include "inverter.h"
-#include "smb_config.h"
+#include "src/devices/inverter.h"
+#include "src/smb_config.h"
 #include "hal/uart_port.h"
 
 static void test_setup(void)

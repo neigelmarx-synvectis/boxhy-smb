@@ -3,9 +3,9 @@
  * @brief Pile à combustible via la carte FCCB (voir fcs.h).
  */
 #include <string.h>
-#include "fcs.h"
-#include "can_db.h"
-#include "smb_config.h"
+#include "src/devices/fcs.h"
+#include "src/can/can_db.h"
+#include "src/smb_config.h"
 #include "hal/can_port.h"
 
 #define FCS_COMMAND_CONFIRM   0xFF /* octet 7 des commandes longues (maintenance, RAZ erreurs) */

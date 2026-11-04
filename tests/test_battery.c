@@ -1,10 +1,10 @@
 /**
  * @file test_battery.c
- * @brief Tests du module batteries IBS (src/battery.c).
+ * @brief Tests du module batteries IBS (src/devices/battery.c).
  */
 #include "test_framework.h"
-#include "battery.h"
-#include "smb_config.h"
+#include "src/devices/battery.h"
+#include "src/smb_config.h"
 #include "hal/can_port.h"
 
 static uint8_t rx_data[8];

@@ -7,17 +7,17 @@
  * le codage est fait par CanMsg_Pack(). Ordonnancement : une trame par créneau TMR1, cycle de
  * 25 créneaux (créneaux 1, 3, 4, 6, 7, 8, 9, 17, 19, 20, 21, 22, 23).
  */
-#include "can_tx.h"
-#include "can_db.h"
-#include "smb_config.h"
-#include "smb_state_machine.h"
-#include "battery.h"
-#include "fcs.h"
-#include "ems.h"
-#include "inverter.h"
-#include "measures.h"
-#include "hmi.h"
-#include "cooling.h"
+#include "src/can/can_tx.h"
+#include "src/can/can_db.h"
+#include "src/smb_config.h"
+#include "src/system/smb_state_machine.h"
+#include "src/devices/battery.h"
+#include "src/devices/fcs.h"
+#include "src/control/ems.h"
+#include "src/devices/inverter.h"
+#include "src/measures/measures.h"
+#include "src/hmi/hmi.h"
+#include "src/control/cooling.h"
 #include "hal/board_io.h"
 #include "hal/can_port.h"
 

@@ -23,28 +23,19 @@ et de l'IHM (boutons, LEDs, buzzer).
 |---|---|
 | `src/main.c` | Point d'entrée : initialisation des modules, enregistrement des ISR, boucle principale (ordonnanceur à drapeaux) |
 | `src/smb_config.h` | Toutes les constantes "métier" : version, seuils, temporisations |
-| `src/generic.c/.h` | Fonctions génériques pures : min/max/saturation, PID, anti-rebond, drapeau temporisé, moyenne par blocs, motif sonore |
-| `src/timebase.c/.h` | Base de temps TMR1 : drapeaux 100 ms / 300 ms / 1 s, chronomètre de la machine d'états |
-| `src/smb_state_machine.c/.h` | Machine d'états SMB (une fonction par état), agrégation des erreurs, acquittement du mode défaut |
-| `src/battery.c/.h` | Batteries IBS : décodage CAN, keep-alive, watchdogs, agrégation SOC/courant, supervisions (SOC, surintensité, surchauffe, surtension, SOP) |
-| `src/fcs.c/.h` | Pile à combustible via FCCB : états, décodage CAN, commandes, watchdog, temporisations de démarrage |
-| `src/ems.c/.h` | Gestion énergétique : courants moyens, courant système, consigne de courant pile |
-| `src/inverter.c/.h` | Onduleur RS232 (QMOD / QPIWS / QPIGS) : réception, décodage, polling, watchdog, puissance de sortie, déconnexion sur SOC bas |
-| `src/measures.c/.h` | Mesures ADC (4 voies moyennées sur 50 échantillons) et sondes CTN |
-| `src/ctn_sensor.c/.h` | Sonde CTN USP10976 : conversion et surveillance de seuils (ex-`CTN_SENSOR_V03`) |
-| `src/cooling.c/.h` | Ventilateurs AC : trois régulateurs PI, PWM |
-| `src/hmi.c/.h` | Boutons filtrés, motifs du buzzer, limite 5 min, drapeau RAZ IHM |
-| `src/maintenance.c/.h` | Mode maintenance : demande et commandes manuelles par CAN |
-| `src/can_signal.c/.h` | Couche CAN générique : lecture / écriture de signaux d'après leurs paramètres DBC, codage / décodage de trames par tables de liaison |
-| `src/can_db.h` | **Généré** depuis `can database/BOXHY.dbc` : identifiants, DLC et disposition de chaque signal |
-| `src/can_rx.c/.h` | Réception CAN : aiguillage d'un message vers le module concerné |
-| `src/can_tx.c/.h` | Télémétrie CAN : une table de liaisons par trame, cycle de 25 créneaux |
+| `src/system/` | Cœur du système : `smb_state_machine` (machine d'états SMB, une fonction par état, agrégation des erreurs, acquittement du mode défaut), `timebase` (drapeaux 100 ms / 300 ms / 1 s issus de TMR1, chronomètre de la machine d'états) |
+| `src/can/` | Bus CAN : `can_signal` (couche générique : signaux décrits par leurs paramètres DBC, tables de liaison), `can_db.h` (**généré** depuis `can database/BOXHY.dbc`), `can_rx` (aiguillage des trames reçues), `can_tx` (télémétrie, cycle de 25 créneaux) |
+| `src/devices/` | Équipements pilotés : `battery` (batteries IBS : trames, keep-alive, watchdogs, supervisions SOC, surintensité, surchauffe, surtension, SOP), `fcs` (pile via la FCCB : états, commandes, watchdog), `inverter` (onduleur RS232 QMOD / QPIWS / QPIGS : polling, décodage, puissance de sortie, déconnexion sur SOC bas) |
+| `src/measures/` | Mesures : `measures` (4 voies ADC moyennées sur 50 échantillons), `ctn_sensor` (sonde CTN USP10976 : conversion et seuils, ex-`CTN_SENSOR_V03`) |
+| `src/control/` | Régulations : `ems` (courants moyens, courant système, consigne de courant pile), `cooling` (ventilateurs AC : trois régulateurs PI, PWM) |
+| `src/hmi/` | Interfaces opérateur : `hmi` (boutons filtrés, motifs du buzzer, limite 5 min, drapeau RAZ IHM), `maintenance` (mode maintenance : demande et commandes manuelles par CAN) |
+| `src/utils/` | `generic` : fonctions génériques pures (min/max/saturation, PID, anti-rebond, drapeau temporisé, moyenne par blocs, motif sonore) |
 | `hal/` | Couche d'abstraction matérielle (GPIO/PWM, CAN, UART, ADC) : `static inline` sur les drivers MCC, coût nul, substituable par des doubles de test |
 | `mcc_generated_files/` | Drivers générés par MCC (horloge, ADC1, CAN1, UART1, TMR1/TMR5, DMA, pin manager, traps) |
 | `tests/` | Tests unitaires hôte : `test_framework.h` (cadre maison), `mocks/hal/` (doubles de la HAL), un `test_<module>.c` par module, `Makefile` |
 | `can database/BOXHY.dbc` | **Base CAN de référence** (format Vector DBC) : toutes les trames SMB, FCCB, IBS et IHM |
 | `can database/*.DBF` | Bases BUSMASTER **générées** depuis le `.dbc` (chargées par `BOXHY_CONFIG_1.1.0.cfx`) |
-| `tools/candb_gen.py` | Générateur (Python standard) : `.dbc` vers `src/can_db.h` et `.DBF` |
+| `tools/candb_gen.py` | Générateur (Python standard) : `.dbc` vers `src/can/can_db.h` et `.DBF` |
 | `nbproject/` | Projet MPLAB X et makefiles générés |
 | `cmake/`, `.vscode/` | Projet pour l'extension MPLAB de VS Code |
 | `Makefile` | Point d'entrée `make` du projet MPLAB X |
@@ -54,6 +45,8 @@ privés MPLAB (`nbproject/private/`) et les sauvegardes MCC (`*.mc3.bak*`) sont 
 
 ## Architecture logicielle
 
+- Les `#include` sont écrits depuis la racine du dépôt (`"src/devices/battery.h"`, `"hal/can_port.h"`,
+  `"mcc_generated_files/..."`) : la seule racine d'inclusion des projets est le dossier du projet.
 - Seuls `hal/*` et `src/main.c` incluent des en-têtes `mcc_generated_files/` (hormis `can_types.h`,
   portable). Les modules applicatifs ne voient le matériel qu'à travers `hal/board_io.h`,
   `hal/can_port.h`, `hal/uart_port.h`, `hal/adc_port.h`.
@@ -115,7 +108,7 @@ CAN_CHECK_BINDINGS(CANDB_SMB_TX_CURRENTS, smb_currents);
 Pour modifier une trame :
 
 1. Modifier `can database/BOXHY.dbc`, avec CANdb++, un éditeur de texte ou cantools.
-2. Lancer `python3 tools/candb_gen.py`, qui régénère `src/can_db.h` et les trois `.DBF` BUSMASTER.
+2. Lancer `python3 tools/candb_gen.py`, qui régénère `src/can/can_db.h` et les trois `.DBF` BUSMASTER.
 3. Mettre à jour la table de liaisons du module concerné. La compilation signale un signal oublié.
 4. `make -C tests` vérifie que les fichiers générés sont à jour, puis lance les tests.
 
@@ -136,7 +129,7 @@ Sortie : `dist/default/production/BOXHY_SMB_V1_3_0.X.production.hex`.
 
 ### VS Code
 Ouvrir le dossier avec l'extension MPLAB installée ; le projet `.vscode/BOXHY_SMB_V1_3_0.mplab.json`
-(fileSet `src/*`, `hal/*`, `mcc_generated_files/*`) génère les fichiers CMake dans `cmake/` et produit
+(fileSet `src/*` et ses sous-dossiers, `hal/*`, `mcc_generated_files/*`) génère les fichiers CMake dans `cmake/` et produit
 `out/BOXHY_SMB_V1_3_0/default.hex`.
 
 ### Occupation mémoire (build debug PICkit 4)

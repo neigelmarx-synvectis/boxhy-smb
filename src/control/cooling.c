@@ -2,9 +2,9 @@
  * @file cooling.c
  * @brief Refroidissement partie AC (voir cooling.h).
  */
-#include "cooling.h"
-#include "generic.h"
-#include "smb_config.h"
+#include "src/control/cooling.h"
+#include "src/utils/generic.h"
+#include "src/smb_config.h"
 #include "hal/board_io.h"
 
 sCooling cooling;

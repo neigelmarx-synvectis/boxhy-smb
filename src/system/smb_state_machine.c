@@ -5,15 +5,15 @@
  * Chaque état est une fonction. Le chronomètre d'état est timebase.ticks_100ms (pas de 100 ms),
  * remis à zéro à chaque transition par go_to().
  */
-#include "smb_state_machine.h"
-#include "smb_config.h"
-#include "timebase.h"
-#include "battery.h"
-#include "fcs.h"
-#include "inverter.h"
-#include "measures.h"
-#include "hmi.h"
-#include "maintenance.h"
+#include "src/system/smb_state_machine.h"
+#include "src/smb_config.h"
+#include "src/system/timebase.h"
+#include "src/devices/battery.h"
+#include "src/devices/fcs.h"
+#include "src/devices/inverter.h"
+#include "src/measures/measures.h"
+#include "src/hmi/hmi.h"
+#include "src/hmi/maintenance.h"
 #include "hal/board_io.h"
 
 /* Temporisations des états (ticks de 100 ms) */

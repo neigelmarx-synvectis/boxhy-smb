@@ -1,10 +1,10 @@
 /**
  * @file test_measures.c
- * @brief Tests des mesures analogiques (src/measures.c) avec le double ADC.
+ * @brief Tests des mesures analogiques (src/measures/measures.c) avec le double ADC.
  */
 #include "test_framework.h"
-#include "measures.h"
-#include "smb_config.h"
+#include "src/measures/measures.h"
+#include "src/smb_config.h"
 #include "hal/adc_port.h"
 
 static void test_setup(void)

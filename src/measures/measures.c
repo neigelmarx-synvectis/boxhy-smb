@@ -2,8 +2,8 @@
  * @file measures.c
  * @brief Mesures analogiques (voir measures.h).
  */
-#include "measures.h"
-#include "smb_config.h"
+#include "src/measures/measures.h"
+#include "src/smb_config.h"
 #include "hal/adc_port.h"
 
 sMeasures measures;

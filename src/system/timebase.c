@@ -2,7 +2,7 @@
  * @file timebase.c
  * @brief Base de temps dérivée de TMR1 (voir timebase.h).
  */
-#include "timebase.h"
+#include "src/system/timebase.h"
 
 volatile sTimebase timebase;
 

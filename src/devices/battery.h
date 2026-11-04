@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "generic.h"
+#include "src/utils/generic.h"
 #include "mcc_generated_files/can_types.h"
 
 #define BATTERY_NB 2

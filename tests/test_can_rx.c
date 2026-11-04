@@ -1,14 +1,14 @@
 /**
  * @file test_can_rx.c
- * @brief Tests de l'aiguillage des trames CAN reçues (src/can_rx.c).
+ * @brief Tests de l'aiguillage des trames CAN reçues (src/can/can_rx.c).
  */
 #include "test_framework.h"
-#include "can_rx.h"
-#include "battery.h"
-#include "fcs.h"
-#include "maintenance.h"
-#include "hmi.h"
-#include "smb_state_machine.h"
+#include "src/can/can_rx.h"
+#include "src/devices/battery.h"
+#include "src/devices/fcs.h"
+#include "src/hmi/maintenance.h"
+#include "src/hmi/hmi.h"
+#include "src/system/smb_state_machine.h"
 #include "hal/can_port.h"
 #include "hal/board_io.h"
 

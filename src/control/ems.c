@@ -3,10 +3,10 @@
  * @brief Gestion énergétique (voir ems.h).
  */
 #include <string.h>
-#include "ems.h"
-#include "generic.h"
-#include "smb_config.h"
-#include "fcs.h"
+#include "src/control/ems.h"
+#include "src/utils/generic.h"
+#include "src/smb_config.h"
+#include "src/devices/fcs.h"
 
 #define EMS_AVERAGE_SIZE 10
 

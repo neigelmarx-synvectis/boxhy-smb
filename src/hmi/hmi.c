@@ -3,12 +3,12 @@
  * @brief Interface homme-machine (voir hmi.h).
  */
 #include <string.h>
-#include "hmi.h"
-#include "smb_config.h"
-#include "battery.h"
-#include "inverter.h"
-#include "fcs.h"
-#include "smb_state_machine.h"
+#include "src/hmi/hmi.h"
+#include "src/smb_config.h"
+#include "src/devices/battery.h"
+#include "src/devices/inverter.h"
+#include "src/devices/fcs.h"
+#include "src/system/smb_state_machine.h"
 #include "hal/board_io.h"
 
 sHmi hmi;

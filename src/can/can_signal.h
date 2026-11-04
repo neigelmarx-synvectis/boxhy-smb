@@ -3,7 +3,7 @@
  * @brief Couche CAN générique : lecture / écriture de signaux décrits par leurs paramètres DBC,
  *        et codage / décodage de trames entières à partir de tables de liaison signal <-> variable.
  *
- * La disposition des signaux vient de src/can_db.h, généré depuis can database/BOXHY.dbc par
+ * La disposition des signaux vient de src/can/can_db.h, généré depuis can database/BOXHY.dbc par
  * tools/candb_gen.py. Ce module ne connaît aucune trame particulière.
  *
  * Conventions DBC :

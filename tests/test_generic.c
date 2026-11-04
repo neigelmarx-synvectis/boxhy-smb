@@ -1,9 +1,9 @@
 /**
  * @file test_generic.c
- * @brief Tests des fonctions génériques (src/generic.c).
+ * @brief Tests des fonctions génériques (src/utils/generic.c).
  */
 #include "test_framework.h"
-#include "generic.h"
+#include "src/utils/generic.h"
 
 static void test_setup(void) {}
 

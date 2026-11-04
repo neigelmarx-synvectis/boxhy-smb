@@ -11,7 +11,7 @@
 #ifndef CAN_DB_H
 #define CAN_DB_H
 
-#include "can_signal.h"
+#include "src/can/can_signal.h"
 
 /* -------------------------------------------------------------------------------------- */
 /* SMB_TX_BAT_GENERAL : 0x2BA0000, DLC 8, émetteur SMB */

@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "ctn_sensor.h"
+#include "src/measures/ctn_sensor.h"
 
 typedef struct
 {

@@ -5,9 +5,9 @@
  * Les trames de l'IHM sont décodées par les tables de liaison ci-dessous (disposition issue de
  * can_db.h) dans `req`, puis la commande est appliquée selon l'identifiant reçu.
  */
-#include "maintenance.h"
-#include "can_db.h"
-#include "smb_state_machine.h"
+#include "src/hmi/maintenance.h"
+#include "src/can/can_db.h"
+#include "src/system/smb_state_machine.h"
 #include "hal/board_io.h"
 
 #define MAINTENANCE_KEY       0x82

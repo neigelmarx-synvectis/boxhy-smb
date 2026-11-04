@@ -1,18 +1,18 @@
 /**
  * @file test_can_tx.c
- * @brief Tests de la télémétrie CAN (src/can_tx.c) : identifiants, DLC, octets, créneaux.
+ * @brief Tests de la télémétrie CAN (src/can/can_tx.c) : identifiants, DLC, octets, créneaux.
  */
 #include "test_framework.h"
-#include "can_tx.h"
-#include "smb_config.h"
-#include "smb_state_machine.h"
-#include "battery.h"
-#include "fcs.h"
-#include "ems.h"
-#include "inverter.h"
-#include "measures.h"
-#include "hmi.h"
-#include "cooling.h"
+#include "src/can/can_tx.h"
+#include "src/smb_config.h"
+#include "src/system/smb_state_machine.h"
+#include "src/devices/battery.h"
+#include "src/devices/fcs.h"
+#include "src/control/ems.h"
+#include "src/devices/inverter.h"
+#include "src/measures/measures.h"
+#include "src/hmi/hmi.h"
+#include "src/control/cooling.h"
 #include "hal/board_io.h"
 #include "hal/can_port.h"
 #include "hal/adc_port.h"

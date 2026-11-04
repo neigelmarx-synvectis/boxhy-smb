@@ -1,10 +1,10 @@
 /**
  * @file test_fcs.c
- * @brief Tests du module pile à combustible (src/fcs.c).
+ * @brief Tests du module pile à combustible (src/devices/fcs.c).
  */
 #include "test_framework.h"
-#include "fcs.h"
-#include "smb_config.h"
+#include "src/devices/fcs.h"
+#include "src/smb_config.h"
 #include "hal/can_port.h"
 
 static uint8_t rx_data[8];

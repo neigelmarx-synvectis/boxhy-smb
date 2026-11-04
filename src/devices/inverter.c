@@ -3,9 +3,9 @@
  * @brief Onduleur DC/AC en RS232 (voir inverter.h).
  */
 #include <string.h>
-#include "inverter.h"
-#include "generic.h"
-#include "smb_config.h"
+#include "src/devices/inverter.h"
+#include "src/utils/generic.h"
+#include "src/smb_config.h"
 #include "hal/uart_port.h"
 
 #define RS232_RX_FRAME_SIZE   120

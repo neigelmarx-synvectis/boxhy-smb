@@ -3,9 +3,9 @@
  * @brief Batteries IBS (voir battery.h).
  */
 #include <string.h>
-#include "battery.h"
-#include "can_db.h"
-#include "smb_config.h"
+#include "src/devices/battery.h"
+#include "src/can/can_db.h"
+#include "src/smb_config.h"
 #include "hal/can_port.h"
 
 #define IBS_INFO_ID_MASK      0xFFFF00FEUL /* 0x18FF xx D0/D1 : xx = index info, bit 0 = batterie */

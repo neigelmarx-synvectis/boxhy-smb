@@ -2,7 +2,7 @@
 """Générateur de la base CAN du firmware SMB BOXHY.
 
 Lit la base de référence `can database/BOXHY.dbc` (format Vector DBC) et génère :
-  - src/can_db.h : identifiants, DLC et disposition de chaque signal (bit de départ,
+  - src/can/can_db.h : identifiants, DLC et disposition de chaque signal (bit de départ,
     longueur, ordre des octets, signe, facteur, offset, min, max, tables de valeurs) ;
   - can database/BOXHY_SMB.DBF, BOXHY_FCCB.DBF, IBS.DBF : bases BUSMASTER chargées par
     BOXHY_CONFIG_1.1.0.cfx (répartition des messages par préfixe de nom SMB_, FCCB_, IBS_).
@@ -20,7 +20,7 @@ import sys
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 DBC_PATH = os.path.join(ROOT, "can database", "BOXHY.dbc")
-HEADER_PATH = os.path.join(ROOT, "src", "can_db.h")
+HEADER_PATH = os.path.join(ROOT, "src", "can", "can_db.h")
 DBF_FILES = [("SMB_", os.path.join(ROOT, "can database", "BOXHY_SMB.DBF")),
              ("FCCB_", os.path.join(ROOT, "can database", "BOXHY_FCCB.DBF")),
              ("IBS_", os.path.join(ROOT, "can database", "IBS.DBF"))]
@@ -191,7 +191,7 @@ def validate(messages):
 
 
 # ----------------------------------------------------------------------------------------
-# Génération de src/can_db.h
+# Génération de src/can/can_db.h
 # ----------------------------------------------------------------------------------------
 def c_num(x):
     x = float(x)
@@ -226,7 +226,7 @@ def gen_header(messages):
     w("#ifndef CAN_DB_H")
     w("#define CAN_DB_H")
     w("")
-    w('#include "can_signal.h"')
+    w('#include "src/can/can_signal.h"')
     w("")
     for m in messages:
         mi = "CANDB_" + c_ident(m.name)

@@ -6,7 +6,7 @@
  * accumulateur 32 bits : pas d'arithmétique 64 bits, coûteuse sur dsPIC.
  */
 #include <string.h>
-#include "can_signal.h"
+#include "src/can/can_signal.h"
 #include "hal/can_port.h"
 
 #define CAN_DATA_SIZE 8u

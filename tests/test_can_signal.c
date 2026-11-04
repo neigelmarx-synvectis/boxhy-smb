@@ -1,12 +1,12 @@
 /**
  * @file test_can_signal.c
- * @brief Tests de la couche CAN générique (src/can_signal.c) et de la base générée (src/can_db.h).
+ * @brief Tests de la couche CAN générique (src/can/can_signal.c) et de la base générée (src/can/can_db.h).
  */
 #define CANDB_WITH_SIGNAL_LIST
 #include <stdlib.h>
 #include "test_framework.h"
-#include "can_signal.h"
-#include "can_db.h"
+#include "src/can/can_signal.h"
+#include "src/can/can_db.h"
 #include "hal/can_port.h"
 
 static void test_setup(void) { MockCan_Reset(); }

@@ -1,9 +1,9 @@
 /**
  * @file test_cooling.c
- * @brief Tests du refroidissement AC (src/cooling.c).
+ * @brief Tests du refroidissement AC (src/control/cooling.c).
  */
 #include "test_framework.h"
-#include "cooling.h"
+#include "src/control/cooling.h"
 #include "hal/board_io.h"
 
 static void test_setup(void)

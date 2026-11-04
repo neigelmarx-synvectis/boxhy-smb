@@ -1,10 +1,10 @@
 /**
  * @file test_ems.c
- * @brief Tests de la gestion énergétique (src/ems.c).
+ * @brief Tests de la gestion énergétique (src/control/ems.c).
  */
 #include "test_framework.h"
-#include "ems.h"
-#include "fcs.h"
+#include "src/control/ems.h"
+#include "src/devices/fcs.h"
 #include "hal/can_port.h"
 
 static void test_setup(void)

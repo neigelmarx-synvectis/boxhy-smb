@@ -210,6 +210,13 @@
             "files": [
                 "src/*.c",
                 "src/*.h",
+                "src/system/*",
+                "src/can/*",
+                "src/devices/*",
+                "src/measures/*",
+                "src/control/*",
+                "src/hmi/*",
+                "src/utils/*",
                 "hal/*.c",
                 "hal/*.h",
                 "Makefile",

@@ -11,10 +11,10 @@ respecte le [Semantic Versioning](https://semver.org/lang/fr/).
 - Tests unitaires hôte (`tests/`, `make -C tests`) : cadre de test maison, doubles de la couche
   HAL, une suite par module (15 suites, 203 tests). Les tests figent le comportement actuel.
 - Base CAN de référence `can database/BOXHY.dbc` (format Vector, 60 messages, 311 signaux) et
-  générateur `tools/candb_gen.py` (Python standard). Le générateur produit `src/can_db.h` et les `.DBF`
+  générateur `tools/candb_gen.py` (Python standard). Le générateur produit `src/can/can_db.h` et les `.DBF`
   BUSMASTER, et valide la base (signal hors DLC, chevauchement, flottant). `make -C tests` vérifie
   que les fichiers générés sont à jour.
-- Couche CAN générique `src/can_signal.c/.h` : lecture et écriture d'un signal d'après ses paramètres
+- Couche CAN générique `src/can/can_signal.c/.h` : lecture et écriture d'un signal d'après ses paramètres
   DBC (Intel / Motorola, signé, flottant 32 bits, facteur, offset). Codage et décodage d'une trame
   entière par tables de liaison signal / variable, placées en mémoire programme. Le nombre de liaisons est
   contrôlé à la compilation.
@@ -35,6 +35,10 @@ respecte le [Semantic Versioning](https://semver.org/lang/fr/).
 - Sources converties en UTF-8 / LF ; encodage des projets MPLAB X et VS Code passé à UTF-8.
 - Descripteurs de projet (`nbproject/configurations.xml`, `.vscode/BOXHY_SMB_V1_3_0.mplab.json`)
   mis à jour avec les nouveaux fichiers.
+- Sources de `src/` regroupées par fonction dans des sous-dossiers : `system/`, `can/`, `devices/`,
+  `measures/`, `control/`, `hmi/` et `utils/`. `main.c` et `smb_config.h` restent à la racine de `src/`.
+  Les `#include` sont écrits depuis la racine du dépôt. Les projets MPLAB X et VS Code, le Makefile de
+  tests et le générateur CAN sont mis à jour. Le firmware produit est identique octet pour octet.
 - Toutes les trames CAN lues ou émises par la SMB passent par la couche générique : télémétrie
   (`can_tx.c`), batteries IBS, FCCB (états et commandes), maintenance, ordres IHM. Les trames
   restent identiques octet pour octet, sauf les corrections ci-dessous. Flash 26 559 → 26 856 octets,
@@ -67,7 +71,7 @@ respecte le [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Supprimé
 - `IBS_BATTERY_V02.C/.H` et `main.c` (squelette MCC) : non compilés, redondants avec le code du main.
-- `CTN_SENSOR_V03.C/.H` : repris dans `src/ctn_sensor.c/.h` compilé séparément.
+- `CTN_SENSOR_V03.C/.H` : repris dans `src/measures/ctn_sensor.c/.h` compilé séparément.
 - Variables et messages jamais utilisés (`rsmsgdebug`, `timer()`, champs QPIGS décodés en
   commentaire, boutons gauche/droit filtrés, `battery_hard_overcurrent_timeout`…).
 

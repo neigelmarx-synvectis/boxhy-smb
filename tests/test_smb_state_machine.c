@@ -1,17 +1,17 @@
 /**
  * @file test_smb_state_machine.c
- * @brief Tests de la machine d'états SMB (src/smb_state_machine.c) : transitions, relais, buzzer.
+ * @brief Tests de la machine d'états SMB (src/system/smb_state_machine.c) : transitions, relais, buzzer.
  */
 #include "test_framework.h"
-#include "smb_state_machine.h"
-#include "smb_config.h"
-#include "timebase.h"
-#include "battery.h"
-#include "fcs.h"
-#include "inverter.h"
-#include "measures.h"
-#include "hmi.h"
-#include "maintenance.h"
+#include "src/system/smb_state_machine.h"
+#include "src/smb_config.h"
+#include "src/system/timebase.h"
+#include "src/devices/battery.h"
+#include "src/devices/fcs.h"
+#include "src/devices/inverter.h"
+#include "src/measures/measures.h"
+#include "src/hmi/hmi.h"
+#include "src/hmi/maintenance.h"
 #include "hal/board_io.h"
 #include "hal/can_port.h"
 #include "hal/adc_port.h"

@@ -2,7 +2,7 @@
  * @file ctn_sensor.c
  * @brief Sonde de température CTN (voir ctn_sensor.h).
  */
-#include "ctn_sensor.h"
+#include "src/measures/ctn_sensor.h"
 
 void ctnSensorCheck(sCTN_SENSOR *ctn_sensor)
 {
