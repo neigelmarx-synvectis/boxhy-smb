@@ -61,6 +61,7 @@ et de l'IHM (boutons, LEDs, buzzer).
 │   └── test_<module>.c             Une suite par module
 ├── docs/
 │   ├── bugs.md                   Bugs ouverts et corrigés (avec correctif et version de correction)
+│   ├── analyse_smb_v2_2_1_triphase.md   Analyse du firmware 2.2.1 triphasé (écarts, anomalies)
 │   └── spec/
 │       └── integration_batteries_powertech.md   Spécification d'intégration des PowerModule (brouillon)
 ├── can database/

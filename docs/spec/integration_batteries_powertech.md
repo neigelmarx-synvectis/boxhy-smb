@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Version | 0.6 – brouillon de travail |
+| Version | 0.7 – brouillon de travail |
 | Date | 2026-11-04 |
-| Statut | Topologie, mise sous tension, débit et broches SMB décidés (Q1 à Q5, Q14). Bus CAN commun entre BOXHY décidé (Q19), avec un identifiant de BOXHY proposé dans les identifiants CAN (§ 6.10), qui résoudrait aussi la collision de Q16. Fonctionnement sans batterie (Q18) et configuration triphasée (Q20 à Q24) à définir. Questions Q6 à Q13, Q15, Q16, Q18, Q20 à Q24 ouvertes (§ 9) |
+| Statut | Topologie, mise sous tension, débit et broches SMB décidés (Q1 à Q5, Q14). Bus CAN commun entre BOXHY décidé (Q19), avec un identifiant de BOXHY proposé dans les identifiants CAN (§ 6.10), qui résoudrait aussi la collision de Q16. Fonctionnement sans batterie (Q18) et configuration triphasée (Q20 à Q24) à définir. Questions Q6 à Q13, Q15, Q16, Q18, Q20 à Q26 ouvertes (§ 9) |
 | Firmware de départ | SMB BOXHY 2.0.0 |
 
 ## 1. Objet
@@ -32,6 +32,7 @@ configuration des chargeurs externes.
 | [PM-DBC] | `can database/POWERMODULE.dbc`, généré par `tools/powermodule_dbc.py` d'après le chapitre 10 de [PM] (configuration BOXHY par défaut : master + 1 slave, 500 kbit/s) |
 | [BOXHY-DBC] | `can database/BOXHY.dbc` : trames actuelles de la SMB, de la FCCB, des IBS et de l'IHM |
 | [BUGS] | `docs/bugs.md` : anomalies connues du firmware SMB |
+| [V221] | `docs/analyse_smb_v2_2_1_triphase.md` : analyse du firmware SMB 2.2.1 triphasé (projets L1, L2, L3 de `assets/old versions/`) |
 | [FW] | Firmware SMB 2.0.0, en particulier `src/devices/battery.c`, `src/control/ems.c` et `src/system/smb_state_machine.c` |
 
 ## 3. Situation actuelle : batteries IBS
@@ -369,6 +370,11 @@ Raisons de ce choix :
   `C1RXF0`). Il laisse donc passer les trois valeurs ;
 - l'identifiant se lit directement dans le quatrième chiffre hexadécimal.
 
+**Mise à jour v0.7 : schéma existant.** Le firmware 2.2.1 triphasé [V221] utilise déjà un autre plan, de type J1939.
+L'identifiant de BOXHY y est porté par l'adresse source : `0x10 + ID` pour la SMB, `0x00 + ID` pour la FCCB, IBS en
+`0xD0` à `0xDF`. Les FCCB et IHM des BOXHY triphasées le comprennent donc déjà, et il est lui aussi sans collision
+avec les PowerModule. Le choix entre ce plan et le champ ci-dessus est l'objet de Q25.
+
 | Id | Exigence | Statut |
 |---|---|---|
 | ID-1 | `BOXHY_ID` (1, 2 ou 3) est un paramètre de configuration (PM-CFG-4). En triphasé, le maître vaut 1 et les esclaves 2 et 3. Une BOXHY seule vaut 1. Ce paramètre remplace le numéro d'esclave `SMB_SLAVE_ID`. | Proposée |
@@ -454,6 +460,8 @@ Raisons de ce choix :
 | Q22 | Comment l'esclave fait-il respecter la puissance autorisée, alors que la SMB n'envoie aucune consigne à l'onduleur ? | Surveillance de la puissance de sortie (QPIGS), avertissement sonore, puis déconnexion temporisée de l'onduleur au-delà de l'autorisation. À vérifier : l'onduleur accepte-t-il une commande de limitation de puissance ? | |
 | Q23 | Comment s'enchaînent le démarrage et l'arrêt triphasés ? La clé du maître arrête-t-elle tout le système ? Les esclaves ont-ils leur propre clé, et quel rôle ont leur relais de maintien (broche 46), puisqu'ils ne pilotent pas de contact sec de batterie ? | La clé du maître arrête tout : le maître retire les autorisations, attend la fin de l'arrêt des esclaves, puis ouvre son relais de maintien. La clé d'un esclave n'arrête que cet esclave. | |
 | Q24 | Qui fait évoluer les logiciels de la FCCB et de l'IHM pour qu'ils prennent en compte le `BOXHY_ID` (ID-4) ? Comment ces équipements reçoivent-ils leur identifiant : paramètre propre, ou valeur transmise par la SMB ? | Même support de configuration que la SMB (Q21) pour chaque équipement. Sinon, la SMB annonce son `BOXHY_ID` au démarrage. | |
+| Q25 | Quel plan d'identifiants CAN pour l'identifiant de BOXHY : le champ sur les bits 14 et 15 (§ 6.10), ou le plan J1939 de la 2.2.1 triphasée [V221], déjà compris par les FCCB et IHM triphasées ? | Plan J1939 de la 2.2.1 si les FCCB et IHM triphasées doivent rester compatibles ; il faudra alors l'étendre à la BOXHY seule et décrire ces trames dans [BOXHY-DBC]. | |
+| Q26 | Quel microcontrôleur équipe chaque carte SMB en service ? La 2.2.1 triphasée vise le dsPIC33EV128GM106, avec une horloge à 15 MIPS, et ne tient pas dans le 32GM106 [V221]. Le firmware unique doit-il cibler les deux composants ? | Recenser les cartes. Si les deux composants coexistent, garder un seul code source et deux configurations de build, la HAL absorbant les écarts d'horloge. | |
 
 ## 10. Historique
 
@@ -465,3 +473,4 @@ Raisons de ce choix :
 | 0.4 | 2026-11-04 | Ajout du cas sans batterie (N = 0) : PM-CFG-1 étendu à 0 ≤ N ≤ 2, nouvelle section 6.8 (dépendances du firmware à la batterie, exigences PM-NOB), nouvelle question Q18. |
 | 0.5 | 2026-11-04 | Configuration triphasée (§ 6.9) : BOXHY maître qui pilote la batterie partagée, esclaves autorisés par le maître (marche et puissance), exigences TRI. Décision Q17 : un seul logiciel configuré par paramètres (`SMB_ROLE`, `SMB_SLAVE_ID`, `PM_MODULE_COUNT`), exigences PM-CFG-4 à 6. Nouvelles questions Q19 à Q23. Correction : la mention « 0 module » était ajoutée à la mauvaise ligne du § 4.2. |
 | 0.6 | 2026-11-04 | Décision Q19 : bus CAN commun aux BOXHY, avec un identifiant de BOXHY dans les trames. Nouvelle section 6.10 : champ `BOXHY_ID` proposé sur les bits 14 et 15, valeurs 1 à 3, sans collision avec les PowerModule ; il résout aussi Q16. Exigences ID-1 à ID-8. `SMB_SLAVE_ID` remplacé par `BOXHY_ID`. Nouvelle question Q24. |
+| 0.7 | 2026-11-04 | Référence [V221] : analyse du firmware 2.2.1 triphasé. Note sur son plan d'identifiants J1939 au § 6.10. Nouvelles questions Q25 (plan d'identifiants) et Q26 (microcontrôleur). |
