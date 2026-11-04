@@ -296,7 +296,7 @@ BO_ 2466518528 PM_CMD_SET_PARAM_S1M2: 3 CONTROLLER
 BO_ 2466519552 PM_CMD_REQUEST_PARAM_S1M2: 0 CONTROLLER
 
 
-CM_ "Batteries PowerTech PowerModule - protocole CAN du manuel V0.2 (29/04/26), chapitre 10. CAN 2.0B, identifiants etendus, format Intel, 250 kbit/s par defaut. Topologie : master + 1 slave(s) en parallele, sans SuperMaster. FICHIER GENERE par tools/powermodule_dbc.py : ne pas modifier a la main.";
+CM_ "Batteries PowerTech PowerModule - protocole CAN du manuel V0.2 (29/04/26), chapitre 10. CAN 2.0B, identifiants etendus, format Intel, 250 kbit/s par defaut, regle ici a 500000 bit/s. Topologie : master + 1 slave(s) en parallele, sans SuperMaster. FICHIER GENERE par tools/powermodule_dbc.py : ne pas modifier a la main.";
 CM_ BU_ CONTROLLER "Controleur externe (outil, device 0b11) : envoie les commandes et lit les status.";
 CM_ BO_ 2193620994 "Global Status 1 emis par le Master : SOC, IMR, IMD et etat du systeme.";
 CM_ SG_ 2193620994 soc_system "Etat de charge du systeme.";
@@ -549,7 +549,7 @@ BA_DEF_DEF_  "BusType" "CAN";
 BA_DEF_DEF_  "Baudrate" 250000;
 BA_DEF_DEF_  "VFrameFormat" "ExtendedCAN";
 BA_DEF_DEF_  "GenMsgCycleTime" 0;
-BA_ "Baudrate" 250000;
+BA_ "Baudrate" 500000;
 BA_ "VFrameFormat" BO_ 2193620994 1;
 BA_ "GenMsgCycleTime" BO_ 2193620994 1000;
 BA_ "VFrameFormat" BO_ 2193620995 1;

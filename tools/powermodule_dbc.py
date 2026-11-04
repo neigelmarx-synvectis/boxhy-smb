@@ -19,7 +19,9 @@ Un fichier DBC ne connaît que des identifiants fixes : ce script instancie chaq
 chaque module d'une topologie donnée.
 
 Usage :
-  python3 tools/powermodule_dbc.py                      Master + 1 slave, sans SuperMaster (défaut)
+  python3 tools/powermodule_dbc.py                      Master + 1 slave, sans SuperMaster, 500 kbit/s (défaut :
+                                                        configuration BOXHY, 1 ou 2 modules)
+  python3 tools/powermodule_dbc.py --baudrate 250000    débit usine des modules
   python3 tools/powermodule_dbc.py --modules 6          Master + 5 slaves en parallèle
   python3 tools/powermodule_dbc.py --supermaster --stacks 3 --modules 4
                                                         3 stacks de 4 slaves, un SuperMaster par stack
@@ -423,8 +425,8 @@ def write_dbc(msgs, nodes, args):
         out.append("")
     out.append("")
     out.append('CM_ "Batteries PowerTech PowerModule - protocole CAN du manuel V0.2 (29/04/26), chapitre 10. '
-               'CAN 2.0B, identifiants etendus, format Intel, 250 kbit/s par defaut. Topologie : %s. '
-               'FICHIER GENERE par tools/powermodule_dbc.py : ne pas modifier a la main.";' % topo)
+               'CAN 2.0B, identifiants etendus, format Intel, 250 kbit/s par defaut, regle ici a %d bit/s. Topologie : %s. '
+               'FICHIER GENERE par tools/powermodule_dbc.py : ne pas modifier a la main.";' % (args.baudrate, topo))
     out.append('CM_ BU_ CONTROLLER "Controleur externe (outil, device 0b11) : envoie les commandes et lit les status.";')
     for m in msgs:
         if m.comment:
@@ -437,10 +439,10 @@ def write_dbc(msgs, nodes, args):
             'BA_DEF_ BO_  "VFrameFormat" ENUM  "StandardCAN","ExtendedCAN","reserved","J1939PG";',
             'BA_DEF_ BO_  "GenMsgCycleTime" INT 0 65535;',
             'BA_DEF_DEF_  "BusType" "CAN";',
-            'BA_DEF_DEF_  "Baudrate" 250000;',
+            'BA_DEF_DEF_  "Baudrate" 250000;',  # défaut usine [PM]
             'BA_DEF_DEF_  "VFrameFormat" "ExtendedCAN";',
             'BA_DEF_DEF_  "GenMsgCycleTime" 0;',
-            'BA_ "Baudrate" 250000;']
+            'BA_ "Baudrate" %d;' % args.baudrate]
     for m in msgs:
         out.append('BA_ "VFrameFormat" BO_ %d 1;' % ext(m.id))
         if m.cycle:
@@ -474,6 +476,8 @@ def main():
     ap.add_argument("--stacks", type=int, default=1, help="nombre de stacks (avec --supermaster)")
     ap.add_argument("--modules", type=int, default=2,
                     help="modules par stack (sans SuperMaster : master compris, modules en parallèle)")
+    ap.add_argument("--baudrate", type=int, default=500000, choices=(125000, 250000, 500000, 1000000),
+                    help="débit du bus (BOXHY : 500 kbit/s, modules reconfigurés ; usine : 250 kbit/s)")
     ap.add_argument("--output", default=DEFAULT_OUTPUT)
     ap.add_argument("--check", action="store_true", help="vérifie que le fichier est à jour")
     args = ap.parse_args()

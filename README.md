@@ -162,11 +162,14 @@ indépendant de `BOXHY.dbc` et n'est pas utilisé par le firmware.
 
 Les identifiants PowerModule ne sont pas fixes. Ils encodent l'émetteur (master, slave ou SuperMaster),
 le numéro de module (1 à 31) et le numéro de stack (1 à 31). Le fichier est donc généré pour une
-topologie donnée par `tools/powermodule_dbc.py`. Par défaut, il s'agit d'un master et d'un slave en
-parallèle, sans SuperMaster : 30 messages et 221 signaux.
+topologie donnée par `tools/powermodule_dbc.py`. Par défaut, c'est la configuration BOXHY : un master et un
+slave en parallèle, sans SuperMaster, à 500 kbit/s. Le fichier contient 30 messages et 221 signaux et couvre
+aussi le cas d'un module seul. Voir la spécification d'intégration
+[`docs/spec/integration_batteries_powertech.md`](docs/spec/integration_batteries_powertech.md).
 
 ```sh
-python3 tools/powermodule_dbc.py                                   # master + 1 slave (défaut)
+python3 tools/powermodule_dbc.py                                   # master + 1 slave, 500 kbit/s (défaut)
+python3 tools/powermodule_dbc.py --baudrate 250000 --output pm_usine.dbc  # débit usine des modules
 python3 tools/powermodule_dbc.py --modules 6                       # master + 5 slaves en parallèle
 python3 tools/powermodule_dbc.py --supermaster --stacks 3 --modules 4 --output pm_3s4p.dbc
 ```
