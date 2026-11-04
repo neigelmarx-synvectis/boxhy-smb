@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.1 – brouillon de travail |
+| Version | 0.2 – brouillon de travail |
 | Date | 2026-11-04 |
 | Statut | Plan mémoire, formats et règles d'écriture proposés. Questions MEM-Q1 à MEM-Q6 ouvertes (§ 9) |
 | Composant de référence | dsPIC33EV128GM106 (décision Q26 de [SPEC-PM]) |
@@ -133,7 +133,7 @@ l'ancienne banque intacte et valide.
 | Id | Nom | Valeurs | Défaut (zone vierge) | Prise en compte |
 |---|---|---|---|---|
 | 0x0001 | `BOXHY_ID` | 0, 1 ou 2 | 0 | Au redémarrage |
-| 0x0002 | `SMB_ROLE` | 0 = `SEULE`, 1 = `TRIPHASE` | `SEULE` | Au redémarrage |
+| 0x0002 | `SMB_ROLE` | 0 = `SEULE`, 1 = `TRI_MAITRE`, 2 = `TRI_ESCLAVE` | `SEULE` | Au redémarrage |
 | 0x0003 | `PM_MODULE_COUNT` | 0, 1 ou 2 | aucun : configuration absente | Au redémarrage |
 | 0x0010, 0x0011 | Numéro de série de la BOXHY | 32 bits, poids faible puis poids fort | 0 | Immédiate |
 | 0x0100 à 0x7FFF | Réservés aux futurs paramètres : seuils, temporisations | | | |
@@ -172,7 +172,7 @@ Code sur 16 bits = famille (8 bits) et numéro (8 bits) :
 | 0x03 | Onduleur | un code par drapeau de QPIWS, perte de communication, surcharge prolongée, déconnexion sur SOC |
 | 0x04 | Batterie PowerModule | perte de communication, module manquant, alarmes et erreurs du Global Status, contacteur ouvert |
 | 0x05 | Capteurs de température | une sonde × (haute, basse, perdue) |
-| 0x06 | Triphasé | perte du maître, `BOXHY_ID` en double, puissance autorisée dépassée |
+| 0x06 | Triphasé | perte du maître, deux maîtres, `BOXHY_ID` en double, puissance autorisée dépassée |
 | 0x07 | Mémoire persistante | banque de paramètres invalide, erreur ECC, page de journal invalide |
 | 0x08 | Reset | cause d'un reset anormal (RCON : watchdog, trappe, brown-out) |
 
@@ -279,3 +279,4 @@ servies :
 | Version | Date | Modification |
 |---|---|---|
 | 0.1 | 2026-11-04 | Premier brouillon : plan mémoire du dsPIC33EV128GM106 (8 pages de 0x013400 à 0x0153FF), protection à la reprogrammation, paramètres en banques A et B, journal des défauts en buffer tournant de 4 pages, endurance, contraintes temps réel. |
+| 0.2 | 2026-11-04 | `SMB_ROLE` revient à trois valeurs (`SEULE`, `TRI_MAITRE`, `TRI_ESCLAVE`), suite à la décision Q27 de [SPEC-PM]. Code « deux maîtres » ajouté à la famille 0x06. |
