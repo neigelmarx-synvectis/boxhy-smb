@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Version | 0.3 – brouillon de travail |
+| Version | 0.4 – brouillon de travail |
 | Date | 2026-11-04 |
-| Statut | Topologie, mise sous tension, débit et broches SMB décidés (Q1 à Q5, Q14). Collision d'identifiants à trancher (Q16). Questions Q6 à Q13, Q15 à Q17 ouvertes (§ 9) |
+| Statut | Topologie, mise sous tension, débit et broches SMB décidés (Q1 à Q5, Q14). Collision d'identifiants à trancher (Q16). Fonctionnement sans batterie à définir (Q18). Questions Q6 à Q13, Q15 à Q18 ouvertes (§ 9) |
 | Firmware de départ | SMB BOXHY 2.0.0 |
 
 ## 1. Objet
@@ -17,6 +17,7 @@ du point de vue de la carte SMB. Il couvre :
 - les supervisions et la sécurité ;
 - la gestion de la charge par la pile à combustible ;
 - la télémétrie vers l'IHM ;
+- le fonctionnement d'une BOXHY sans batterie (§ 6.8) ;
 - les impacts sur le firmware SMB et la manière de les vérifier.
 
 Il ne couvre pas le dimensionnement électrique de la batterie, le câblage de puissance interne ni la
@@ -90,8 +91,8 @@ Les données ci-dessous sont tirées de [PM].
 
 | Sujet | Décision | Réf. |
 |---|---|---|
-| Nombre de modules | 1 PowerModule ; 2 en parallèle dans certains cas. Le nombre est un paramètre de la SMB. | Q1, PM-CFG-1 |
-| Version | Standard. | Q1 |
+| Nombre de modules | 1 PowerModule ; 2 en parallèle dans certains cas ; 0 sur les BOXHY sans batterie. Le nombre est un paramètre de la SMB. | Q1, PM-CFG-1, § 6.8 |
+| Version | Standard. | Q1 Ajout : **0 module sur les BOXHY sans batterie** (§ 6.8). |
 | Topologie | Master seul ou Master + 1 slave, sans SuperMaster. | Q2 |
 | Batteries IBS | Remplacées définitivement : le firmware ne gère plus que les PowerModule. | Q3 |
 | Mise sous tension | Option switch (contact sec). Une clé manuelle et un relais piloté par la SMB sont câblés en parallèle sur le contact. | Q4, § 6.2 |
@@ -183,15 +184,15 @@ Statuts :
 
 | Id | Exigence | Statut |
 |---|---|---|
-| PM-HW-1 | La batterie est constituée de 1 ou 2 PowerModule Standard en parallèle (1S1P ou 1S2P, 51,2 V nominal), sans SuperMaster. | Décidée |
+| PM-HW-1 | Lorsqu'elle est présente, la batterie est constituée de 1 ou 2 PowerModule Standard en parallèle (1S1P ou 1S2P, 51,2 V nominal), sans SuperMaster. | Décidée |
 | PM-HW-2 | Le bus CAN des PowerModule est raccordé au bus CAN de la SMB, avec une terminaison de 120 Ω à chaque extrémité du bus complet. | Proposée |
 | PM-HW-3 | La mise sous tension des PowerModule passe par l'option switch. Le contact de la clé et le contact du relais de maintien SMB sont câblés en parallèle (§ 5.3). | Décidée |
 | PM-HW-4 | Un fusible de calibre inférieur à N × fusible interne protège chaque pôle de la batterie, conformément à [PM] § 4. | Proposée |
 | PM-HW-5 | Avec 2 modules, les câbles de puissance entre modules et hubs ont tous la même longueur, conformément à [PM] § 4.1. | Proposée |
 | PM-HW-6 | Le relais de maintien offre un contact sec, sans liaison galvanique avec la SMB, adapté au signal de l'entrée switch. Sa bobine est commandée par la broche 46 du dsPIC (RB7), reliée au connecteur J24, libre dans le firmware 2.0.0. La broche est déclarée dans MCC en sortie numérique, au niveau bas à l'initialisation, avec l'analogique AN25 désactivé. La commande du relais comporte un pull-down matériel : le relais reste ouvert tant que la broche est en haute impédance, c'est-à-dire du reset jusqu'à l'initialisation des ports. | Décidée |
 | PM-HW-7 | La position de la clé est lue sur la broche 47 du dsPIC (RC13), reliée au connecteur J24, libre dans le firmware 2.0.0. La broche est déclarée dans MCC en entrée numérique, avec le pull-down interne activé : une clé ouverte ou débranchée se lit « arrêt ». La clé ramène le niveau haut (5 V) en position marche. L'entrée est protégée contre les surtensions et les décharges électrostatiques (à vérifier sur le schéma de la carte). L'état est filtré, sur le modèle des sélecteurs de mode (500 ms). | Décidée |
-| PM-CFG-1 | Le nombre de modules N (1 ou 2) est un paramètre de la SMB, `PM_MODULE_COUNT`. Proposition : constante de `src/smb_config.h`, avec contrôle à la compilation 1 ≤ N ≤ 2 (Q17). | Proposée |
-| PM-CFG-2 | La SMB vérifie que le Status 1 de chacun des N modules attendus est reçu. Proposition : Master, puis slave 1 si N = 2. Un module manquant ou un module en trop déclenche une alarme. La réaction, défaut ou mode dégradé, suit Q9. | Proposée |
+| PM-CFG-1 | Le nombre de modules N (0, 1 ou 2) est un paramètre de la SMB, `PM_MODULE_COUNT`. N = 0 désigne une BOXHY sans batterie (§ 6.8). Proposition : constante de `src/smb_config.h`, avec contrôle à la compilation 0 ≤ N ≤ 2 (Q17). | Proposée |
+| PM-CFG-2 | Pour N ≥ 1, la SMB vérifie que le Status 1 de chacun des N modules attendus est reçu. Proposition : Master, puis slave 1 si N = 2. Un module manquant ou un module en trop déclenche une alarme. La réaction, défaut ou mode dégradé, suit Q9. | Proposée |
 | PM-CFG-3 | Les tables de liaison CAN sont compilées pour 2 modules au plus. Seules les N premières sont exploitées. | Proposée |
 
 ### 6.2 Mise sous tension et maintien
@@ -264,6 +265,28 @@ courant entrant, donc la charge : le signe est inversé.
 | PM-TLM-1 | Les trames `SMB_TX_BAT_GENERAL` et `SMB_TX_BAT_DETAILS`, conçues pour deux IBS, sont redéfinies pour la batterie PowerModule (Q8), et l'IHM est mise à jour en conséquence. Avec 2 modules au plus, le détail par module tient dans les trames existantes. | À valider |
 | PM-TLM-2 | La version firmware émise (0x2C00004) permet à l'IHM de savoir quel type de batterie est géré. Le nombre de modules configuré (PM-CFG-1) y est ajouté. | Proposée |
 
+### 6.8 Configuration sans batterie (N = 0)
+
+Certaines BOXHY n'auront aucun PowerModule, donc aucune batterie. Le firmware 2.0.0 suppose partout qu'une
+batterie est présente :
+
+| Dépendance | Emplacement dans [FW] | Effet si rien n'est fait avec N = 0 |
+|---|---|---|
+| Perte de communication batterie = erreur critique | `Battery_HasCriticalError()`, `smb_state_machine.c:94` | Mode défaut permanent dès la mise sous tension |
+| SOC pour entrer en mode hybride (≤ 70 %) et en sortir (≥ 85 %) | `smb_state_machine.c:217` et `:299` | SOC à 0 : entrée en hybride toujours autorisée, jamais de sortie sur SOC haut |
+| Déconnexion de l'onduleur sur SOC très bas | `Inverter_Supervise100ms(battery.soc)` (`main.c:55`) | Onduleur déconnecté dès que la puissance de sortie dépasse le seuil `DCAC_SOC_DISCONNECT_POWER_LEVEL` |
+| Bips de SOC bas ou haut, avertissement SOP | `hmi.c:77-91` | Bips intempestifs |
+| Courant batterie et limite de charge pour la consigne de courant pile | `Ems_Update100ms`, `Ems_Update1s` (`main.c:59`, `:72`) | Consigne pile fausse |
+| Parcours nominal : onduleur d'abord alimenté par la batterie (`SMB_BATTERY_MODE`), puis démarrage de la pile | `smb_state_machine.c` | Aucune source pour démarrer l'onduleur sans batterie : le parcours est à redéfinir |
+
+| Id | Exigence | Statut |
+|---|---|---|
+| PM-NOB-1 | N = 0 est une valeur valide de `PM_MODULE_COUNT` (PM-CFG-1). Aucune trame PowerModule n'est alors attendue ni émise : pas de watchdog, pas d'erreur batterie, pas de supervision de SOC, de température ni de courant batterie. | Décidée |
+| PM-NOB-2 | Avec N = 0, aucune décision de la machine d'états, de l'onduleur, de l'IHM ni de la gestion énergie n'utilise une donnée batterie. Chaque dépendance du tableau ci-dessus reçoit un comportement explicite, défini par Q18. | Proposée |
+| PM-NOB-3 | Avec N = 0, la télémétrie batterie (PM-TLM-1) émet une valeur « batterie absente » distincte de toute valeur valide, et le nombre de modules configuré est émis (PM-TLM-2). | Proposée |
+| PM-NOB-4 | Avec N = 0, le rôle de la clé (broche 47) et du relais de maintien (broche 46) est défini par Q18. Le relais n'a plus de contact sec de batterie à maintenir. | À définir |
+| PM-NOB-5 | Les tests unitaires de la machine d'états, de l'onduleur, de l'IHM et de la gestion énergie sont exécutés pour N = 0, 1 et 2. | Proposée |
+
 ## 7. Impacts sur le firmware SMB
 
 | Élément | Impact |
@@ -284,7 +307,7 @@ courant entrant, donc la charge : le signe est inversé.
 
 1. **Tests unitaires sur PC.**
    - Décodage de chaque trame PowerModule sur des vecteurs du manuel, dont l'exemple du Global Status 1 de
-     [PM] § 10.2.3.3. Conversions et signes. Watchdog et présence des modules pour N = 1 et N = 2.
+     [PM] § 10.2.3.3. Conversions et signes. Watchdog et présence des modules pour N = 1 et N = 2. Absence de toute supervision batterie pour N = 0.
    - Consigne pile bornée par l'IMR. Transitions sur erreur et sur fin de charge.
    - Commande du relais de maintien dans chaque état. Arrêt sur clé et temporisation T_MAINTIEN_MAX.
    - Non-collision des identifiants.
@@ -295,6 +318,7 @@ courant entrant, donc la charge : le signe est inversé.
    - Passage de la clé sur arrêt en mode hybride : maintien jusqu'à la fin de l'arrêt de la pile, puis coupure.
    - Charge par la pile jusqu'à « End of charge ».
    - Coupure d'un module, perte du bus CAN, fonctionnement à froid si applicable.
+4. **Essais sur une BOXHY sans batterie (N = 0).** Mise sous tension, démarrage et arrêt selon le parcours défini en Q18, absence d'erreur batterie.
 
 ## 9. Questions ouvertes
 
@@ -316,7 +340,8 @@ courant entrant, donc la charge : le signe est inversé.
 | Q14 | Quelle sortie de la SMB commande le relais de maintien ? La SMB dispose-t-elle d'une entrée pour lire la position de la clé ? | Entrée clé : nécessaire pour PM-PWR-3. | **Relais : broche 46 (RB7). Clé : broche 47 (RC13).** |
 | Q15 | Dans quels états la SMB maintient-elle les batteries ? Que faire en mode défaut (`SMB_EMERGENCY`) ? | Maintien de `SMB_DCAC_START_1` à `SMB_STOPPING` et en `SMB_MAINTENANCE`. En défaut : maintien limité à T_MAINTIEN_MAX pour signaler l'erreur et laisser la pile s'arrêter. | |
 | Q16 | Quels nouveaux identifiants pour `SMB_TX_TEMPERATURE` et `SMB_TX_CURRENTS` (§ 5.1) ? | 0x02C00005 et 0x02C00006, sous réserve de la réponse de PowerTech à Q13. | |
-| Q17 | Le nombre de modules est-il fixé à la compilation, ou réglable sur le terrain, par commande CAN de maintenance enregistrée en EEPROM ? | À la compilation dans `smb_config.h` : plus simple, sans EEPROM. | |
+| Q17 | Le nombre de modules est-il fixé à la compilation, ou réglable sur le terrain, par commande CAN de maintenance enregistrée en EEPROM ? | À la compilation dans `smb_config.h` : plus simple, sans EEPROM. Il faut alors un binaire par configuration (N = 0, 1, 2), identifié par la trame de version (PM-TLM-2). | |
+| Q18 | Comment fonctionne une BOXHY sans batterie ? (a) Quelle source alimente la SMB, la FCCB et le démarrage de la pile (24 V, précharges) ? (b) Quel parcours de la machine d'états : démarrage de la pile puis de l'onduleur, sans `SMB_BATTERY_MODE` ? (c) La pile suit-elle seule les appels de charge de l'onduleur, et quelle consigne de courant lui envoyer ? (d) Quel rôle pour la clé et le relais de maintien ? (e) Quelle surveillance remplace celle du SOC (tension du bus, par exemple) ? | À définir avec l'architecture électrique de la version sans batterie. | |
 
 ## 10. Historique
 
@@ -325,3 +350,4 @@ courant entrant, donc la charge : le signe est inversé.
 | 0.1 | 2026-11-04 | Premier brouillon : état des lieux, points bloquants, exigences proposées, questions ouvertes |
 | 0.2 | 2026-11-04 | Décisions Q1 à Q5 : 1 ou 2 modules Standard, nombre de modules paramétrable, sans SuperMaster, IBS remplacées, mise sous tension par clé et relais SMB en parallèle sur l'option switch, CAN à 500 kbit/s. Dimensionnement en décharge validé. Collision d'identifiants confirmée pour la configuration retenue. Nouvelles exigences PM-CFG et PM-PWR. Nouvelles questions Q14 à Q17. [PM-DBC] régénéré à 500 kbit/s. |
 | 0.3 | 2026-11-04 | Décision Q14 : relais de maintien sur la broche 46 (RB7), position de la clé sur la broche 47 (RC13). Les deux broches sont reliées au connecteur J24. Nouvelle exigence PM-HW-7. Configuration MCC et HAL précisées. |
+| 0.4 | 2026-11-04 | Ajout du cas sans batterie (N = 0) : PM-CFG-1 étendu à 0 ≤ N ≤ 2, nouvelle section 6.8 (dépendances du firmware à la batterie, exigences PM-NOB), nouvelle question Q18. |
