@@ -39,6 +39,8 @@ respecte le [Semantic Versioning](https://semver.org/lang/fr/).
   `measures/`, `control/`, `hmi/` et `utils/`. `main.c` et `smb_config.h` restent à la racine de `src/`.
   Les `#include` sont écrits depuis la racine du dépôt. Les projets MPLAB X et VS Code, le Makefile de
   tests et le générateur CAN sont mis à jour. Le firmware produit est identique octet pour octet.
+- README : arborescence commentée du dépôt, rapport mémoire de l'éditeur de liens XC16 tel qu'affiché,
+  sortie des tests unitaires et couverture de chaque suite.
 - Commentaires ajoutés dans tous les fichiers de `src/` et `hal/` : rôle de chaque module, cadence
   d'appel, unités, durée réelle des temporisations, rôle et relais attendus de chaque état de la
   machine d'états, algorithmes de la couche CAN. `can_db.h` reprend les commentaires du `.dbc`.
