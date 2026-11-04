@@ -27,6 +27,33 @@
         <itemPath>mcc_generated_files/tmr5.h</itemPath>
         <itemPath>mcc_generated_files/uart1.h</itemPath>
       </logicalFolder>
+      <logicalFolder name="Application"
+                     displayName="Application"
+                     projectFiles="true">
+        <itemPath>src/smb_config.h</itemPath>
+        <itemPath>src/generic.h</itemPath>
+        <itemPath>src/timebase.h</itemPath>
+        <itemPath>src/ctn_sensor.h</itemPath>
+        <itemPath>src/measures.h</itemPath>
+        <itemPath>src/battery.h</itemPath>
+        <itemPath>src/fcs.h</itemPath>
+        <itemPath>src/ems.h</itemPath>
+        <itemPath>src/inverter.h</itemPath>
+        <itemPath>src/hmi.h</itemPath>
+        <itemPath>src/cooling.h</itemPath>
+        <itemPath>src/maintenance.h</itemPath>
+        <itemPath>src/can_rx.h</itemPath>
+        <itemPath>src/can_tx.h</itemPath>
+        <itemPath>src/smb_state_machine.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="HAL"
+                     displayName="HAL"
+                     projectFiles="true">
+        <itemPath>hal/board_io.h</itemPath>
+        <itemPath>hal/can_port.h</itemPath>
+        <itemPath>hal/uart_port.h</itemPath>
+        <itemPath>hal/adc_port.h</itemPath>
+      </logicalFolder>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -52,7 +79,30 @@
         <itemPath>mcc_generated_files/tmr5.c</itemPath>
         <itemPath>mcc_generated_files/uart1.c</itemPath>
       </logicalFolder>
-      <itemPath>smb_v1_3_0_main.c</itemPath>
+      <logicalFolder name="Application"
+                     displayName="Application"
+                     projectFiles="true">
+        <itemPath>src/main.c</itemPath>
+        <itemPath>src/generic.c</itemPath>
+        <itemPath>src/timebase.c</itemPath>
+        <itemPath>src/ctn_sensor.c</itemPath>
+        <itemPath>src/measures.c</itemPath>
+        <itemPath>src/battery.c</itemPath>
+        <itemPath>src/fcs.c</itemPath>
+        <itemPath>src/ems.c</itemPath>
+        <itemPath>src/inverter.c</itemPath>
+        <itemPath>src/hmi.c</itemPath>
+        <itemPath>src/cooling.c</itemPath>
+        <itemPath>src/maintenance.c</itemPath>
+        <itemPath>src/can_rx.c</itemPath>
+        <itemPath>src/can_tx.c</itemPath>
+        <itemPath>src/smb_state_machine.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="HAL"
+                     displayName="HAL"
+                     projectFiles="true">
+        <itemPath>hal/board_io.c</itemPath>
+      </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

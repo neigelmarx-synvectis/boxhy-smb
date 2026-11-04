@@ -208,12 +208,15 @@
         {
             "name": "Project files",
             "files": [
-                "smb_v1_3_0_main.c",
+                "src/*.c",
+                "src/*.h",
+                "hal/*.c",
+                "hal/*.h",
                 "Makefile",
                 "mcc_generated_files/*",
                 "*.mc3"
             ],
-            "encoding": "ISO-8859-1"
+            "encoding": "UTF-8"
         }
     ]
 }

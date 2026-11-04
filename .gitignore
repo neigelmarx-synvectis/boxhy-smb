@@ -31,3 +31,6 @@ Thumbs.db
 
 # MPLAB VS Code extension regenerated cmake files
 cmake/**/.generated/
+
+# Tests unitaires hôte
+tests/build/
