@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Version | 0.4 – brouillon de travail |
+| Version | 0.5 – brouillon de travail |
 | Date | 2026-11-04 |
-| Statut | Topologie, mise sous tension, débit et broches SMB décidés (Q1 à Q5, Q14). Collision d'identifiants à trancher (Q16). Fonctionnement sans batterie à définir (Q18). Questions Q6 à Q13, Q15 à Q18 ouvertes (§ 9) |
+| Statut | Topologie, mise sous tension, débit et broches SMB décidés (Q1 à Q5, Q14). Collision d'identifiants à trancher (Q16). Fonctionnement sans batterie (Q18) et configuration triphasée (Q19 à Q23) à définir. Questions Q6 à Q13, Q15, Q16, Q18 à Q23 ouvertes (§ 9) |
 | Firmware de départ | SMB BOXHY 2.0.0 |
 
 ## 1. Objet
@@ -18,6 +18,7 @@ du point de vue de la carte SMB. Il couvre :
 - la gestion de la charge par la pile à combustible ;
 - la télémétrie vers l'IHM ;
 - le fonctionnement d'une BOXHY sans batterie (§ 6.8) ;
+- la configuration triphasée, où une BOXHY maître pilote la batterie partagée avec deux BOXHY esclaves (§ 6.9) ;
 - les impacts sur le firmware SMB et la manière de les vérifier.
 
 Il ne couvre pas le dimensionnement électrique de la batterie, le câblage de puissance interne ni la
@@ -92,11 +93,12 @@ Les données ci-dessous sont tirées de [PM].
 | Sujet | Décision | Réf. |
 |---|---|---|
 | Nombre de modules | 1 PowerModule ; 2 en parallèle dans certains cas ; 0 sur les BOXHY sans batterie. Le nombre est un paramètre de la SMB. | Q1, PM-CFG-1, § 6.8 |
-| Version | Standard. | Q1 Ajout : **0 module sur les BOXHY sans batterie** (§ 6.8). |
+| Version | Standard. | Q1 |
 | Topologie | Master seul ou Master + 1 slave, sans SuperMaster. | Q2 |
 | Batteries IBS | Remplacées définitivement : le firmware ne gère plus que les PowerModule. | Q3 |
 | Mise sous tension | Option switch (contact sec). Une clé manuelle et un relais piloté par la SMB sont câblés en parallèle sur le contact. | Q4, § 6.2 |
 | Débit CAN | 500 kbit/s : les PowerModule sont configurés à ce débit. Le bus BOXHY reste inchangé. | Q5 |
+| Configurations système | BOXHY seule (avec ou sans batterie), BOXHY triphasée maître ou esclave. Un seul logiciel, configuré uniquement par paramètres. | Q17, § 6.9 |
 | Broches SMB | Relais de maintien : broche 46 (RB7). Position de la clé : broche 47 (RC13). Les deux sont reliées au connecteur J24 de la SMB. | Q14, PM-HW-6, PM-HW-7 |
 
 Dimensionnement en décharge, avec un module Standard :
@@ -191,9 +193,12 @@ Statuts :
 | PM-HW-5 | Avec 2 modules, les câbles de puissance entre modules et hubs ont tous la même longueur, conformément à [PM] § 4.1. | Proposée |
 | PM-HW-6 | Le relais de maintien offre un contact sec, sans liaison galvanique avec la SMB, adapté au signal de l'entrée switch. Sa bobine est commandée par la broche 46 du dsPIC (RB7), reliée au connecteur J24, libre dans le firmware 2.0.0. La broche est déclarée dans MCC en sortie numérique, au niveau bas à l'initialisation, avec l'analogique AN25 désactivé. La commande du relais comporte un pull-down matériel : le relais reste ouvert tant que la broche est en haute impédance, c'est-à-dire du reset jusqu'à l'initialisation des ports. | Décidée |
 | PM-HW-7 | La position de la clé est lue sur la broche 47 du dsPIC (RC13), reliée au connecteur J24, libre dans le firmware 2.0.0. La broche est déclarée dans MCC en entrée numérique, avec le pull-down interne activé : une clé ouverte ou débranchée se lit « arrêt ». La clé ramène le niveau haut (5 V) en position marche. L'entrée est protégée contre les surtensions et les décharges électrostatiques (à vérifier sur le schéma de la carte). L'état est filtré, sur le modèle des sélecteurs de mode (500 ms). | Décidée |
-| PM-CFG-1 | Le nombre de modules N (0, 1 ou 2) est un paramètre de la SMB, `PM_MODULE_COUNT`. N = 0 désigne une BOXHY sans batterie (§ 6.8). Proposition : constante de `src/smb_config.h`, avec contrôle à la compilation 0 ≤ N ≤ 2 (Q17). | Proposée |
+| PM-CFG-1 | Le nombre de modules pilotés N (0, 1 ou 2) est un paramètre de configuration de la SMB, `PM_MODULE_COUNT`. N = 0 désigne une BOXHY seule sans batterie (§ 6.8) ou une BOXHY esclave (§ 6.9). | Décidée |
 | PM-CFG-2 | Pour N ≥ 1, la SMB vérifie que le Status 1 de chacun des N modules attendus est reçu. Proposition : Master, puis slave 1 si N = 2. Un module manquant ou un module en trop déclenche une alarme. La réaction, défaut ou mode dégradé, suit Q9. | Proposée |
 | PM-CFG-3 | Les tables de liaison CAN sont compilées pour 2 modules au plus. Seules les N premières sont exploitées. | Proposée |
+| PM-CFG-4 | Un seul logiciel couvre toutes les configurations (§ 6.9). `SMB_ROLE`, `SMB_SLAVE_ID` et `PM_MODULE_COUNT` sont lus au démarrage depuis un support défini par Q21, et non fixés à la compilation. | Décidée |
+| PM-CFG-5 | Au démarrage, la SMB vérifie la cohérence des paramètres : `TRI_MAITRE` impose N ≥ 1, `TRI_ESCLAVE` impose N = 0 et un numéro d'esclave 1 ou 2. Une configuration absente ou incohérente maintient la SMB en défaut, relais en sécurité. | Proposée |
+| PM-CFG-6 | Les paramètres de configuration sont émis en télémétrie, avec la version firmware (PM-TLM-2). | Proposée |
 
 ### 6.2 Mise sous tension et maintien
 
@@ -267,7 +272,8 @@ courant entrant, donc la charge : le signe est inversé.
 
 ### 6.8 Configuration sans batterie (N = 0)
 
-Certaines BOXHY n'auront aucun PowerModule, donc aucune batterie. Le firmware 2.0.0 suppose partout qu'une
+Certaines BOXHY seules n'auront aucun PowerModule, donc aucune batterie. Ce cas est distinct de la BOXHY esclave
+(§ 6.9), qui dispose de la batterie du maître sans la piloter. Le firmware 2.0.0 suppose partout qu'une
 batterie est présente :
 
 | Dépendance | Emplacement dans [FW] | Effet si rien n'est fait avec N = 0 |
@@ -285,7 +291,40 @@ batterie est présente :
 | PM-NOB-2 | Avec N = 0, aucune décision de la machine d'états, de l'onduleur, de l'IHM ni de la gestion énergie n'utilise une donnée batterie. Chaque dépendance du tableau ci-dessus reçoit un comportement explicite, défini par Q18. | Proposée |
 | PM-NOB-3 | Avec N = 0, la télémétrie batterie (PM-TLM-1) émet une valeur « batterie absente » distincte de toute valeur valide, et le nombre de modules configuré est émis (PM-TLM-2). | Proposée |
 | PM-NOB-4 | Avec N = 0, le rôle de la clé (broche 47) et du relais de maintien (broche 46) est défini par Q18. Le relais n'a plus de contact sec de batterie à maintenir. | À définir |
-| PM-NOB-5 | Les tests unitaires de la machine d'états, de l'onduleur, de l'IHM et de la gestion énergie sont exécutés pour N = 0, 1 et 2. | Proposée |
+| PM-NOB-5 | Les tests unitaires de la machine d'états, de l'onduleur, de l'IHM et de la gestion énergie sont exécutés pour N = 0, 1 et 2, et pour chaque rôle. | Proposée |
+
+### 6.9 Configuration triphasée : BOXHY maître et esclaves
+
+En fonctionnement triphasé, trois BOXHY partagent le même bus 48 V :
+
+- la **BOXHY maître** pilote le système batterie : lecture des PowerModule, relais de maintien, supervisions et
+  limites de charge et de décharge ;
+- les **deux BOXHY esclaves** se raccordent au bus 48 V du maître. Elles ont accès à la batterie mais ne la
+  pilotent pas : elles ne voient pas les PowerModule, qui sont sur le bus CAN du maître ;
+- le maître autorise chaque esclave à fonctionner ou non, et fixe la puissance qu'il peut débiter.
+
+Le même logiciel gère la BOXHY seule, le maître et l'esclave. Le choix se fait uniquement par paramètres
+(Q17).
+
+| Configuration | `SMB_ROLE` | `PM_MODULE_COUNT` | Batterie |
+|---|---|---|---|
+| BOXHY seule, avec batterie | `SEULE` | 1 ou 2 | pilotée |
+| BOXHY seule, sans batterie | `SEULE` | 0 | absente (§ 6.8) |
+| BOXHY triphasée maître | `TRI_MAITRE` | 1 ou 2 | pilotée, partagée avec les esclaves |
+| BOXHY triphasée esclave | `TRI_ESCLAVE` | 0 | présente sur le bus 48 V, non pilotée |
+
+| Id | Exigence | Statut |
+|---|---|---|
+| TRI-1 | Le rôle de la SMB, `SMB_ROLE` (`SEULE`, `TRI_MAITRE` ou `TRI_ESCLAVE`), et le numéro d'esclave, `SMB_SLAVE_ID` (1 ou 2), sont des paramètres de configuration (PM-CFG-4). | Décidée |
+| TRI-2 | En `TRI_MAITRE`, la SMB émet périodiquement vers chaque esclave une autorisation qui contient l'ordre de marche ou d'arrêt et la puissance maximale que l'esclave peut prélever sur le bus 48 V. Proposition : période de 500 ms. | Décidée (contenu), À valider (période) |
+| TRI-3 | Le maître calcule les autorisations à partir de l'état de la batterie (erreur, SOC, IMD, IMR), de sa propre consommation et de l'état rapporté par chaque esclave. La règle de répartition est définie par Q20. | À définir |
+| TRI-4 | Le maître retire toutes les autorisations sur erreur batterie (PM-SAF-1), sur SOC très bas, et avant sa propre séquence d'arrêt. Le relais de maintien du maître reste fermé tant qu'un esclave n'a pas terminé son arrêt (Q15, Q23). | Proposée |
+| TRI-5 | En `TRI_ESCLAVE`, la SMB ne démarre son onduleur que si l'autorisation de marche est reçue. Sans autorisation, elle reste en `SMB_STANDBY` ou exécute sa séquence d'arrêt. | Proposée |
+| TRI-6 | En `TRI_ESCLAVE`, la SMB fait respecter la puissance autorisée. La SMB ne peut pas fixer de consigne de puissance à l'onduleur : le protocole RS232 actuel (QMOD, QPIWS, QPIGS) ne fait que l'interroger. Proposition : surveiller la puissance de sortie, et déconnecter l'onduleur par temporisation si l'autorisation est dépassée, sur le modèle de la surveillance de surcharge existante (Q22). | À valider |
+| TRI-7 | En `TRI_ESCLAVE`, la perte des autorisations du maître pendant T_TRI déclenche la séquence d'arrêt et une alarme. Proposition : T_TRI = 2 s. | Proposée |
+| TRI-8 | En `TRI_ESCLAVE`, la SMB envoie son état au maître : état de la machine d'états, puissance prélevée sur le bus, courant de sa pile, erreurs. | Proposée |
+| TRI-9 | En `TRI_ESCLAVE`, les décisions qui utilisaient le SOC (mode hybride, déconnexion de l'onduleur, bips) utilisent les données transmises par le maître, ou sont désactivées (Q20). | À définir |
+| TRI-10 | La liaison entre BOXHY est définie par Q19. Elle ne doit pas créer de collision d'identifiants avec les équipements de chaque BOXHY. | À définir |
 
 ## 7. Impacts sur le firmware SMB
 
@@ -298,10 +337,12 @@ batterie est présente :
 | `src/system/smb_state_machine.c` | Erreurs critiques (PM-SAF-1). Fin de charge (PM-CHG-2). Maintien des batteries et arrêt sur clé (PM-PWR-2 à 4). Correction du bug 7. |
 | `hal/board_io.h` et son double de test | `Board_SetBatteryHoldRelay` / `Board_GetBatteryHoldRelay` (broche 46) et `Board_GetKeySwitch` (broche 47), au repos au reset (PM-PWR-5). Ajout à `Board_RelaysSafeState` à décider avec Q15. |
 | MCC (`test_dspic2.mc3`, `mcc_generated_files/pin_manager`) | RB7 : `BATTERY_HOLD_RELAY`, sortie numérique, niveau bas, `ANSELB` bit 7 à 0. RC13 : `KEY_SWITCH`, entrée numérique, pull-down (`CNPDC` bit 13). Régénération MCC, ou modification équivalente de `pin_manager.c/.h`. |
-| `src/smb_config.h` | `PM_MODULE_COUNT`, T_COM, T_MAINTIEN_MAX, seuils de SOC. Suppression des seuils SOP si Q6 le confirme. |
+| Nouveau module de configuration (`src/system/config.c/.h`) | Lecture et contrôle de `SMB_ROLE`, `SMB_SLAVE_ID` et `PM_MODULE_COUNT` au démarrage (PM-CFG-4, PM-CFG-5). Toutes les décisions dépendantes de la configuration passent par lui. |
+| Nouveau module de liaison triphasée | Autorisations du maître, état des esclaves, watchdog T_TRI, répartition de la puissance (TRI-2 à TRI-8). Support défini par Q19. |
+| `src/smb_config.h` | T_COM, T_MAINTIEN_MAX, T_TRI, seuils de SOC. Suppression des seuils SOP si Q6 le confirme. |
 | `src/can/can_tx.c`, `src/hmi/maintenance.c` | Télémétrie batterie (PM-TLM-1), état du relais et de la clé (PM-PWR-6), commande de maintenance du relais. |
 | `tests/` | Suites `test_battery`, `test_ems`, `test_can_tx`, `test_maintenance` et `test_smb_state_machine` à adapter. Nouveaux tests : maintien et clé, présence des N modules, non-collision des identifiants (PM-COM-1). |
-| Mémoire | Flash utilisée à 81 %, soit 5 976 octets libres. Le retrait de la gestion IBS (Q3) libère de la place pour la gestion PowerModule. |
+| Mémoire | Flash utilisée à 81 %, soit 5 976 octets libres. Le retrait de la gestion IBS (Q3) libère de la place pour la gestion PowerModule. **Point de vigilance** : la gestion PowerModule, les rôles maître et esclave et le stockage des paramètres doivent tenir dans ce budget. Le dsPIC33EV32GM106 n'a pas d'EEPROM de données : une page de flash réservée aux paramètres coûterait 1 536 octets (une page effaçable de 512 instructions), plus le code d'écriture (Q21). |
 
 ## 8. Vérification
 
@@ -319,12 +360,18 @@ batterie est présente :
    - Charge par la pile jusqu'à « End of charge ».
    - Coupure d'un module, perte du bus CAN, fonctionnement à froid si applicable.
 4. **Essais sur une BOXHY sans batterie (N = 0).** Mise sous tension, démarrage et arrêt selon le parcours défini en Q18, absence d'erreur batterie.
+5. **Essais triphasés, avec trois BOXHY.**
+   - Démarrage du maître, puis des esclaves sur autorisation.
+   - Respect de la puissance autorisée par chaque esclave.
+   - Retrait des autorisations sur erreur batterie et sur SOC très bas.
+   - Perte de la liaison : arrêt des esclaves après T_TRI.
+   - Arrêt du maître par la clé alors que des esclaves fonctionnent.
 
 ## 9. Questions ouvertes
 
 | N° | Question | Proposition | Décision |
 |---|---|---|---|
-| Q1 | Combien de PowerModule, et quelle version (Standard ou Solid State) ? | Dimensionner selon la puissance onduleur (jusqu'à 7,2 kVA) et l'autonomie visée. | **Version Standard. 1 module, 2 dans certains cas. Le nombre de modules est un paramètre de la SMB.** Les pics de décharge de l'onduleur sont admis par le module (§ 4.2). |
+| Q1 | Combien de PowerModule, et quelle version (Standard ou Solid State) ? | Dimensionner selon la puissance onduleur (jusqu'à 7,2 kVA) et l'autonomie visée. | **Version Standard. 1 module, 2 dans certains cas, 0 sur les BOXHY sans batterie et les BOXHY esclaves. Le nombre de modules est un paramètre de la SMB.** Les pics de décharge de l'onduleur sont admis par le module (§ 4.2). |
 | Q2 | Faut-il un SuperMaster (précharge, monitoring distant, plus de 16 modules) ? | Non si N ≤ 16 et sans besoin de monitoring distant. | **Non.** |
 | Q3 | La SMB doit-elle continuer à gérer les IBS, au choix à la compilation, ou les PowerModule les remplacent-ils définitivement ? | Remplacement définitif, pour préserver la flash. | **Remplacement définitif.** |
 | Q4 | Qui commande la mise sous tension ? | | **Option switch (contact sec). Une clé manuelle et un relais SMB en parallèle. Le relais maintient les batteries quand la clé est sur arrêt et que la machine d'états l'exige.** |
@@ -340,8 +387,13 @@ batterie est présente :
 | Q14 | Quelle sortie de la SMB commande le relais de maintien ? La SMB dispose-t-elle d'une entrée pour lire la position de la clé ? | Entrée clé : nécessaire pour PM-PWR-3. | **Relais : broche 46 (RB7). Clé : broche 47 (RC13).** |
 | Q15 | Dans quels états la SMB maintient-elle les batteries ? Que faire en mode défaut (`SMB_EMERGENCY`) ? | Maintien de `SMB_DCAC_START_1` à `SMB_STOPPING` et en `SMB_MAINTENANCE`. En défaut : maintien limité à T_MAINTIEN_MAX pour signaler l'erreur et laisser la pile s'arrêter. | |
 | Q16 | Quels nouveaux identifiants pour `SMB_TX_TEMPERATURE` et `SMB_TX_CURRENTS` (§ 5.1) ? | 0x02C00005 et 0x02C00006, sous réserve de la réponse de PowerTech à Q13. | |
-| Q17 | Le nombre de modules est-il fixé à la compilation, ou réglable sur le terrain, par commande CAN de maintenance enregistrée en EEPROM ? | À la compilation dans `smb_config.h` : plus simple, sans EEPROM. Il faut alors un binaire par configuration (N = 0, 1, 2), identifié par la trame de version (PM-TLM-2). | |
+| Q17 | Le nombre de modules est-il fixé à la compilation, ou réglable sur le terrain, par commande CAN de maintenance enregistrée en EEPROM ? | À la compilation dans `smb_config.h` : plus simple, sans EEPROM. | **Un seul logiciel pour toutes les configurations (BOXHY seule, triphasée maître ou esclave), réglé uniquement par paramètres.** Les paramètres sont donc lus au démarrage, sur un support défini en Q21. |
 | Q18 | Comment fonctionne une BOXHY sans batterie ? (a) Quelle source alimente la SMB, la FCCB et le démarrage de la pile (24 V, précharges) ? (b) Quel parcours de la machine d'états : démarrage de la pile puis de l'onduleur, sans `SMB_BATTERY_MODE` ? (c) La pile suit-elle seule les appels de charge de l'onduleur, et quelle consigne de courant lui envoyer ? (d) Quel rôle pour la clé et le relais de maintien ? (e) Quelle surveillance remplace celle du SOC (tension du bus, par exemple) ? | À définir avec l'architecture électrique de la version sans batterie. | |
+| Q19 | Par quelle liaison le maître et les esclaves communiquent-ils ? | Un bus CAN commun aux trois BOXHY est exclu tel quel : SMB, FCCB et IHM de chaque BOXHY émettent les mêmes identifiants. Il faudrait que tous les équipements, FCCB comprise, prennent des identifiants qui dépendent du numéro de BOXHY. Piste proposée : liaison série dédiée entre SMB, sur l'UART2 du dsPIC (l'UART1 sert à l'onduleur), routée sur des broches remappables libres, avec un émetteur-récepteur RS-485 à ajouter sur la carte. Alternative minimale : autorisation de marche en TOR, et puissance autorisée en PWM ou en analogique. | |
+| Q20 | Comment le maître répartit-il la puissance entre lui et les esclaves ? Les piles des esclaves peuvent-elles charger la batterie du maître, et dans quelle limite (IMR) ? Les esclaves ont-ils besoin du SOC, par exemple pour leur mode hybride ? | Répartition égale de l'IMD disponible entre les BOXHY en marche, moins une marge. Charge par les piles des esclaves bornée par une part de l'IMR, transmise dans l'autorisation. | |
+| Q21 | Où sont stockés les paramètres de configuration (`SMB_ROLE`, `SMB_SLAVE_ID`, `PM_MODULE_COUNT`) ? | Trois options. (a) Straps ou cavaliers sur des broches libres : simple, sans code d'écriture, mais il faut un câblage ou une modification de carte. (b) Page de flash réservée, écrite par une commande CAN de maintenance : sans matériel, mais 1 536 octets de flash en moins. (c) Envoi par l'IHM à chaque démarrage : pas de stockage dans la SMB, mais la SMB dépend de l'IHM pour démarrer. Proposition : (a) si la carte le permet. | |
+| Q22 | Comment l'esclave fait-il respecter la puissance autorisée, alors que la SMB n'envoie aucune consigne à l'onduleur ? | Surveillance de la puissance de sortie (QPIGS), avertissement sonore, puis déconnexion temporisée de l'onduleur au-delà de l'autorisation. À vérifier : l'onduleur accepte-t-il une commande de limitation de puissance ? | |
+| Q23 | Comment s'enchaînent le démarrage et l'arrêt triphasés ? La clé du maître arrête-t-elle tout le système ? Les esclaves ont-ils leur propre clé, et quel rôle ont leur relais de maintien (broche 46), puisqu'ils ne pilotent pas de contact sec de batterie ? | La clé du maître arrête tout : le maître retire les autorisations, attend la fin de l'arrêt des esclaves, puis ouvre son relais de maintien. La clé d'un esclave n'arrête que cet esclave. | |
 
 ## 10. Historique
 
@@ -351,3 +403,4 @@ batterie est présente :
 | 0.2 | 2026-11-04 | Décisions Q1 à Q5 : 1 ou 2 modules Standard, nombre de modules paramétrable, sans SuperMaster, IBS remplacées, mise sous tension par clé et relais SMB en parallèle sur l'option switch, CAN à 500 kbit/s. Dimensionnement en décharge validé. Collision d'identifiants confirmée pour la configuration retenue. Nouvelles exigences PM-CFG et PM-PWR. Nouvelles questions Q14 à Q17. [PM-DBC] régénéré à 500 kbit/s. |
 | 0.3 | 2026-11-04 | Décision Q14 : relais de maintien sur la broche 46 (RB7), position de la clé sur la broche 47 (RC13). Les deux broches sont reliées au connecteur J24. Nouvelle exigence PM-HW-7. Configuration MCC et HAL précisées. |
 | 0.4 | 2026-11-04 | Ajout du cas sans batterie (N = 0) : PM-CFG-1 étendu à 0 ≤ N ≤ 2, nouvelle section 6.8 (dépendances du firmware à la batterie, exigences PM-NOB), nouvelle question Q18. |
+| 0.5 | 2026-11-04 | Configuration triphasée (§ 6.9) : BOXHY maître qui pilote la batterie partagée, esclaves autorisés par le maître (marche et puissance), exigences TRI. Décision Q17 : un seul logiciel configuré par paramètres (`SMB_ROLE`, `SMB_SLAVE_ID`, `PM_MODULE_COUNT`), exigences PM-CFG-4 à 6. Nouvelles questions Q19 à Q23. Correction : la mention « 0 module » était ajoutée à la mauvaise ligne du § 4.2. |
