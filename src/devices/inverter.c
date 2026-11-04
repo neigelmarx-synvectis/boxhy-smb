@@ -1,6 +1,14 @@
 /**
  * @file inverter.c
  * @brief Onduleur DC/AC en RS232 (voir inverter.h).
+ *
+ * Déroulement d'un échange :
+ *  1. Inverter_Poll300ms() envoie une requête (QMOD, QPIWS ou QPIGS) et mémorise laquelle dans
+ *     frame_id ;
+ *  2. l'ISR UART appelle Inverter_OnRxByte() pour chaque octet reçu ; la réponse est copiée dans
+ *     rx_frame (sans le '(' initial) jusqu'à la longueur attendue, puis frame_received est levé ;
+ *  3. la boucle principale appelle Inverter_ProcessFrame(), qui décode selon frame_id.
+ * Les supervisions (déconnexion sur SOC bas, surcharge de sortie, watchdogs) utilisent ces mesures.
  */
 #include <string.h>
 #include "src/devices/inverter.h"
@@ -8,27 +16,30 @@
 #include "src/smb_config.h"
 #include "hal/uart_port.h"
 
-#define RS232_RX_FRAME_SIZE   120
+#define RS232_RX_FRAME_SIZE   120  /* tampon de réception, supérieur à la plus longue réponse (QPIGS) */
 #define RS232_START_BYTE      0x28 /* '(' */
 #define RS232_NAK_BYTE        0x4E /* 'N' */
 #define RS232_END_BYTE        0x0D /* '\r' */
+/* Nombre de caractères utiles (après '(') à partir duquel une réponse est considérée complète */
 #define QMOD_LENGTH           1
 #define QPIWS_LENGTH          32
 #define QPIGS_LENGTH          106
-#define POWER_AVERAGE_SIZE    10
+#define POWER_AVERAGE_SIZE    10   /* moyenne de puissance sur 10 échantillons de 100 ms (1 s) */
 
+/* État public de l'onduleur (déclaré extern dans inverter.h). */
 sInverter inverter;
 
-/* Réception (ISR) */
+/* Réception (ISR) : écrits dans l'interruption UART, lus par la boucle principale */
 static char rx_frame[RS232_RX_FRAME_SIZE];
 static uint8_t rx_byte_cnt;
 static bool frame_receiving;
 static uint8_t frame_id; /* requête en cours : RS232FRAME_* */
 
-/* Polling */
+/* Polling : rang de la période de 300 ms dans le cycle de requêtes (1..25) */
 static uint8_t poll_ind;
 
-/* Supervision */
+/* Supervision : compteurs des watchdogs (s), des temporisations (ticks de 100 ms) et
+ * tampon circulaire de la moyenne de puissance */
 static uint8_t watchdog_cnt;
 static uint8_t recieve_cnt;
 static uint8_t power_error_cpt;
@@ -36,11 +47,13 @@ static uint8_t soc_disconnect_cpt;
 static uint16_t power_tab[POWER_AVERAGE_SIZE];
 static uint8_t power_i;
 
-/* Requêtes (commande + CRC + '\r'), octets identiques à l'ancien printf */
+/* Requêtes (commande + CRC + '\r'), octets identiques à l'ancien printf.
+ * Le CRC sur deux octets est fixe pour chaque commande : il est précalculé. */
 static const uint8_t REQ_QMOD[]  = {'Q', 'M', 'O', 'D', 0x49, 0xC1, 0x0D};
 static const uint8_t REQ_QPIWS[] = {'Q', 'P', 'I', 'W', 'S', 0xB4, 0xDA, 0x0D};
 static const uint8_t REQ_QPIGS[] = {'Q', 'P', 'I', 'G', 'S', 0xB7, 0xA9, 0x0D};
 
+/* Remet à zéro l'état onduleur et tous les compteurs internes. */
 void Inverter_Init(void)
 {
     uint8_t i;
@@ -62,12 +75,20 @@ void Inverter_Init(void)
 
 /* ---- Réception ------------------------------------------------------------------- */
 
+/* Corps de l'ISR UART1 : transmet l'octet reçu à l'assembleur de trame. */
 void Inverter_OnRxInterrupt(void)
 {
     if (UartPort_IsRxReady())
         Inverter_OnRxByte(UartPort_ReadByte());
 }
 
+/*
+ * Assemblage d'une réponse, octet par octet (appelé sous interruption).
+ * '(' démarre une réponse ; 'N' (début de "NAK") ou '\r' l'abandonnent ou la terminent.
+ * La réponse est déclarée complète dès que le nombre de caractères attendu pour la requête
+ * en cours est atteint ; les octets suivants (CRC) sont rangés après la partie utile jusqu'au
+ * '\r', sans conséquence puisque le décodage n'utilise que les positions connues.
+ */
 void Inverter_OnRxByte(uint8_t byte)
 {
     if (byte == RS232_START_BYTE)
@@ -111,6 +132,10 @@ void Inverter_OnRxByte(uint8_t byte)
 
 /* ---- Décodage -------------------------------------------------------------------- */
 
+/*
+ * Réponse QMOD : la première lettre donne le mode (B batterie, F défaut, H économie d'énergie,
+ * L source AC, S veille, P mise sous tension). Une réponse valide réarme les deux watchdogs.
+ */
 static void decode_qmod(void)
 {
     switch (rx_frame[0])
@@ -130,6 +155,13 @@ static void decode_qmod(void)
     inverter.recieve_flag = 0;
 }
 
+/*
+ * Réponse QPIWS : rx_frame[1..29] contiennent '0' ou '1' ; le bit de poids faible du caractère
+ * ASCII donne directement la valeur du drapeau ('0' = 0x30, '1' = 0x31).
+ * Comportement d'origine conservé : les erreurs surchauffe, ventilateur bloqué et tension batterie
+ * haute ne sont mises à jour que si l'onduleur signale un défaut (inverter_error) ; l'erreur
+ * surcharge l'est aussi quand la SMB a détecté une surcharge de sortie.
+ */
 static void decode_qpiws(void)
 {
     inverter.error_flag = (rx_frame[1] & 0x01);
@@ -174,7 +206,8 @@ static void decode_qpiws(void)
     watchdog_cnt = 0;
 }
 
-/* Nombre décimal de 4 chiffres ASCII aux positions p0..p3 */
+/* Nombre décimal de 4 chiffres ASCII aux positions p0..p3 (milliers, centaines, dizaines, unités).
+ * Un caractère non numérique vaut 15 (Generic_CharToDec), comme à l'origine. */
 static uint16_t decimal4(uint8_t p0, uint8_t p1, uint8_t p2, uint8_t p3)
 {
     uint16_t v;
@@ -185,6 +218,11 @@ static uint16_t decimal4(uint8_t p0, uint8_t p1, uint8_t p2, uint8_t p3)
     return v;
 }
 
+/*
+ * Réponse QPIGS : champs à positions fixes, par exemple "230.1" pour la tension de sortie
+ * (positions 11, 12, 13 puis 15, le point est sauté). Les drapeaux d'état sont aux positions
+ * 85 à 105 ('0' / '1').
+ */
 static void decode_qpigs(void)
 {
     /* Champs non exploités (tension/fréquence réseau, fréquence sortie, charge %, bus interne,
@@ -205,6 +243,7 @@ static void decode_qpigs(void)
     watchdog_cnt = 0;
 }
 
+/* Décode la réponse complète selon la requête en cours, puis libère la réception. */
 void Inverter_ProcessFrame(void)
 {
     if (frame_id == RS232FRAME_QMOD)
@@ -220,6 +259,7 @@ void Inverter_ProcessFrame(void)
 
 /* ---- Polling ---------------------------------------------------------------------- */
 
+/* Efface les mesures envoyées en télémétrie (puissances, tension) lorsque l'onduleur n'est pas actif. */
 static void clear_measures(void)
 {
     inverter.moy_ac_output_apparent_power = 0;
@@ -227,9 +267,15 @@ static void clear_measures(void)
     inverter.ac_output_voltage = 0;
 }
 
+/*
+ * Polling de l'onduleur, appelé toutes les 300 ms. Un cycle dure 25 périodes (7,5 s) :
+ * QMOD à la période 1, QPIWS à la 6e (+1,5 s), QPIGS à la 13e (+3,6 s), puis remise à zéro.
+ * Le polling n'a lieu qu'entre le démarrage de l'onduleur (état > SMB_STANDBY) et l'arrêt
+ * pile (état < SMB_FC_STOP_1) ; sinon les mesures sont effacées.
+ */
 void Inverter_Poll300ms(uint8_t smb_step)
 {
-    if ((smb_step > 30) && (smb_step < 200))
+    if ((smb_step > 30) && (smb_step < 200)) /* SMB_STANDBY < état < SMB_FC_STOP_1 */
     {
         poll_ind++;
         if (poll_ind == 1)
@@ -263,6 +309,14 @@ void Inverter_Poll300ms(uint8_t smb_step)
 
 /* ---- Supervision ------------------------------------------------------------------ */
 
+/*
+ * Supervisions toutes les 100 ms, sur la puissance apparente moyenne de la seconde précédente :
+ *  - déconnexion de l'onduleur : SOC < DCAC_SOC_DISCONNECT_LEVEL (20 %) avec une charge
+ *    > DCAC_SOC_DISCONNECT_POWER_LEVEL (50 VA) pendant DCAC_SOC_DISCONNECT_TIMEOUT ticks (5 s) ;
+ *    la déconnexion est maintenue tant que le SOC reste sous BATTERY_SOC_LOW_LEVEL (25 %) ;
+ *  - surcharge de sortie : > 5200 VA pendant 9 s, ou > 7200 VA pendant 4 s ; l'erreur est
+ *    verrouillée jusqu'à Inverter_ResetErrors().
+ */
 void Inverter_Supervise100ms(uint8_t battery_soc)
 {
     /* Déconnexion de l'onduleur sur SOC bas avec charge présente */
@@ -302,6 +356,10 @@ void Inverter_Supervise100ms(uint8_t battery_soc)
     }
 }
 
+/*
+ * Moyenne de la puissance apparente sur 10 échantillons de 100 ms (recalculée toutes les
+ * secondes), et avertissement de puissance haute à partir de AC_OUTPUT_POWER_HIGH_LEVEL (5000 VA).
+ */
 void Inverter_UpdatePowerAverage100ms(void)
 {
     uint8_t i;
@@ -325,9 +383,14 @@ void Inverter_UpdatePowerAverage100ms(void)
         inverter.apparent_power_high_warning_flag = 1;
 }
 
+/*
+ * Watchdogs de la liaison RS232, comptés en secondes, uniquement en mode batterie ou hybride :
+ *  - watchdog_error_flag : aucune réponse valide depuis DCAC_WATCHDOG_TIMEOUT (180 s) ;
+ *  - recieve_flag : pas de réponse QMOD depuis DCAC_RECEIVE_TIMEOUT (5 s), information télémétrie.
+ */
 void Inverter_Update1s(uint8_t smb_step)
 {
-    if ((smb_step >= 100) && (smb_step < 200))
+    if ((smb_step >= 100) && (smb_step < 200)) /* SMB_BATTERY_MODE <= état < SMB_FC_STOP_1 */
     {
         watchdog_cnt++;
         recieve_cnt++;
@@ -344,24 +407,31 @@ void Inverter_Update1s(uint8_t smb_step)
     }
 }
 
+/* Erreur générale onduleur (verrouillée) : perte de liaison, défaut onduleur ou défaut de la sonde
+ * de température ambiante AC. Effacée seulement par Inverter_ResetErrors(). */
 void Inverter_UpdateGeneralError(bool ambiant_temp_error)
 {
     if (inverter.watchdog_error_flag || inverter.error_flag || ambiant_temp_error)
         inverter.general_error_flag = 1;
 }
 
+/* Mode inconnu et mesures à zéro (appelé en mode défaut). */
 void Inverter_ClearData(void)
 {
     inverter.mode = INVERTER_UNDEFINED_MODE;
     clear_measures();
 }
 
+/* Comme Inverter_ClearData(), et demande à can_tx d'émettre une dernière fois les trames onduleur
+ * pour que la télémétrie affiche les valeurs remises à zéro. */
 void Inverter_ClearDataAfterStop(void)
 {
     inverter.raz_data_after_stop_flag = 1;
     Inverter_ClearData();
 }
 
+/* Acquittement des erreurs onduleur à la sortie du mode défaut. Les drapeaux détaillés QPIWS sont
+ * laissés tels quels : ils seront rafraîchis par la prochaine réponse. */
 void Inverter_ResetErrors(void)
 {
     inverter.watchdog_error_flag = 0;

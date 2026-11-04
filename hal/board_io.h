@@ -4,6 +4,20 @@
  *
  * Implémentation cible : fonctions inline sur les macros du pin manager MCC (coût nul).
  * Une implémentation de substitution existe dans tests/mocks/hal/ pour les tests sur PC.
+ *
+ * Pourquoi une HAL :
+ *  - les modules applicatifs (src/) n'incluent jamais mcc_generated_files/pin_manager.h, qui dépend
+ *    des registres du dsPIC (xc.h) et ne compile pas sur PC ;
+ *  - `static inline` : chaque fonction se réduit à l'instruction d'accès au port (bset / bclr / btg),
+ *    sans appel ni octet de flash supplémentaire par rapport à l'usage direct des macros MCC ;
+ *  - substitution pour les tests : le Makefile de tests met tests/mocks avant la racine du dépôt
+ *    dans les chemins d'inclusion, donc `#include "hal/board_io.h"` y trouve le double de test,
+ *    qui mémorise l'état des sorties et permet d'injecter l'état des boutons.
+ * Toute fonction ajoutée ici doit aussi l'être dans tests/mocks/hal/board_io.h.
+ *
+ * Câblage (noms MCC) : relais DCAC_INPUT_RELAY (entrée onduleur), DCAC_PRECHARGE_RELAY (précharge
+ * onduleur), SUPPLY_PRECHARGE_RELAY (précharge de l'alimentation 24 V), FCS_OUTPUT_RELAY (sortie
+ * pile) ; buzzer ; trois boutons d'IHM avec LED ; boutons de mode batterie et hybride.
  */
 #ifndef HAL_BOARD_IO_H
 #define HAL_BOARD_IO_H
@@ -18,6 +32,8 @@ void Board_Init(void);
 void Board_SetFansDutyCycle(uint8_t duty_cycle);
 
 /* ---- Relais ------------------------------------------------------------------- */
+/* Pour chaque sortie : Set (true = commandée / fermée), Toggle (inversion, utilisé par le mode
+ * maintenance) et Get (relecture du port, émise dans la télémétrie SMB_TX_RAW1). */
 static inline void Board_SetDcacInputRelay(bool on)      { if (on) DCAC_INPUT_RELAY_SetHigh(); else DCAC_INPUT_RELAY_SetLow(); }
 static inline void Board_ToggleDcacInputRelay(void)      { DCAC_INPUT_RELAY_Toggle(); }
 static inline bool Board_GetDcacInputRelay(void)         { return DCAC_INPUT_RELAY_GetValue(); }
@@ -52,13 +68,15 @@ static inline void Board_ToggleLedRight(void)            { IHM_RIGHT_BUTTON_LED_
 static inline bool Board_GetLedRight(void)               { return IHM_RIGHT_BUTTON_LED_GetValue(); }
 
 /* ---- Boutons (niveau brut) ------------------------------------------------------- */
+/* Niveau logique non filtré de l'entrée : l'anti-rebond est fait par hmi.c toutes les 100 ms. */
 static inline bool Board_GetButtonLeft(void)             { return IHM_LEFT_BUTTON_GetValue(); }
 static inline bool Board_GetButtonMiddle(void)           { return IHM_MIDDLE_BUTTON_GetValue(); }
 static inline bool Board_GetButtonRight(void)            { return IHM_RIGHT_BUTTON_GetValue(); }
 static inline bool Board_GetButtonBatteryMode(void)      { return BATTERY_MODE_BUTTON_GetValue(); }
 static inline bool Board_GetButtonHybridMode(void)       { return HYBRID_MODE_BUTTON_GetValue(); }
 
-/** État de repli : alim 24 V précharge maintenue, tous les contacteurs de puissance ouverts. */
+/** État de repli : alim 24 V précharge maintenue, tous les contacteurs de puissance ouverts.
+ *  Utilisé par les états INIT, EMERGENCY et l'état inconnu de la machine d'états. */
 static inline void Board_RelaysSafeState(void)
 {
     Board_SetSupplyPrechargeRelay(true);

@@ -15,6 +15,19 @@
  * Liaisons : une variable du firmware est exprimée dans sa propre unité (VAR_UNIT, valeur physique
  * d'un LSB). La conversion var = brut × mul / div + offset est précalculée à la compilation par
  * CAN_BIND() à partir du facteur DBC : aucune multiplication flottante par 0,01 à l'exécution.
+ *
+ * Utilisation type (voir can_tx.c, battery.c, fcs.c, maintenance.c, can_rx.c) :
+ * @code
+ *   static const sCanBinding currents[] CAN_ROM = {
+ *       CAN_BIND(CANDB_SMB_TX_CURRENTS__FCS_OUTPUT_CURRENT, &fcs.output_current, CAN_VAR_I16, 0.01),
+ *       ...                                   // un élément par signal du message dans le .dbc
+ *   };
+ *   CAN_CHECK_BINDINGS(CANDB_SMB_TX_CURRENTS, currents);       // oubli d'un signal = erreur de compilation
+ *   static const sCanMessage msg CAN_ROM = CAN_MESSAGE(CANDB_SMB_TX_CURRENTS, currents);
+ *
+ *   CanMsg_Send(&msg, msg.dlc, CAN_PRIORITY_LOW);               // émission
+ *   CanMsg_Unpack(CanMsg_Find(table, n, id), data);             // réception
+ * @endcode
  */
 #ifndef CAN_SIGNAL_H
 #define CAN_SIGNAL_H
@@ -25,12 +38,15 @@
 #include "mcc_generated_files/can_types.h"
 
 /* ---- Disposition d'un signal ------------------------------------------------------------ */
+/* Drapeaux de sCanSignalLayout.flags : un ordre d'octets OU un type de valeur. */
 #define CAN_INTEL      0x00u
 #define CAN_MOTOROLA   0x01u
 #define CAN_UNSIGNED   0x00u
 #define CAN_SIGNED     0x02u
 #define CAN_FLOAT32    0x04u
 
+/** Disposition d'un signal dans les 8 octets de données, telle que décrite dans le .dbc.
+ *  Les valeurs sont générées dans can_db.h (macros CANDB_<MSG>__<SIG>_LAYOUT). */
 typedef struct
 {
     uint8_t start_bit; /**< bit de départ DBC (voir conventions ci-dessus) */
@@ -38,6 +54,7 @@ typedef struct
     uint8_t flags;     /**< CAN_INTEL|CAN_MOTOROLA, CAN_UNSIGNED|CAN_SIGNED|CAN_FLOAT32 */
 } sCanSignalLayout;
 
+/** Initialiseur d'un sCanSignalLayout, utilisé par le fichier généré can_db.h. */
 #define CAN_LAYOUT(start, length, flags) { (start), (length), (flags) }
 
 /** Bits bruts du signal (non signés, alignés à droite). */
@@ -52,6 +69,8 @@ void CanSignal_SetRaw(uint8_t *data, const sCanSignalLayout *s, uint32_t raw);
 void CanSignal_SetFloat(uint8_t *data, const sCanSignalLayout *s, float value);
 
 /* ---- Liaisons signal <-> variable ------------------------------------------------------- */
+/* Type C de la variable liée (sCanBinding.var_type) : la couche générique lit / écrit la
+ * variable avec exactement cette taille et ce signe. */
 #define CAN_VAR_NONE   0u /**< signal ignoré (réception) / laissé à 0 (émission) */
 #define CAN_VAR_CONST  1u /**< émission d'une valeur brute constante (champ offset) */
 #define CAN_VAR_BOOL   2u
@@ -62,6 +81,8 @@ void CanSignal_SetFloat(uint8_t *data, const sCanSignalLayout *s, float value);
 #define CAN_VAR_U32    7u
 #define CAN_VAR_I32    8u
 
+/** Liaison d'un signal à une variable du firmware. Construite par CAN_BIND / CAN_BIND_CONST /
+ *  CAN_BIND_NONE, jamais à la main, pour que mul / div / offset restent cohérents avec le .dbc. */
 typedef struct
 {
     sCanSignalLayout layout;
@@ -72,6 +93,8 @@ typedef struct
     int16_t offset;   /**< pour CAN_VAR_CONST : valeur brute émise */
 } sCanBinding;
 
+/** Message CAN : identifiant, format, DLC et table de liaisons (une par signal du .dbc).
+ *  Construit par CAN_MESSAGE / CAN_MESSAGE_EMPTY. */
 typedef struct
 {
     uint32_t id;
@@ -82,7 +105,10 @@ typedef struct
 } sCanMessage;
 
 /* Tables en mémoire programme (lues via la fenêtre PSV) : avec -mconst-in-data, un simple
- * « const » serait recopié en RAM. Sur PC (tests), attribut vide. */
+ * « const » serait recopié en RAM. Sur PC (tests), attribut vide.
+ * Sur dsPIC33E, la fenêtre PSV présente la flash dans l'espace données à partir de 0x8000 ;
+ * le code de démarrage (__psv_init) règle DSRPAG sur la page des tables, et les pointeurs
+ * ordinaires vers ces tables fonctionnent donc sans code particulier. */
 #if defined(__XC16__)
 #define CAN_ROM __attribute__((space(auto_psv)))
 #else
@@ -90,7 +116,13 @@ typedef struct
 #endif
 
 /* Conversion précalculée : ratio = facteur DBC / unité de la variable.
- * |ratio| >= 1 -> mul = ratio, div = 1 ; |ratio| < 1 -> mul = ±1, div = 1 / |ratio|. */
+ * |ratio| >= 1 -> mul = ratio, div = 1 ; |ratio| < 1 -> mul = ±1, div = 1 / |ratio|.
+ * Ces expressions flottantes sont évaluées par le compilateur (initialiseurs statiques) : seuls
+ * les entiers arrondis mul / div / offset sont rangés dans les tables.
+ * Exemples : facteur 0.01, variable en 0.01 -> 1 / 1 ; facteur 0.01 (SOC en 0,01 %), variable en %
+ * -> mul 1, div 100 ; facteur 100 (points ADC / 100), variable en points -> mul 100, div 1 ;
+ * facteur -1 (courant IBS en A, signe inversé), variable en 0,01 A -> mul -100, div 1.
+ * Le ratio doit être entier ou l'inverse d'un entier, sinon l'arrondi fausse la conversion. */
 #define CAN_RATIO_(f, u)   ((double)(f) / (double)(u))
 #define CAN_ABS_(x)        ((x) < 0 ? -(x) : (x))
 #define CAN_ROUND16_(x)    ((int16_t)((x) >= 0 ? (x) + 0.5 : (x) - 0.5))
@@ -113,6 +145,7 @@ typedef struct
 /** Signal non utilisé par le firmware (ignoré en réception, 0 en émission). */
 #define CAN_BIND_NONE(SIG)        { SIG##_LAYOUT, CAN_VAR_NONE, NULL, 1, 1, 0 }
 
+/** Nombre d'éléments d'un tableau. */
 #define CAN_ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 /* Les macros publiques passent par une macro interne « _ » pour que MSG soit développé
@@ -126,7 +159,10 @@ typedef struct
 #define CAN_MESSAGE_EMPTY_(MSG) \
     { MSG##_ID, MSG##_EXTENDED, MSG##_DLC, 0u, NULL }
 
-/** Contrôle à la compilation : chaque signal du .dbc a exactement une liaison. */
+/** Contrôle à la compilation : chaque signal du .dbc a exactement une liaison.
+ *  Si la condition est fausse, le typedef déclare un tableau de taille -1 : erreur de compilation
+ *  dont le message cite « can_static_assert_<MESSAGE> ». (Forme compatible C99 / XC16, sans
+ *  _Static_assert.) Le contrôle porte sur le nombre de liaisons, pas sur un doublon éventuel. */
 #define CAN_STATIC_ASSERT(cond, tag)  CAN_STATIC_ASSERT_(cond, tag)
 #define CAN_STATIC_ASSERT_(cond, tag) typedef char can_static_assert_##tag[(cond) ? 1 : -1]
 #define CAN_CHECK_BINDINGS(MSG, table)  CAN_CHECK_BINDINGS_(MSG, table)

@@ -28,6 +28,7 @@ DBC_ENCODING = "cp1252"
 
 
 class DbcError(Exception):
+    """Erreur de syntaxe ou de cohérence du .dbc (message affiché, code retour 2)."""
     pass
 
 
@@ -35,6 +36,7 @@ class DbcError(Exception):
 # Modèle
 # ----------------------------------------------------------------------------------------
 class Signal:
+    """Signal DBC (ligne SG_), complété par VAL_, SIG_VALTYPE_ et CM_."""
     def __init__(self, name, start, length, intel, signed, factor, offset, vmin, vmax, unit, receivers):
         self.name = name
         self.start = start          # convention DBC : LSB (Intel) ou MSB en dents de scie (Motorola)
@@ -66,6 +68,8 @@ class Signal:
 
 
 class Message:
+    """Message DBC (ligne BO_). L'identifiant DBC porte le bit 31 pour une trame étendue :
+    `raw_id` le conserve, `id` est l'identifiant CAN 29 bits réel."""
     def __init__(self, raw_id, name, dlc, transmitter):
         self.extended = bool(raw_id & 0x80000000)
         self.id = raw_id & 0x1FFFFFFF
@@ -107,6 +111,10 @@ def statements(text):
 
 
 def parse_dbc(path):
+    """Lit le .dbc et renvoie la liste des messages, dans l'ordre du fichier (qui fixe l'ordre de
+    can_db.h et des .DBF). Sous-ensemble DBC reconnu : BO_, SG_, VAL_, SIG_VALTYPE_, CM_ BO_ et
+    CM_ SG_ ; les autres instructions (BU_, BA_DEF_, BA_...) sont ignorées. La base est ensuite
+    validée par validate()."""
     text = open(path, encoding=DBC_ENCODING).read()
     messages, by_id, current = [], {}, None
     for st in statements(text):
@@ -154,6 +162,7 @@ def parse_dbc(path):
 
 
 def find_signal(by_id, raw_id, name):
+    """Signal `name` du message d'identifiant DBC brut `raw_id` (bit 31 = trame étendue)."""
     if raw_id not in by_id:
         raise DbcError("message %d inconnu" % raw_id)
     for s in by_id[raw_id].signals:
@@ -163,6 +172,9 @@ def find_signal(by_id, raw_id, name):
 
 
 def validate(messages):
+    """Contrôles qui protègent le firmware d'une base incohérente : noms utilisables en C, DLC
+    0..8, signaux de 1 à 32 bits (limite de la couche C), flottants de 32 bits, facteur non nul,
+    chaque bit dans le DLC et utilisé par un seul signal (pas de multiplexage)."""
     ident = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
     for m in messages:
         if not ident.match(m.name):
@@ -194,6 +206,8 @@ def validate(messages):
 # Génération de src/can/can_db.h
 # ----------------------------------------------------------------------------------------
 def c_num(x):
+    """Littéral C double : « 100.0 » pour un entier (évite une division entière dans les macros
+    de conversion de can_signal.h), sinon la représentation Python la plus courte (« 0.01 »)."""
     x = float(x)
     if x == int(x) and abs(x) < 1e15:
         return "%d.0" % int(x)
@@ -201,16 +215,36 @@ def c_num(x):
 
 
 def c_ident(name):
+    """Nom de message / signal / valeur converti en identifiant C majuscule (caractères hors
+    [A-Za-z0-9_] remplacés par « _ »)."""
     return re.sub(r"[^A-Za-z0-9_]", "_", name).upper()
 
 
 def flags(s):
+    """Drapeaux de disposition (sCanSignalLayout.flags) : ordre des octets | type de valeur."""
     order = "CAN_INTEL" if s.intel else "CAN_MOTOROLA"
     kind = "CAN_FLOAT32" if s.is_float else ("CAN_SIGNED" if s.signed else "CAN_UNSIGNED")
     return "%s | %s" % (order, kind)
 
 
+def c_comment_lines(text, prefix, width=106):
+    """Découpe un commentaire du .dbc en lignes de commentaire C de largeur bornée.
+    « */ » est neutralisé pour ne pas fermer le commentaire C par erreur."""
+    words = text.replace("*/", "* /").split()
+    lines, cur = [], prefix
+    for word in words:
+        if len(cur) + 1 + len(word) > width and cur.strip() != prefix.strip():
+            lines.append(cur)
+            cur = " *" + " " * (len(prefix) - 2)
+        cur = cur + (" " if not cur.endswith(" ") else "") + word
+    lines.append(cur)
+    return lines
+
+
 def gen_header(messages):
+    """Contenu de src/can/can_db.h : une section de macros par message, puis (pour les tests
+    seulement) la liste de tous les signaux. Les commentaires CM_ du .dbc sont recopiés en
+    commentaire C au-dessus du message ou du signal concerné ; ils n'ont aucun effet sur le code."""
     out = []
     w = out.append
     w("/**")
@@ -222,6 +256,12 @@ def gen_header(messages):
     w(" * Pour chaque message <M> : CANDB_<M>_ID, _EXTENDED, _DLC, _NB_SIGNALS.")
     w(" * Pour chaque signal <S> de <M> : CANDB_<M>__<S>_LAYOUT (bit de départ DBC, longueur, drapeaux),")
     w(" * _FACTOR, _OFFSET, _MIN, _MAX (valeurs physiques) et CANDB_<M>__<S>__<VALEUR> pour les VAL_.")
+    w(" *")
+    w(" * Ces macros ne génèrent ni code ni données : elles servent à construire les tables de liaison")
+    w(" * des modules, par exemple :")
+    w(" *     CAN_BIND(CANDB_SMB_TX_GENERAL__STEP, &smb.step, CAN_VAR_U8, 1)")
+    w(" * (voir src/can/can_signal.h). Les commentaires sous chaque message et signal reprennent les")
+    w(" * commentaires CM_ du .dbc.")
     w(" */")
     w("#ifndef CAN_DB_H")
     w("#define CAN_DB_H")
@@ -231,8 +271,12 @@ def gen_header(messages):
     for m in messages:
         mi = "CANDB_" + c_ident(m.name)
         w("/* " + "-" * 86 + " */")
-        w("/* %s : 0x%X, DLC %d, émetteur %s%s */" % (m.name, m.id, m.dlc, m.transmitter,
-                                                      "" if not m.comment else ""))
+        if m.comment:
+            w("/* %s : 0x%X, DLC %d, émetteur %s" % (m.name, m.id, m.dlc, m.transmitter))
+            out.extend(c_comment_lines(m.comment, " * "))
+            w(" */")
+        else:
+            w("/* %s : 0x%X, DLC %d, émetteur %s */" % (m.name, m.id, m.dlc, m.transmitter))
         w("#define %-60s 0x%08XUL" % (mi + "_ID", m.id))
         w("#define %-60s %d" % (mi + "_EXTENDED", 1 if m.extended else 0))
         w("#define %-60s %du" % (mi + "_DLC", m.dlc))
@@ -240,7 +284,12 @@ def gen_header(messages):
         for s in m.signals:
             si = "%s__%s" % (mi, c_ident(s.name))
             unit = (" [%s]" % s.unit) if s.unit else ""
-            w("/* %s%s */" % (s.name, unit))
+            if s.comment:
+                w("/* %s%s" % (s.name, unit))
+                out.extend(c_comment_lines(s.comment, " *   "))
+                w(" */")
+            else:
+                w("/* %s%s */" % (s.name, unit))
             w("#define %-60s CAN_LAYOUT(%du, %du, %s)" % (si + "_LAYOUT", s.start, s.length, flags(s)))
             w("#define %-60s %s" % (si + "_FACTOR", c_num(s.factor)))
             w("#define %-60s %s" % (si + "_OFFSET", c_num(s.offset)))
@@ -250,6 +299,8 @@ def gen_header(messages):
                 w("#define %-60s %d" % ("%s__%s" % (si, c_ident(t)), v))
         w("")
     # Liste complète des signaux : compilée uniquement pour les tests (pas en flash cible).
+    w("/* Liste de tous les signaux de la base, compilée seulement si CANDB_WITH_SIGNAL_LIST est défini")
+    w(" * (tests/test_can_signal.c) : elle n'occupe aucune place dans le firmware. */")
     w("#ifdef CANDB_WITH_SIGNAL_LIST")
     w("typedef struct")
     w("{")
@@ -280,6 +331,7 @@ def gen_header(messages):
 # Génération des .DBF BUSMASTER
 # ----------------------------------------------------------------------------------------
 def dbf_num(x):
+    """Nombre au format des bornes BUSMASTER : entier sans décimale, sinon 6 décimales au plus."""
     x = float(x)
     if x == int(x):
         return "%d" % int(x)
@@ -317,6 +369,8 @@ def gen_dbf(messages):
 
 # ----------------------------------------------------------------------------------------
 def outputs(messages):
+    """Contenu attendu de chaque fichier généré, en octets : can_db.h en UTF-8, .DBF en latin-1
+    (encodage des fichiers BUSMASTER d'origine). Chaque message doit relever d'un .DBF."""
     files = {HEADER_PATH: gen_header(messages).encode("utf-8")}
     for prefix, path in DBF_FILES:
         subset = [m for m in messages if m.name.startswith(prefix)]
@@ -328,6 +382,9 @@ def outputs(messages):
 
 
 def main():
+    """Génère les fichiers (ou les vérifie avec --check). N'écrit que les fichiers dont le contenu
+    change, pour ne pas toucher aux dates de modification inutilement. Codes de retour : 0 succès,
+    1 fichiers obsolètes (--check), 2 base .dbc invalide."""
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--check", action="store_true", help="vérifie que les fichiers générés sont à jour")
     ap.add_argument("--dbc", default=DBC_PATH)

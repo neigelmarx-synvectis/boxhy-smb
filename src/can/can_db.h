@@ -7,6 +7,12 @@
  * Pour chaque message <M> : CANDB_<M>_ID, _EXTENDED, _DLC, _NB_SIGNALS.
  * Pour chaque signal <S> de <M> : CANDB_<M>__<S>_LAYOUT (bit de départ DBC, longueur, drapeaux),
  * _FACTOR, _OFFSET, _MIN, _MAX (valeurs physiques) et CANDB_<M>__<S>__<VALEUR> pour les VAL_.
+ *
+ * Ces macros ne génèrent ni code ni données : elles servent à construire les tables de liaison
+ * des modules, par exemple :
+ *     CAN_BIND(CANDB_SMB_TX_GENERAL__STEP, &smb.step, CAN_VAR_U8, 1)
+ * (voir src/can/can_signal.h). Les commentaires sous chaque message et signal reprennent les
+ * commentaires CM_ du .dbc.
  */
 #ifndef CAN_DB_H
 #define CAN_DB_H
@@ -14,7 +20,9 @@
 #include "src/can/can_signal.h"
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_TX_BAT_GENERAL : 0x2BA0000, DLC 8, émetteur SMB */
+/* SMB_TX_BAT_GENERAL : 0x2BA0000, DLC 8, émetteur SMB
+ * Etat general des batteries IBS (SOC moyen, drapeaux, courant total).
+ */
 #define CANDB_SMB_TX_BAT_GENERAL_ID                                  0x02BA0000UL
 #define CANDB_SMB_TX_BAT_GENERAL_EXTENDED                            1
 #define CANDB_SMB_TX_BAT_GENERAL_DLC                                 8u
@@ -105,7 +113,9 @@
 #define CANDB_SMB_TX_BAT_GENERAL__IBS1_SOP_MAX                       255.0
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_TX_INV_FLAGS : 0x2AC0000, DLC 7, émetteur SMB */
+/* SMB_TX_INV_FLAGS : 0x2AC0000, DLC 7, émetteur SMB
+ * Mode et defauts de l'onduleur (reponses QMOD et QPIWS). Emise seulement onduleur en service.
+ */
 #define CANDB_SMB_TX_INV_FLAGS_ID                                    0x02AC0000UL
 #define CANDB_SMB_TX_INV_FLAGS_EXTENDED                              1
 #define CANDB_SMB_TX_INV_FLAGS_DLC                                   7u
@@ -267,7 +277,9 @@
 #define CANDB_SMB_TX_INV_FLAGS__MPPT_OVERLOAD_ERROR_FLAG_OFFSET      0.0
 #define CANDB_SMB_TX_INV_FLAGS__MPPT_OVERLOAD_ERROR_FLAG_MIN         0.0
 #define CANDB_SMB_TX_INV_FLAGS__MPPT_OVERLOAD_ERROR_FLAG_MAX         1.0
-/* ac_output_apparent_power_very_high_error_flag */
+/* ac_output_apparent_power_very_high_error_flag
+ *   Surcharge de sortie detectee par la SMB.
+ */
 #define CANDB_SMB_TX_INV_FLAGS__AC_OUTPUT_APPARENT_POWER_VERY_HIGH_ERROR_FLAG_LAYOUT CAN_LAYOUT(34u, 1u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_SMB_TX_INV_FLAGS__AC_OUTPUT_APPARENT_POWER_VERY_HIGH_ERROR_FLAG_FACTOR 1.0
 #define CANDB_SMB_TX_INV_FLAGS__AC_OUTPUT_APPARENT_POWER_VERY_HIGH_ERROR_FLAG_OFFSET 0.0
@@ -285,7 +297,9 @@
 #define CANDB_SMB_TX_INV_FLAGS__OPV_SHORT_WARNING_FLAG_OFFSET        0.0
 #define CANDB_SMB_TX_INV_FLAGS__OPV_SHORT_WARNING_FLAG_MIN           0.0
 #define CANDB_SMB_TX_INV_FLAGS__OPV_SHORT_WARNING_FLAG_MAX           1.0
-/* bus_soft_fail_warning_flag */
+/* bus_soft_fail_warning_flag
+ *   Recopie de bus_soft_fail_error_flag (comportement du firmware).
+ */
 #define CANDB_SMB_TX_INV_FLAGS__BUS_SOFT_FAIL_WARNING_FLAG_LAYOUT    CAN_LAYOUT(42u, 1u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_SMB_TX_INV_FLAGS__BUS_SOFT_FAIL_WARNING_FLAG_FACTOR    1.0
 #define CANDB_SMB_TX_INV_FLAGS__BUS_SOFT_FAIL_WARNING_FLAG_OFFSET    0.0
@@ -365,7 +379,9 @@
 #define CANDB_SMB_TX_INV_FLAGS__BATTERY_TOO_LOW_TO_CHARGE_WARNING_FLAG_MAX 1.0
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_TX_INV_GENERAL : 0x2AC0001, DLC 8, émetteur SMB */
+/* SMB_TX_INV_GENERAL : 0x2AC0001, DLC 8, émetteur SMB
+ * Mesures de l'onduleur (reponse QPIGS). ac_output_apparent_power est la moyenne sur 1 s.
+ */
 #define CANDB_SMB_TX_INV_GENERAL_ID                                  0x02AC0001UL
 #define CANDB_SMB_TX_INV_GENERAL_EXTENDED                            1
 #define CANDB_SMB_TX_INV_GENERAL_DLC                                 8u
@@ -414,7 +430,9 @@
 #define CANDB_SMB_TX_INV_GENERAL__TOGGLE_QPIGS_FLAG_MAX              1.0
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_TX_GENERAL : 0x2C00000, DLC 8, émetteur SMB */
+/* SMB_TX_GENERAL : 0x2C00000, DLC 8, émetteur SMB
+ * Etat de la machine d'etats SMB et drapeaux d'erreur.
+ */
 #define CANDB_SMB_TX_GENERAL_ID                                      0x02C00000UL
 #define CANDB_SMB_TX_GENERAL_EXTENDED                                1
 #define CANDB_SMB_TX_GENERAL_DLC                                     8u
@@ -640,7 +658,9 @@
 #define CANDB_SMB_TX_GENERAL__BATTERY_OVERTEMPERATURE_DISCHARGE_WARNING_FLAG_MAX 1.0
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_TX_RAW1 : 0x2C00001, DLC 8, émetteur SMB */
+/* SMB_TX_RAW1 : 0x2C00001, DLC 8, émetteur SMB
+ * Entrees / sorties brutes de la carte et moyennes ADC brutes (points).
+ */
 #define CANDB_SMB_TX_RAW1_ID                                         0x02C00001UL
 #define CANDB_SMB_TX_RAW1_EXTENDED                                   1
 #define CANDB_SMB_TX_RAW1_DLC                                        8u
@@ -749,7 +769,9 @@
 #define CANDB_SMB_TX_RAW1__BUS_VOLTAGE_RAW_MAX                       65535.0
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_TX_TEMPERATURE : 0x2C00002, DLC 8, émetteur SMB */
+/* SMB_TX_TEMPERATURE : 0x2C00002, DLC 8, émetteur SMB
+ * Temperatures des sondes CTN et tensions mesurees.
+ */
 #define CANDB_SMB_TX_TEMPERATURE_ID                                  0x02C00002UL
 #define CANDB_SMB_TX_TEMPERATURE_EXTENDED                            1
 #define CANDB_SMB_TX_TEMPERATURE_DLC                                 8u
@@ -780,7 +802,9 @@
 #define CANDB_SMB_TX_TEMPERATURE__BUS_VOLTAGE_MAX                    655.35
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_TX_CURRENTS : 0x2C00003, DLC 8, émetteur SMB */
+/* SMB_TX_CURRENTS : 0x2C00003, DLC 8, émetteur SMB
+ * Courants pile, batterie, systeme et consigne de courant pile.
+ */
 #define CANDB_SMB_TX_CURRENTS_ID                                     0x02C00003UL
 #define CANDB_SMB_TX_CURRENTS_EXTENDED                               1
 #define CANDB_SMB_TX_CURRENTS_DLC                                    8u
@@ -811,7 +835,9 @@
 #define CANDB_SMB_TX_CURRENTS__SYSTEM_OUTPUT_CURRENT_MAX             327.67
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_TX_VERSION : 0x2C00004, DLC 6, émetteur SMB */
+/* SMB_TX_VERSION : 0x2C00004, DLC 6, émetteur SMB
+ * Version logicielle et informations IHM.
+ */
 #define CANDB_SMB_TX_VERSION_ID                                      0x02C00004UL
 #define CANDB_SMB_TX_VERSION_EXTENDED                                1
 #define CANDB_SMB_TX_VERSION_DLC                                     6u
@@ -848,7 +874,9 @@
 #define CANDB_SMB_TX_VERSION__RAZ_ERREUR_IHM_FLAG_MAX                1.0
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_TX_BAT_DETAILS : 0x2BA0001, DLC 8, émetteur SMB */
+/* SMB_TX_BAT_DETAILS : 0x2BA0001, DLC 8, émetteur SMB
+ * Detail par batterie IBS.
+ */
 #define CANDB_SMB_TX_BAT_DETAILS_ID                                  0x02BA0001UL
 #define CANDB_SMB_TX_BAT_DETAILS_EXTENDED                            1
 #define CANDB_SMB_TX_BAT_DETAILS_DLC                                 8u
@@ -891,14 +919,18 @@
 #define CANDB_SMB_TX_BAT_DETAILS__IBS1_MAX_BOARD_TEMPERATURE_MAX     127.0
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_TX_BAT_RESERVED : 0x2BA0003, DLC 2, émetteur SMB */
+/* SMB_TX_BAT_RESERVED : 0x2BA0003, DLC 2, émetteur SMB
+ * Trame reservee, emise a zero.
+ */
 #define CANDB_SMB_TX_BAT_RESERVED_ID                                 0x02BA0003UL
 #define CANDB_SMB_TX_BAT_RESERVED_EXTENDED                           1
 #define CANDB_SMB_TX_BAT_RESERVED_DLC                                2u
 #define CANDB_SMB_TX_BAT_RESERVED_NB_SIGNALS                         0u
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_FAN_CONTROL : 0xCFF0027, DLC 4, émetteur SMB */
+/* SMB_FAN_CONTROL : 0xCFF0027, DLC 4, émetteur SMB
+ * Demandes des trois regulateurs de refroidissement et PWM appliquee.
+ */
 #define CANDB_SMB_FAN_CONTROL_ID                                     0x0CFF0027UL
 #define CANDB_SMB_FAN_CONTROL_EXTENDED                               1
 #define CANDB_SMB_FAN_CONTROL_DLC                                    4u
@@ -929,7 +961,9 @@
 #define CANDB_SMB_FAN_CONTROL__FAN_PWM_MAX                           255.0
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_ENERGY_MANAGEMENT : 0xCFF0127, DLC 7, émetteur SMB */
+/* SMB_ENERGY_MANAGEMENT : 0xCFF0127, DLC 7, émetteur SMB
+ * Gestion energie. min/max_ems_current toujours a 0 (regulation dynamique desactivee).
+ */
 #define CANDB_SMB_ENERGY_MANAGEMENT_ID                               0x0CFF0127UL
 #define CANDB_SMB_ENERGY_MANAGEMENT_EXTENDED                         1
 #define CANDB_SMB_ENERGY_MANAGEMENT_DLC                              7u
@@ -966,12 +1000,16 @@
 #define CANDB_SMB_ENERGY_MANAGEMENT__IBS0_MAX_DISCHARGE_CURRENT_MAX  327.67
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_RX_FAN_SPEED : 0x2C01D00, DLC 2, émetteur IHM */
+/* SMB_RX_FAN_SPEED : 0x2C01D00, DLC 2, émetteur IHM
+ * Mode maintenance : rapport cyclique des ventilateurs AC.
+ */
 #define CANDB_SMB_RX_FAN_SPEED_ID                                    0x02C01D00UL
 #define CANDB_SMB_RX_FAN_SPEED_EXTENDED                              1
 #define CANDB_SMB_RX_FAN_SPEED_DLC                                   2u
 #define CANDB_SMB_RX_FAN_SPEED_NB_SIGNALS                            2u
-/* maintenance_key */
+/* maintenance_key
+ *   Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.
+ */
 #define CANDB_SMB_RX_FAN_SPEED__MAINTENANCE_KEY_LAYOUT               CAN_LAYOUT(0u, 8u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_SMB_RX_FAN_SPEED__MAINTENANCE_KEY_FACTOR               1.0
 #define CANDB_SMB_RX_FAN_SPEED__MAINTENANCE_KEY_OFFSET               0.0
@@ -985,12 +1023,16 @@
 #define CANDB_SMB_RX_FAN_SPEED__FAN_SPEED_MAX                        255.0
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_RX_DCAC_INPUT_RELAY : 0x2C01D01, DLC 2, émetteur IHM */
+/* SMB_RX_DCAC_INPUT_RELAY : 0x2C01D01, DLC 2, émetteur IHM
+ * Mode maintenance : relais d'entree onduleur.
+ */
 #define CANDB_SMB_RX_DCAC_INPUT_RELAY_ID                             0x02C01D01UL
 #define CANDB_SMB_RX_DCAC_INPUT_RELAY_EXTENDED                       1
 #define CANDB_SMB_RX_DCAC_INPUT_RELAY_DLC                            2u
 #define CANDB_SMB_RX_DCAC_INPUT_RELAY_NB_SIGNALS                     2u
-/* maintenance_key */
+/* maintenance_key
+ *   Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.
+ */
 #define CANDB_SMB_RX_DCAC_INPUT_RELAY__MAINTENANCE_KEY_LAYOUT        CAN_LAYOUT(0u, 8u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_SMB_RX_DCAC_INPUT_RELAY__MAINTENANCE_KEY_FACTOR        1.0
 #define CANDB_SMB_RX_DCAC_INPUT_RELAY__MAINTENANCE_KEY_OFFSET        0.0
@@ -1006,12 +1048,16 @@
 #define CANDB_SMB_RX_DCAC_INPUT_RELAY__COMMAND__TOGGLE               1
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_RX_DCAC_PRECHARGE_RELAY : 0x2C01D02, DLC 2, émetteur IHM */
+/* SMB_RX_DCAC_PRECHARGE_RELAY : 0x2C01D02, DLC 2, émetteur IHM
+ * Mode maintenance : relais de precharge onduleur.
+ */
 #define CANDB_SMB_RX_DCAC_PRECHARGE_RELAY_ID                         0x02C01D02UL
 #define CANDB_SMB_RX_DCAC_PRECHARGE_RELAY_EXTENDED                   1
 #define CANDB_SMB_RX_DCAC_PRECHARGE_RELAY_DLC                        2u
 #define CANDB_SMB_RX_DCAC_PRECHARGE_RELAY_NB_SIGNALS                 2u
-/* maintenance_key */
+/* maintenance_key
+ *   Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.
+ */
 #define CANDB_SMB_RX_DCAC_PRECHARGE_RELAY__MAINTENANCE_KEY_LAYOUT    CAN_LAYOUT(0u, 8u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_SMB_RX_DCAC_PRECHARGE_RELAY__MAINTENANCE_KEY_FACTOR    1.0
 #define CANDB_SMB_RX_DCAC_PRECHARGE_RELAY__MAINTENANCE_KEY_OFFSET    0.0
@@ -1027,12 +1073,16 @@
 #define CANDB_SMB_RX_DCAC_PRECHARGE_RELAY__COMMAND__TOGGLE           1
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_RX_SUPPLY_PRECHARGE_RELAY : 0x2C01D03, DLC 2, émetteur IHM */
+/* SMB_RX_SUPPLY_PRECHARGE_RELAY : 0x2C01D03, DLC 2, émetteur IHM
+ * Mode maintenance : relais de precharge alimentation 24 V.
+ */
 #define CANDB_SMB_RX_SUPPLY_PRECHARGE_RELAY_ID                       0x02C01D03UL
 #define CANDB_SMB_RX_SUPPLY_PRECHARGE_RELAY_EXTENDED                 1
 #define CANDB_SMB_RX_SUPPLY_PRECHARGE_RELAY_DLC                      2u
 #define CANDB_SMB_RX_SUPPLY_PRECHARGE_RELAY_NB_SIGNALS               2u
-/* maintenance_key */
+/* maintenance_key
+ *   Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.
+ */
 #define CANDB_SMB_RX_SUPPLY_PRECHARGE_RELAY__MAINTENANCE_KEY_LAYOUT  CAN_LAYOUT(0u, 8u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_SMB_RX_SUPPLY_PRECHARGE_RELAY__MAINTENANCE_KEY_FACTOR  1.0
 #define CANDB_SMB_RX_SUPPLY_PRECHARGE_RELAY__MAINTENANCE_KEY_OFFSET  0.0
@@ -1048,12 +1098,16 @@
 #define CANDB_SMB_RX_SUPPLY_PRECHARGE_RELAY__COMMAND__TOGGLE         1
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_RX_FCS_OUTPUT_RELAY : 0x2C01D04, DLC 2, émetteur IHM */
+/* SMB_RX_FCS_OUTPUT_RELAY : 0x2C01D04, DLC 2, émetteur IHM
+ * Mode maintenance : relais de sortie pile.
+ */
 #define CANDB_SMB_RX_FCS_OUTPUT_RELAY_ID                             0x02C01D04UL
 #define CANDB_SMB_RX_FCS_OUTPUT_RELAY_EXTENDED                       1
 #define CANDB_SMB_RX_FCS_OUTPUT_RELAY_DLC                            2u
 #define CANDB_SMB_RX_FCS_OUTPUT_RELAY_NB_SIGNALS                     2u
-/* maintenance_key */
+/* maintenance_key
+ *   Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.
+ */
 #define CANDB_SMB_RX_FCS_OUTPUT_RELAY__MAINTENANCE_KEY_LAYOUT        CAN_LAYOUT(0u, 8u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_SMB_RX_FCS_OUTPUT_RELAY__MAINTENANCE_KEY_FACTOR        1.0
 #define CANDB_SMB_RX_FCS_OUTPUT_RELAY__MAINTENANCE_KEY_OFFSET        0.0
@@ -1069,12 +1123,16 @@
 #define CANDB_SMB_RX_FCS_OUTPUT_RELAY__COMMAND__TOGGLE               1
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_RX_BUZZER : 0x2C01D05, DLC 2, émetteur IHM */
+/* SMB_RX_BUZZER : 0x2C01D05, DLC 2, émetteur IHM
+ * Mode maintenance : buzzer.
+ */
 #define CANDB_SMB_RX_BUZZER_ID                                       0x02C01D05UL
 #define CANDB_SMB_RX_BUZZER_EXTENDED                                 1
 #define CANDB_SMB_RX_BUZZER_DLC                                      2u
 #define CANDB_SMB_RX_BUZZER_NB_SIGNALS                               2u
-/* maintenance_key */
+/* maintenance_key
+ *   Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.
+ */
 #define CANDB_SMB_RX_BUZZER__MAINTENANCE_KEY_LAYOUT                  CAN_LAYOUT(0u, 8u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_SMB_RX_BUZZER__MAINTENANCE_KEY_FACTOR                  1.0
 #define CANDB_SMB_RX_BUZZER__MAINTENANCE_KEY_OFFSET                  0.0
@@ -1090,12 +1148,16 @@
 #define CANDB_SMB_RX_BUZZER__COMMAND__TOGGLE                         1
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_RX_IHM_LEFT_BUTTON_LED : 0x2C01D06, DLC 2, émetteur IHM */
+/* SMB_RX_IHM_LEFT_BUTTON_LED : 0x2C01D06, DLC 2, émetteur IHM
+ * Mode maintenance : LED du bouton gauche.
+ */
 #define CANDB_SMB_RX_IHM_LEFT_BUTTON_LED_ID                          0x02C01D06UL
 #define CANDB_SMB_RX_IHM_LEFT_BUTTON_LED_EXTENDED                    1
 #define CANDB_SMB_RX_IHM_LEFT_BUTTON_LED_DLC                         2u
 #define CANDB_SMB_RX_IHM_LEFT_BUTTON_LED_NB_SIGNALS                  2u
-/* maintenance_key */
+/* maintenance_key
+ *   Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.
+ */
 #define CANDB_SMB_RX_IHM_LEFT_BUTTON_LED__MAINTENANCE_KEY_LAYOUT     CAN_LAYOUT(0u, 8u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_SMB_RX_IHM_LEFT_BUTTON_LED__MAINTENANCE_KEY_FACTOR     1.0
 #define CANDB_SMB_RX_IHM_LEFT_BUTTON_LED__MAINTENANCE_KEY_OFFSET     0.0
@@ -1111,12 +1173,16 @@
 #define CANDB_SMB_RX_IHM_LEFT_BUTTON_LED__COMMAND__TOGGLE            1
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_RX_IHM_MIDDLE_BUTTON_LED : 0x2C01D07, DLC 2, émetteur IHM */
+/* SMB_RX_IHM_MIDDLE_BUTTON_LED : 0x2C01D07, DLC 2, émetteur IHM
+ * Mode maintenance : LED du bouton central.
+ */
 #define CANDB_SMB_RX_IHM_MIDDLE_BUTTON_LED_ID                        0x02C01D07UL
 #define CANDB_SMB_RX_IHM_MIDDLE_BUTTON_LED_EXTENDED                  1
 #define CANDB_SMB_RX_IHM_MIDDLE_BUTTON_LED_DLC                       2u
 #define CANDB_SMB_RX_IHM_MIDDLE_BUTTON_LED_NB_SIGNALS                2u
-/* maintenance_key */
+/* maintenance_key
+ *   Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.
+ */
 #define CANDB_SMB_RX_IHM_MIDDLE_BUTTON_LED__MAINTENANCE_KEY_LAYOUT   CAN_LAYOUT(0u, 8u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_SMB_RX_IHM_MIDDLE_BUTTON_LED__MAINTENANCE_KEY_FACTOR   1.0
 #define CANDB_SMB_RX_IHM_MIDDLE_BUTTON_LED__MAINTENANCE_KEY_OFFSET   0.0
@@ -1132,12 +1198,16 @@
 #define CANDB_SMB_RX_IHM_MIDDLE_BUTTON_LED__COMMAND__TOGGLE          1
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_RX_IHM_RIGHT_BUTTON_LED : 0x2C01D08, DLC 2, émetteur IHM */
+/* SMB_RX_IHM_RIGHT_BUTTON_LED : 0x2C01D08, DLC 2, émetteur IHM
+ * Mode maintenance : LED du bouton droit.
+ */
 #define CANDB_SMB_RX_IHM_RIGHT_BUTTON_LED_ID                         0x02C01D08UL
 #define CANDB_SMB_RX_IHM_RIGHT_BUTTON_LED_EXTENDED                   1
 #define CANDB_SMB_RX_IHM_RIGHT_BUTTON_LED_DLC                        2u
 #define CANDB_SMB_RX_IHM_RIGHT_BUTTON_LED_NB_SIGNALS                 2u
-/* maintenance_key */
+/* maintenance_key
+ *   Doit valoir 0x82 ; commande prise en compte en mode maintenance (etat 40) seulement.
+ */
 #define CANDB_SMB_RX_IHM_RIGHT_BUTTON_LED__MAINTENANCE_KEY_LAYOUT    CAN_LAYOUT(0u, 8u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_SMB_RX_IHM_RIGHT_BUTTON_LED__MAINTENANCE_KEY_FACTOR    1.0
 #define CANDB_SMB_RX_IHM_RIGHT_BUTTON_LED__MAINTENANCE_KEY_OFFSET    0.0
@@ -1153,7 +1223,9 @@
 #define CANDB_SMB_RX_IHM_RIGHT_BUTTON_LED__COMMAND__TOGGLE           1
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_RX_MAINTENANCE_REQUEST : 0x2C0100F, DLC 8, émetteur IHM */
+/* SMB_RX_MAINTENANCE_REQUEST : 0x2C0100F, DLC 8, émetteur IHM
+ * Entree en maintenance (etat 30, key 0x82, confirm 0xFF) ou sortie (etat 40, key 0x82).
+ */
 #define CANDB_SMB_RX_MAINTENANCE_REQUEST_ID                          0x02C0100FUL
 #define CANDB_SMB_RX_MAINTENANCE_REQUEST_EXTENDED                    1
 #define CANDB_SMB_RX_MAINTENANCE_REQUEST_DLC                         8u
@@ -1172,7 +1244,10 @@
 #define CANDB_SMB_RX_MAINTENANCE_REQUEST__MAINTENANCE_CONFIRM_MAX    255.0
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_RX_RESET_ORDER : 0x2C01009, DLC 1, émetteur IHM */
+/* SMB_RX_RESET_ORDER : 0x2C01009, DLC 1, émetteur IHM
+ * Acquittement du mode defaut (etat 250, key 0x82). Le firmware traite aussi cette trame comme
+ * SMB_RX_IHM_ERRORS_ACK (bug 3).
+ */
 #define CANDB_SMB_RX_RESET_ORDER_ID                                  0x02C01009UL
 #define CANDB_SMB_RX_RESET_ORDER_EXTENDED                            1
 #define CANDB_SMB_RX_RESET_ORDER_DLC                                 1u
@@ -1185,7 +1260,9 @@
 #define CANDB_SMB_RX_RESET_ORDER__RESET_KEY_MAX                      255.0
 
 /* -------------------------------------------------------------------------------------- */
-/* SMB_RX_IHM_ERRORS_ACK : 0x25C1000, DLC 1, émetteur IHM */
+/* SMB_RX_IHM_ERRORS_ACK : 0x25C1000, DLC 1, émetteur IHM
+ * L'IHM confirme la prise en compte de la RAZ des erreurs (ack = 1).
+ */
 #define CANDB_SMB_RX_IHM_ERRORS_ACK_ID                               0x025C1000UL
 #define CANDB_SMB_RX_IHM_ERRORS_ACK_EXTENDED                         1
 #define CANDB_SMB_RX_IHM_ERRORS_ACK_DLC                              1u
@@ -1198,12 +1275,17 @@
 #define CANDB_SMB_RX_IHM_ERRORS_ACK__ACK_MAX                         255.0
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_CURRENT_0 : 0x18FF02D0, DLC 8, émetteur IBS */
+/* IBS_CURRENT_0 : 0x18FF02D0, DLC 8, émetteur IBS
+ * Courant et SOP de la batterie 0.
+ */
 #define CANDB_IBS_CURRENT_0_ID                                       0x18FF02D0UL
 #define CANDB_IBS_CURRENT_0_EXTENDED                                 1
 #define CANDB_IBS_CURRENT_0_DLC                                      8u
 #define CANDB_IBS_CURRENT_0_NB_SIGNALS                               2u
-/* current [A] */
+/* current [A]
+ *   Flottant IEEE 754 big-endian. L'IBS compte la decharge en negatif : facteur -1 pour un courant
+ *   positif en decharge.
+ */
 #define CANDB_IBS_CURRENT_0__CURRENT_LAYOUT                          CAN_LAYOUT(7u, 32u, CAN_MOTOROLA | CAN_FLOAT32)
 #define CANDB_IBS_CURRENT_0__CURRENT_FACTOR                          -1.0
 #define CANDB_IBS_CURRENT_0__CURRENT_OFFSET                          0.0
@@ -1217,7 +1299,9 @@
 #define CANDB_IBS_CURRENT_0__SOP_MAX                                 255.0
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_CELL_TEMPERATURE_0 : 0x18FF03D0, DLC 8, émetteur IBS */
+/* IBS_CELL_TEMPERATURE_0 : 0x18FF03D0, DLC 8, émetteur IBS
+ * Temperatures cellules de la batterie 0.
+ */
 #define CANDB_IBS_CELL_TEMPERATURE_0_ID                              0x18FF03D0UL
 #define CANDB_IBS_CELL_TEMPERATURE_0_EXTENDED                        1
 #define CANDB_IBS_CELL_TEMPERATURE_0_DLC                             8u
@@ -1242,7 +1326,9 @@
 #define CANDB_IBS_CELL_TEMPERATURE_0__AVG_CELL_TEMPERATURE_MAX       3276.7000000000003
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_BOARD_TEMPERATURE_0 : 0x18FF04D0, DLC 8, émetteur IBS */
+/* IBS_BOARD_TEMPERATURE_0 : 0x18FF04D0, DLC 8, émetteur IBS
+ * Temperatures de la carte BMS de la batterie 0.
+ */
 #define CANDB_IBS_BOARD_TEMPERATURE_0_ID                             0x18FF04D0UL
 #define CANDB_IBS_BOARD_TEMPERATURE_0_EXTENDED                       1
 #define CANDB_IBS_BOARD_TEMPERATURE_0_DLC                            8u
@@ -1267,7 +1353,9 @@
 #define CANDB_IBS_BOARD_TEMPERATURE_0__AVG_BOARD_TEMPERATURE_MAX     3276.7000000000003
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_STATE_0 : 0x18FF05D0, DLC 8, émetteur IBS */
+/* IBS_STATE_0 : 0x18FF05D0, DLC 8, émetteur IBS
+ * Etat de charge et de sante de la batterie 0.
+ */
 #define CANDB_IBS_STATE_0_ID                                         0x18FF05D0UL
 #define CANDB_IBS_STATE_0_EXTENDED                                   1
 #define CANDB_IBS_STATE_0_DLC                                        8u
@@ -1286,7 +1374,9 @@
 #define CANDB_IBS_STATE_0__SOH_MAX                                   655.35
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_INFO_0 : 0x18FF07D0, DLC 8, émetteur IBS */
+/* IBS_INFO_0 : 0x18FF07D0, DLC 8, émetteur IBS
+ * Drapeaux de la batterie 0.
+ */
 #define CANDB_IBS_INFO_0_ID                                          0x18FF07D0UL
 #define CANDB_IBS_INFO_0_EXTENDED                                    1
 #define CANDB_IBS_INFO_0_DLC                                         8u
@@ -1303,7 +1393,9 @@
 #define CANDB_IBS_INFO_0__BALANCING_FLAG_OFFSET                      0.0
 #define CANDB_IBS_INFO_0__BALANCING_FLAG_MIN                         0.0
 #define CANDB_IBS_INFO_0__BALANCING_FLAG_MAX                         1.0
-/* error_flag */
+/* error_flag
+ *   Le bit IBS vaut 1 en l'absence d'erreur : facteur -1, offset 1.
+ */
 #define CANDB_IBS_INFO_0__ERROR_FLAG_LAYOUT                          CAN_LAYOUT(17u, 1u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_IBS_INFO_0__ERROR_FLAG_FACTOR                          -1.0
 #define CANDB_IBS_INFO_0__ERROR_FLAG_OFFSET                          1.0
@@ -1317,7 +1409,10 @@
 #define CANDB_IBS_INFO_0__LOW_SOC_WARNING_FLAG_MAX                   1.0
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_CURRENT_LIMITS_0 : 0x18FF0CD0, DLC 8, émetteur IBS */
+/* IBS_CURRENT_LIMITS_0 : 0x18FF0CD0, DLC 8, émetteur IBS
+ * Limites de courant de la batterie 0. A VALIDER : l'ancien IBS.DBF decrivait deux U16 (x0.05, -1600 A)
+ * sur 4 octets ; le firmware decode deux flottants big-endian.
+ */
 #define CANDB_IBS_CURRENT_LIMITS_0_ID                                0x18FF0CD0UL
 #define CANDB_IBS_CURRENT_LIMITS_0_EXTENDED                          1
 #define CANDB_IBS_CURRENT_LIMITS_0_DLC                               8u
@@ -1336,7 +1431,9 @@
 #define CANDB_IBS_CURRENT_LIMITS_0__MAX_CHARGE_CURRENT_MAX           3000.0
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_RX_KEEP_ALIVE_0 : 0x180AD000, DLC 1, émetteur SMB */
+/* IBS_RX_KEEP_ALIVE_0 : 0x180AD000, DLC 1, émetteur SMB
+ * Keep-alive envoye chaque seconde a la batterie 0 (alternance des deux trames).
+ */
 #define CANDB_IBS_RX_KEEP_ALIVE_0_ID                                 0x180AD000UL
 #define CANDB_IBS_RX_KEEP_ALIVE_0_EXTENDED                           1
 #define CANDB_IBS_RX_KEEP_ALIVE_0_DLC                                1u
@@ -1349,12 +1446,17 @@
 #define CANDB_IBS_RX_KEEP_ALIVE_0__KEEP_ALIVE_MAX                    255.0
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_CURRENT_1 : 0x18FF02D1, DLC 8, émetteur IBS */
+/* IBS_CURRENT_1 : 0x18FF02D1, DLC 8, émetteur IBS
+ * Courant et SOP de la batterie 1.
+ */
 #define CANDB_IBS_CURRENT_1_ID                                       0x18FF02D1UL
 #define CANDB_IBS_CURRENT_1_EXTENDED                                 1
 #define CANDB_IBS_CURRENT_1_DLC                                      8u
 #define CANDB_IBS_CURRENT_1_NB_SIGNALS                               2u
-/* current [A] */
+/* current [A]
+ *   Flottant IEEE 754 big-endian. L'IBS compte la decharge en negatif : facteur -1 pour un courant
+ *   positif en decharge.
+ */
 #define CANDB_IBS_CURRENT_1__CURRENT_LAYOUT                          CAN_LAYOUT(7u, 32u, CAN_MOTOROLA | CAN_FLOAT32)
 #define CANDB_IBS_CURRENT_1__CURRENT_FACTOR                          -1.0
 #define CANDB_IBS_CURRENT_1__CURRENT_OFFSET                          0.0
@@ -1368,7 +1470,9 @@
 #define CANDB_IBS_CURRENT_1__SOP_MAX                                 255.0
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_CELL_TEMPERATURE_1 : 0x18FF03D1, DLC 8, émetteur IBS */
+/* IBS_CELL_TEMPERATURE_1 : 0x18FF03D1, DLC 8, émetteur IBS
+ * Temperatures cellules de la batterie 1.
+ */
 #define CANDB_IBS_CELL_TEMPERATURE_1_ID                              0x18FF03D1UL
 #define CANDB_IBS_CELL_TEMPERATURE_1_EXTENDED                        1
 #define CANDB_IBS_CELL_TEMPERATURE_1_DLC                             8u
@@ -1393,7 +1497,9 @@
 #define CANDB_IBS_CELL_TEMPERATURE_1__AVG_CELL_TEMPERATURE_MAX       3276.7000000000003
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_BOARD_TEMPERATURE_1 : 0x18FF04D1, DLC 8, émetteur IBS */
+/* IBS_BOARD_TEMPERATURE_1 : 0x18FF04D1, DLC 8, émetteur IBS
+ * Temperatures de la carte BMS de la batterie 1.
+ */
 #define CANDB_IBS_BOARD_TEMPERATURE_1_ID                             0x18FF04D1UL
 #define CANDB_IBS_BOARD_TEMPERATURE_1_EXTENDED                       1
 #define CANDB_IBS_BOARD_TEMPERATURE_1_DLC                            8u
@@ -1418,7 +1524,9 @@
 #define CANDB_IBS_BOARD_TEMPERATURE_1__AVG_BOARD_TEMPERATURE_MAX     3276.7000000000003
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_STATE_1 : 0x18FF05D1, DLC 8, émetteur IBS */
+/* IBS_STATE_1 : 0x18FF05D1, DLC 8, émetteur IBS
+ * Etat de charge et de sante de la batterie 1.
+ */
 #define CANDB_IBS_STATE_1_ID                                         0x18FF05D1UL
 #define CANDB_IBS_STATE_1_EXTENDED                                   1
 #define CANDB_IBS_STATE_1_DLC                                        8u
@@ -1437,7 +1545,9 @@
 #define CANDB_IBS_STATE_1__SOH_MAX                                   655.35
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_INFO_1 : 0x18FF07D1, DLC 8, émetteur IBS */
+/* IBS_INFO_1 : 0x18FF07D1, DLC 8, émetteur IBS
+ * Drapeaux de la batterie 1.
+ */
 #define CANDB_IBS_INFO_1_ID                                          0x18FF07D1UL
 #define CANDB_IBS_INFO_1_EXTENDED                                    1
 #define CANDB_IBS_INFO_1_DLC                                         8u
@@ -1454,7 +1564,9 @@
 #define CANDB_IBS_INFO_1__BALANCING_FLAG_OFFSET                      0.0
 #define CANDB_IBS_INFO_1__BALANCING_FLAG_MIN                         0.0
 #define CANDB_IBS_INFO_1__BALANCING_FLAG_MAX                         1.0
-/* error_flag */
+/* error_flag
+ *   Le bit IBS vaut 1 en l'absence d'erreur : facteur -1, offset 1.
+ */
 #define CANDB_IBS_INFO_1__ERROR_FLAG_LAYOUT                          CAN_LAYOUT(17u, 1u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_IBS_INFO_1__ERROR_FLAG_FACTOR                          -1.0
 #define CANDB_IBS_INFO_1__ERROR_FLAG_OFFSET                          1.0
@@ -1468,7 +1580,10 @@
 #define CANDB_IBS_INFO_1__LOW_SOC_WARNING_FLAG_MAX                   1.0
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_CURRENT_LIMITS_1 : 0x18FF0CD1, DLC 8, émetteur IBS */
+/* IBS_CURRENT_LIMITS_1 : 0x18FF0CD1, DLC 8, émetteur IBS
+ * Limites de courant de la batterie 1. A VALIDER : l'ancien IBS.DBF decrivait deux U16 (x0.05, -1600 A)
+ * sur 4 octets ; le firmware decode deux flottants big-endian.
+ */
 #define CANDB_IBS_CURRENT_LIMITS_1_ID                                0x18FF0CD1UL
 #define CANDB_IBS_CURRENT_LIMITS_1_EXTENDED                          1
 #define CANDB_IBS_CURRENT_LIMITS_1_DLC                               8u
@@ -1487,7 +1602,9 @@
 #define CANDB_IBS_CURRENT_LIMITS_1__MAX_CHARGE_CURRENT_MAX           3000.0
 
 /* -------------------------------------------------------------------------------------- */
-/* IBS_RX_KEEP_ALIVE_1 : 0x180AD100, DLC 1, émetteur SMB */
+/* IBS_RX_KEEP_ALIVE_1 : 0x180AD100, DLC 1, émetteur SMB
+ * Keep-alive envoye chaque seconde a la batterie 1 (alternance des deux trames).
+ */
 #define CANDB_IBS_RX_KEEP_ALIVE_1_ID                                 0x180AD100UL
 #define CANDB_IBS_RX_KEEP_ALIVE_1_EXTENDED                           1
 #define CANDB_IBS_RX_KEEP_ALIVE_1_DLC                                1u
@@ -1500,12 +1617,16 @@
 #define CANDB_IBS_RX_KEEP_ALIVE_1__KEEP_ALIVE_MAX                    255.0
 
 /* -------------------------------------------------------------------------------------- */
-/* FCCB_TX_GENERAL : 0x2FC0000, DLC 8, émetteur FCCB */
+/* FCCB_TX_GENERAL : 0x2FC0000, DLC 8, émetteur FCCB
+ * Etat general de la FCCB.
+ */
 #define CANDB_FCCB_TX_GENERAL_ID                                     0x02FC0000UL
 #define CANDB_FCCB_TX_GENERAL_EXTENDED                               1
 #define CANDB_FCCB_TX_GENERAL_DLC                                    8u
 #define CANDB_FCCB_TX_GENERAL_NB_SIGNALS                             15u
-/* STEP */
+/* STEP
+ *   Valeurs d'etat reprises du firmware SMB (l'ancien DBF indiquait STANDBY = 48).
+ */
 #define CANDB_FCCB_TX_GENERAL__STEP_LAYOUT                           CAN_LAYOUT(0u, 8u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_FCCB_TX_GENERAL__STEP_FACTOR                           1.0
 #define CANDB_FCCB_TX_GENERAL__STEP_OFFSET                           0.0
@@ -1534,7 +1655,9 @@
 #define CANDB_FCCB_TX_GENERAL__MINOR_ERROR_FLAG_OFFSET               0.0
 #define CANDB_FCCB_TX_GENERAL__MINOR_ERROR_FLAG_MIN                  0.0
 #define CANDB_FCCB_TX_GENERAL__MINOR_ERROR_FLAG_MAX                  1.0
-/* ppmh2_error_flag */
+/* ppmh2_error_flag
+ *   Lu par la SMB (octet 1 bit 2) ; absent de l'ancien BOXHY_FCCB.DBF.
+ */
 #define CANDB_FCCB_TX_GENERAL__PPMH2_ERROR_FLAG_LAYOUT               CAN_LAYOUT(10u, 1u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_FCCB_TX_GENERAL__PPMH2_ERROR_FLAG_FACTOR               1.0
 #define CANDB_FCCB_TX_GENERAL__PPMH2_ERROR_FLAG_OFFSET               0.0
@@ -1594,7 +1717,9 @@
 #define CANDB_FCCB_TX_GENERAL__INSTANT_H2_CONSUMPTION_OFFSET         0.0
 #define CANDB_FCCB_TX_GENERAL__INSTANT_H2_CONSUMPTION_MIN            0.0
 #define CANDB_FCCB_TX_GENERAL__INSTANT_H2_CONSUMPTION_MAX            255.0
-/* short_circuit_ongoing_flag */
+/* short_circuit_ongoing_flag
+ *   Lu par la SMB (octet 5 bit 0) ; absent de l'ancien BOXHY_FCCB.DBF.
+ */
 #define CANDB_FCCB_TX_GENERAL__SHORT_CIRCUIT_ONGOING_FLAG_LAYOUT     CAN_LAYOUT(40u, 1u, CAN_INTEL | CAN_UNSIGNED)
 #define CANDB_FCCB_TX_GENERAL__SHORT_CIRCUIT_ONGOING_FLAG_FACTOR     1.0
 #define CANDB_FCCB_TX_GENERAL__SHORT_CIRCUIT_ONGOING_FLAG_OFFSET     0.0
@@ -1903,7 +2028,9 @@
 #define CANDB_FCCB_TX_TEMPERATURE__BOARD_TEMPERATURE_OFFSET          0.0
 #define CANDB_FCCB_TX_TEMPERATURE__BOARD_TEMPERATURE_MIN             -128.0
 #define CANDB_FCCB_TX_TEMPERATURE__BOARD_TEMPERATURE_MAX             127.0
-/* dcdc_temperature [°C] */
+/* dcdc_temperature [°C]
+ *   Lu par la SMB pour la regulation des ventilateurs.
+ */
 #define CANDB_FCCB_TX_TEMPERATURE__DCDC_TEMPERATURE_LAYOUT           CAN_LAYOUT(24u, 8u, CAN_INTEL | CAN_SIGNED)
 #define CANDB_FCCB_TX_TEMPERATURE__DCDC_TEMPERATURE_FACTOR           1.0
 #define CANDB_FCCB_TX_TEMPERATURE__DCDC_TEMPERATURE_OFFSET           0.0
@@ -2202,7 +2329,9 @@
 #define CANDB_FCCB_TX_EEPROM4_NB_SIGNALS                             0u
 
 /* -------------------------------------------------------------------------------------- */
-/* FCCB_RX_KEEP_ALIVE : 0x2FC1000, DLC 2, émetteur SMB */
+/* FCCB_RX_KEEP_ALIVE : 0x2FC1000, DLC 2, émetteur SMB
+ * Presence SMB envoyee a la FCCB (octet 1 = 1).
+ */
 #define CANDB_FCCB_RX_KEEP_ALIVE_ID                                  0x02FC1000UL
 #define CANDB_FCCB_RX_KEEP_ALIVE_EXTENDED                            1
 #define CANDB_FCCB_RX_KEEP_ALIVE_DLC                                 2u
@@ -2215,7 +2344,10 @@
 #define CANDB_FCCB_RX_KEEP_ALIVE__SMB_PRESENT_MAX                    255.0
 
 /* -------------------------------------------------------------------------------------- */
-/* FCCB_RX_ON_OFF : 0x2FC1001, DLC 8, émetteur SMB */
+/* FCCB_RX_ON_OFF : 0x2FC1001, DLC 8, émetteur SMB
+ * Commandes SMB vers FCCB. Arret critique / arret / demarrage emis en DLC 3 ; maintenance et RAZ des
+ * erreurs emis en DLC 8 avec command_confirm = 0xFF.
+ */
 #define CANDB_FCCB_RX_ON_OFF_ID                                      0x02FC1001UL
 #define CANDB_FCCB_RX_ON_OFF_EXTENDED                                1
 #define CANDB_FCCB_RX_ON_OFF_DLC                                     8u
@@ -2255,7 +2387,9 @@
 #define CANDB_FCCB_RX_ON_OFF__COMMAND_CONFIRM_MAX                    255.0
 
 /* -------------------------------------------------------------------------------------- */
-/* FCCB_RX_OUPUT_CURRENT_LIMIT : 0x2FC1002, DLC 2, émetteur SMB */
+/* FCCB_RX_OUPUT_CURRENT_LIMIT : 0x2FC1002, DLC 2, émetteur SMB
+ * Consigne de courant pile envoyee par la SMB en mode hybride.
+ */
 #define CANDB_FCCB_RX_OUPUT_CURRENT_LIMIT_ID                         0x02FC1002UL
 #define CANDB_FCCB_RX_OUPUT_CURRENT_LIMIT_EXTENDED                   1
 #define CANDB_FCCB_RX_OUPUT_CURRENT_LIMIT_DLC                        2u
@@ -2363,6 +2497,8 @@
 #define CANDB_FCCB_TX_DEBUG__BUS_VOLTAGE_MIN                         0.0
 #define CANDB_FCCB_TX_DEBUG__BUS_VOLTAGE_MAX                         655.35
 
+/* Liste de tous les signaux de la base, compilée seulement si CANDB_WITH_SIGNAL_LIST est défini
+ * (tests/test_can_signal.c) : elle n'occupe aucune place dans le firmware. */
 #ifdef CANDB_WITH_SIGNAL_LIST
 typedef struct
 {

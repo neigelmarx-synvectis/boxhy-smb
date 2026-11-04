@@ -6,6 +6,18 @@
  * La disposition des signaux vient de can_db.h (généré depuis can database/BOXHY.dbc) ;
  * le codage est fait par CanMsg_Pack(). Ordonnancement : une trame par créneau TMR1, cycle de
  * 25 créneaux (créneaux 1, 3, 4, 6, 7, 8, 9, 17, 19, 20, 21, 22, 23).
+ *
+ * Lecture des tables : CAN_BIND(signal, &variable, type C, unité de la variable).
+ * L'unité est la valeur physique (dans l'unité du .dbc) d'un LSB de la variable :
+ *  - 1    : la variable est déjà dans l'unité du signal (%, °C, VA, drapeaux...) ;
+ *  - 0.01 : courants en 0,01 A, tensions en 0,01 V (même résolution que le signal) ;
+ *  - 0.1  : tension de sortie onduleur en 0,1 V.
+ * Quand l'unité diffère du facteur DBC, la conversion est faite à l'émission (voir les cas signalés
+ * dans les tables : températures brutes ADC, consigne pile en A).
+ *
+ * Les tables sont `static const ... CAN_ROM` : en flash, sans copie en RAM. Chaque table est
+ * suivie de CAN_CHECK_BINDINGS, qui fait échouer la compilation si le .dbc compte un signal de plus
+ * ou de moins. L'alias local `M` évite de répéter le nom du message.
  */
 #include "src/can/can_tx.h"
 #include "src/can/can_db.h"
@@ -23,7 +35,8 @@
 
 #define CAN_TX_CYCLE_LENGTH 25
 
-/* Instantané des entrées / sorties de la carte, relu juste avant l'émission de SMB_TX_RAW1. */
+/* Instantané des entrées / sorties de la carte, relu juste avant l'émission de SMB_TX_RAW1.
+ * Les accès GPIO (Board_Get*) ne sont pas des variables : on les recopie ici pour pouvoir les lier. */
 static struct
 {
     bool btn_left, btn_middle, btn_right, btn_battery_mode, btn_hybrid_mode;
@@ -31,10 +44,12 @@ static struct
     bool buzzer, led_left, led_middle, led_right;
 } io;
 
-static uint8_t can_frame_ind;
+static uint8_t can_frame_ind;   /* créneau courant du cycle, 0..CAN_TX_CYCLE_LENGTH-1 */
 
 /* ---- Tables de liaison ------------------------------------------------------------------ */
 
+/* 0x2BA0000 - créneau 1 : état général des batteries IBS (SOC moyen, drapeaux, courant total,
+ * températures moyennes et SOP de chaque pack). */
 #define M CANDB_SMB_TX_BAT_GENERAL
 static const sCanBinding bat_general[] CAN_ROM = {
     CAN_BIND(CANDB_SMB_TX_BAT_GENERAL__SOC, &battery.soc, CAN_VAR_U8, 1),
@@ -56,6 +71,8 @@ CAN_CHECK_BINDINGS(M, bat_general);
 static const sCanMessage msg_bat_general CAN_ROM = CAN_MESSAGE(M, bat_general);
 #undef M
 
+/* 0x2AC0000 - créneau 3 : mode de l'onduleur et ses drapeaux d'erreur / d'avertissement
+ * (réponses QMOD et QPIWS). Macro B() : liaison d'un drapeau booléen de la structure `inverter`. */
 #define M CANDB_SMB_TX_INV_FLAGS
 #define B(SIG, var) CAN_BIND(CANDB_SMB_TX_INV_FLAGS__##SIG, &inverter.var, CAN_VAR_BOOL, 1)
 static const sCanBinding inv_flags[] CAN_ROM = {
@@ -106,6 +123,8 @@ CAN_CHECK_BINDINGS(M, inv_flags);
 static const sCanMessage msg_inv_flags CAN_ROM = CAN_MESSAGE(M, inv_flags);
 #undef M
 
+/* 0x2AC0001 - créneau 4 : mesures de l'onduleur (réponse QPIGS). La puissance apparente émise est
+ * la moyenne glissante sur 1 s ; les bits « toggle » basculent à chaque réponse reçue (vie du lien). */
 #define M CANDB_SMB_TX_INV_GENERAL
 static const sCanBinding inv_general[] CAN_ROM = {
     CAN_BIND(CANDB_SMB_TX_INV_GENERAL__AC_OUTPUT_APPARENT_POWER, &inverter.moy_ac_output_apparent_power, CAN_VAR_U16, 1),
@@ -120,6 +139,8 @@ CAN_CHECK_BINDINGS(M, inv_general);
 static const sCanMessage msg_inv_general CAN_ROM = CAN_MESSAGE(M, inv_general);
 #undef M
 
+/* 0x2C00000 - créneau 6 : état de la machine d'états SMB, état FCCB et l'ensemble des drapeaux
+ * d'erreur / d'avertissement. Macro B() : liaison d'un drapeau booléen quelconque. */
 #define M CANDB_SMB_TX_GENERAL
 #define B(SIG, var) CAN_BIND(CANDB_SMB_TX_GENERAL__##SIG, &var, CAN_VAR_BOOL, 1)
 static const sCanBinding smb_general[] CAN_ROM = {
@@ -161,6 +182,9 @@ CAN_CHECK_BINDINGS(M, smb_general);
 static const sCanMessage msg_smb_general CAN_ROM = CAN_MESSAGE(M, smb_general);
 #undef M
 
+/* 0x2C00001 - créneau 7 : entrées / sorties brutes de la carte (instantané `io`) et moyennes ADC
+ * brutes. Températures brutes : le signal a un facteur 100, la variable est en points ADC
+ * (unité 1) -> émission de points / 100, tronqué (une valeur 0..4095 tient alors sur un octet). */
 #define M CANDB_SMB_TX_RAW1
 #define B(SIG, var) CAN_BIND(CANDB_SMB_TX_RAW1__##SIG, &io.var, CAN_VAR_BOOL, 1)
 static const sCanBinding smb_raw1[] CAN_ROM = {
@@ -187,6 +211,7 @@ CAN_CHECK_BINDINGS(M, smb_raw1);
 static const sCanMessage msg_smb_raw1 CAN_ROM = CAN_MESSAGE(M, smb_raw1);
 #undef M
 
+/* 0x2C00002 - créneau 8 : températures des sondes CTN (°C) et tensions mesurées (0,01 V). */
 #define M CANDB_SMB_TX_TEMPERATURE
 static const sCanBinding smb_temperature[] CAN_ROM = {
     CAN_BIND(CANDB_SMB_TX_TEMPERATURE__AC_AMBIANT_TEMP, &measures.ac_ambiant_temp.value_8, CAN_VAR_I8, 1),
@@ -198,6 +223,7 @@ CAN_CHECK_BINDINGS(M, smb_temperature);
 static const sCanMessage msg_smb_temperature CAN_ROM = CAN_MESSAGE(M, smb_temperature);
 #undef M
 
+/* 0x2C00003 - créneau 9 : courants pile, batterie et système, consigne de courant pile (0,01 A). */
 #define M CANDB_SMB_TX_CURRENTS
 static const sCanBinding smb_currents[] CAN_ROM = {
     CAN_BIND(CANDB_SMB_TX_CURRENTS__FCS_OUTPUT_CURRENT, &fcs.output_current, CAN_VAR_I16, 0.01),
@@ -209,6 +235,8 @@ CAN_CHECK_BINDINGS(M, smb_currents);
 static const sCanMessage msg_smb_currents CAN_ROM = CAN_MESSAGE(M, smb_currents);
 #undef M
 
+/* 0x2C00004 - créneau 17 : version logicielle (constantes de smb_config.h), compteur de la limite
+ * de 5 min du buzzer (secondes, 16 bits) et demande de RAZ des erreurs à l'IHM. */
 #define M CANDB_SMB_TX_VERSION
 static const sCanBinding smb_version[] CAN_ROM = {
     CAN_BIND_CONST(CANDB_SMB_TX_VERSION__SOFTWARE_VERSION, SMB_VERSION),
@@ -221,6 +249,7 @@ CAN_CHECK_BINDINGS(M, smb_version);
 static const sCanMessage msg_smb_version CAN_ROM = CAN_MESSAGE(M, smb_version);
 #undef M
 
+/* 0x2BA0001 - créneau 23 : détail par batterie (courant, températures max cellules et carte BMS). */
 #define M CANDB_SMB_TX_BAT_DETAILS
 static const sCanBinding bat_details[] CAN_ROM = {
     CAN_BIND(CANDB_SMB_TX_BAT_DETAILS__IBS0_OUTPUT_CURRENT, &battery.ibs[0].output_current, CAN_VAR_I16, 0.01),
@@ -234,9 +263,11 @@ CAN_CHECK_BINDINGS(M, bat_details);
 static const sCanMessage msg_bat_details CAN_ROM = CAN_MESSAGE(M, bat_details);
 #undef M
 
+/* 0x2BA0003 - créneau 19 : trame réservée, sans signal, émise à zéro (DLC 2). */
 CAN_CHECK_EMPTY(CANDB_SMB_TX_BAT_RESERVED);
 static const sCanMessage msg_bat_reserved CAN_ROM = CAN_MESSAGE_EMPTY(CANDB_SMB_TX_BAT_RESERVED);
 
+/* 0x2FC1000 - créneau 20 : présence de la SMB, attendue par la carte FCCB (octet 1 = 1). */
 #define M CANDB_FCCB_RX_KEEP_ALIVE
 static const sCanBinding fccb_keep_alive[] CAN_ROM = {
     CAN_BIND_CONST(CANDB_FCCB_RX_KEEP_ALIVE__SMB_PRESENT, 1),
@@ -245,6 +276,7 @@ CAN_CHECK_BINDINGS(M, fccb_keep_alive);
 static const sCanMessage msg_fccb_keep_alive CAN_ROM = CAN_MESSAGE(M, fccb_keep_alive);
 #undef M
 
+/* 0xCFF0027 - créneau 21 : demandes des trois régulateurs de refroidissement et PWM appliquée (%). */
 #define M CANDB_SMB_FAN_CONTROL
 static const sCanBinding fan_control[] CAN_ROM = {
     CAN_BIND(CANDB_SMB_FAN_CONTROL__DCAC_COOLING_REQUEST, &cooling.inverter_pwm, CAN_VAR_U8, 1),
@@ -256,6 +288,9 @@ CAN_CHECK_BINDINGS(M, fan_control);
 static const sCanMessage msg_fan_control CAN_ROM = CAN_MESSAGE(M, fan_control);
 #undef M
 
+/* 0xCFF0127 - créneau 22 : gestion énergie. La consigne pile, tenue en 0,01 A, est émise en A
+ * (signal de facteur 1, unité de la variable 0.01 -> division par 100). Les limites de courant de la
+ * batterie 0 sont émises en 0,01 A. */
 #define M CANDB_SMB_ENERGY_MANAGEMENT
 static const sCanBinding energy_management[] CAN_ROM = {
     CAN_BIND_CONST(CANDB_SMB_ENERGY_MANAGEMENT__MIN_EMS_CURRENT, 0), /* régulation dynamique désactivée */
@@ -276,11 +311,13 @@ static bool inverter_frames_enabled(void)
     return ((smb.step > SMB_STANDBY) && (smb.step <= SMB_EMERGENCY)) || inverter.raz_data_after_stop_flag;
 }
 
+/* Après l'émission des mesures onduleur : la « dernière émission après arrêt » a eu lieu. */
 static void after_inverter_measures(void)
 {
     inverter.raz_data_after_stop_flag = 0;
 }
 
+/* Relit boutons, relais, buzzer et LEDs dans `io`, juste avant le codage de SMB_TX_RAW1. */
 static void snapshot_io(void)
 {
     io.btn_left = Board_GetButtonLeft();
@@ -298,6 +335,8 @@ static void snapshot_io(void)
     io.led_right = Board_GetLedRight();
 }
 
+/* Un créneau du cycle d'émission : quelle trame, à quelle condition, avec quelles actions
+ * avant (préparation des données) et après (acquittement). */
 typedef struct
 {
     uint8_t slot;
@@ -307,6 +346,8 @@ typedef struct
     void (*after)(void);   /* NULL : rien */
 } sCanTxSlot;
 
+/* Planning d'émission. Les créneaux absents (0, 2, 5, 10..16, 18, 24) n'émettent rien : ils
+ * laissent du temps de bus et reproduisent le cadencement du firmware d'origine. */
 static const sCanTxSlot slots[] CAN_ROM = {
     {1,  &msg_bat_general,       NULL, NULL, NULL},
     {3,  &msg_inv_flags,         inverter_frames_enabled, NULL, NULL},
@@ -323,11 +364,15 @@ static const sCanTxSlot slots[] CAN_ROM = {
     {23, &msg_bat_details,       NULL, NULL, NULL},
 };
 
+/* Repart au début du cycle. */
 void CanTx_Init(void)
 {
     can_frame_ind = 0;
 }
 
+/* Cherche le créneau courant dans le planning, émet sa trame si sa condition est remplie, puis
+ * avance d'un créneau (retour à 0 après le dernier). Les trames partent en priorité basse : les
+ * commandes FCCB et le keep-alive IBS, émis en priorité haute, passent devant. */
 void CanTx_SendNext(void)
 {
     uint8_t i;

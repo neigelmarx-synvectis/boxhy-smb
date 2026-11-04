@@ -1,9 +1,16 @@
 /**
  * @file ctn_sensor.c
  * @brief Sonde de température CTN (voir ctn_sensor.h).
+ *
+ * Code du module CTN_SENSOR_V03 d'origine, inchangé à part sa compilation séparée.
  */
 #include "src/measures/ctn_sensor.h"
 
+/* Surveillance d'une sonde, toutes les 100 ms. Ordre des contrôles :
+ *  1. valeur hors plage : on compte la perte, et rien d'autre n'est évalué ;
+ *  2. sinon, sous le seuil bas : on compte, l'avertissement et le seuil haut ne sont pas réévalués ;
+ *  3. sinon, avertissement haut immédiat et comptage au-dessus du seuil haut.
+ * Les erreurs, une fois levées, restent actives jusqu'à ctnSensorInit(). */
 void ctnSensorCheck(sCTN_SENSOR *ctn_sensor)
 {
     if (ctn_sensor->value == CTN_SENSOR_LOST_VALUE)
@@ -15,7 +22,7 @@ void ctnSensorCheck(sCTN_SENSOR *ctn_sensor)
     else
     {
         ctn_sensor->lost_cnt = 0;
-        ctn_sensor->value_8 = ctn_sensor->value / 100;
+        ctn_sensor->value_8 = ctn_sensor->value / 100; /* 0,01 °C -> °C (troncature vers zéro) */
 
         if (ctn_sensor->value_8 < ctn_sensor->low_level)
         {
@@ -46,6 +53,8 @@ void ctnSensorCheck(sCTN_SENSOR *ctn_sensor)
         ctn_sensor->error_flag = 1;
 }
 
+/* Remise à zéro complète, avec les seuils par défaut du module (50 / 70 / -5 °C) : l'appelant doit
+ * réappliquer ses propres seuils s'il en a (voir TODO(bug 12) dans measures.c). */
 void ctnSensorInit(sCTN_SENSOR *ctn_sensor)
 {
     ctn_sensor->value = 0;
@@ -66,6 +75,10 @@ void ctnSensorInit(sCTN_SENSOR *ctn_sensor)
     ctn_sensor->error_flag = 0;
 }
 
+/* Linéarisation de la sonde USP10976 sur l'ADC 12 bits : 18 segments de droite
+ * temp = a × points - b, en 0,01 °C. Les coefficients viennent du module d'origine (approximation de
+ * la courbe de la CTN dans son montage) ; en dehors de [70, 4025] points, la valeur est déclarée
+ * hors plage (sonde débranchée ou en court-circuit). */
 int16_t convertTemperatureUSP10976(uint16_t adc_result)
 {
     int16_t temp;

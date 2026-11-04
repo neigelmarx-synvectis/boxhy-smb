@@ -1,18 +1,25 @@
 /**
  * @file cooling.c
  * @brief Refroidissement partie AC (voir cooling.h).
+ *
+ * Régulateurs PI (Kp = 1, Ki = 0,1 ; le terme dérivé n'est pas utilisé) : la sortie, en %,
+ * augmente quand la température dépasse sa consigne. Le terme intégral est borné dans
+ * Generic_PidController() pour éviter l'emballement lorsque les ventilateurs saturent.
  */
 #include "src/control/cooling.h"
 #include "src/utils/generic.h"
 #include "src/smb_config.h"
 #include "hal/board_io.h"
 
+/* État public (déclaré extern dans cooling.h). */
 sCooling cooling;
 
+/* Termes intégraux des trois régulateurs, conservés d'un appel à l'autre. */
 static float ambiant_int_part;
 static float inverter_int_part;
 static float dcdc_int_part;
 
+/* Remet à zéro les demandes et les intégrales. */
 void Cooling_Init(void)
 {
     cooling.ambiant_pwm = 0;
@@ -24,6 +31,10 @@ void Cooling_Init(void)
     dcdc_int_part = 0;
 }
 
+/*
+ * Calcule les trois demandes de refroidissement (%) puis applique la plus forte aux ventilateurs,
+ * bornée entre COOLING_FANS_MIN_DUTY (15 %) et COOLING_FANS_MAX_DUTY (100 %).
+ */
 void Cooling_Update1s(int8_t ambiant_temp, uint8_t inverter_temp, uint8_t dcdc_temp)
 {
     cooling.ambiant_pwm = Generic_PidController(COOLING_PID_KP, COOLING_PID_KI, COOLING_PID_KD,

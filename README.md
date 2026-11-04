@@ -71,7 +71,7 @@ avec les états de sortie `FC_STOP_1/2`, `DCAC_STOP`, `STOPPING`, et les états 
 
 - **CAN1** : échange avec la carte FCCB (états `FCCB_*`, commandes `Fcs_Send*`), avec les batteries IBS (trames `0x18FFxxD0/D1`, keep-alive) et avec l'IHM (télémétrie, maintenance). Toutes les trames sont décrites dans `can database/BOXHY.dbc` (voir « Base CAN »).
 - **UART1 (RS232)** : interrogation de l'onduleur avec les commandes `QPIGS`, `QMOD`, `QPIWS` et décodage de son mode (fault, standby, AC source, battery, power saving…).
-- **ADC1** : 4 voies moyennées sur 50 échantillons : température 1, température 2, tension d'alimentation, tension de bus.
+- **ADC1** : 4 voies moyennées sur 50 échantillons : température 1, température 2, tension d'alimentation, tension de bus. Les conversions sont déclenchées par TMR5 toutes les 100 µs.
 - **Sorties** : relais `DCAC_INPUT_RELAY`, `DCAC_PRECHARGE_RELAY`, `FCS_OUTPUT_RELAY`, `SUPPLY_PRECHARGE_RELAY`, PWM ventilateurs, buzzer.
 - **IHM** : trois boutons avec LED (`IHM_LEFT/MIDDLE/RIGHT_BUTTON`).
 

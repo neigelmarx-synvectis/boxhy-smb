@@ -14,6 +14,10 @@
  *  - `high_level_warning_flag` : sans temporisation ;
  *  - `low_level_error_flag` / `high_level_error_flag` : après `CTN_SENSOR_LEVEL_TIMEOUT` ;
  *  - `lost_error_flag` : valeur 0x7FFF (hors plage) pendant `CTN_SENSOR_LOST_TIMEOUT`.
+ * Les drapeaux d'erreur sont verrouillés : seul ctnSensorInit() les efface (sortie du mode défaut).
+ *
+ * Dans ce firmware, les deux sondes sont gérées par src/measures/measures.c, qui fournit `value`
+ * après chaque bloc de 50 conversions et appelle ctnSensorCheck() depuis la tâche 100 ms.
  */
 #ifndef CTN_SENSOR_H
 #define CTN_SENSOR_H
@@ -22,9 +26,10 @@
 #include <stdbool.h>
 
 #define CTN_SENSOR_LOST_VALUE     0x7FFF /**< valeur hors plage de mesure */
-#define CTN_SENSOR_LOST_TIMEOUT   50     /**< ticks 100 ms */
-#define CTN_SENSOR_LEVEL_TIMEOUT  50     /**< ticks 100 ms */
+#define CTN_SENSOR_LOST_TIMEOUT   50     /**< ticks 100 ms (~5 s hors plage avant l'erreur) */
+#define CTN_SENSOR_LEVEL_TIMEOUT  50     /**< ticks 100 ms (~5 s au-delà d'un seuil avant l'erreur) */
 
+/** État d'une sonde : seuils (réglés par l'application), mesure, drapeaux et compteurs. */
 typedef struct
 {
     /* A régler en début de soft */
@@ -36,16 +41,16 @@ typedef struct
     int16_t value;   /**< Température (0.01°C) */
     int8_t value_8;  /**< Température (1°C) */
 
-    bool high_level_warning_flag;
-    bool high_level_error_flag;
-    bool low_level_error_flag;
-    bool lost_error_flag;
+    bool high_level_warning_flag; /**< au-dessus de warning_high_level (immédiat, non verrouillé) */
+    bool high_level_error_flag;   /**< au-dessus de high_level trop longtemps (verrouillé) */
+    bool low_level_error_flag;    /**< sous low_level trop longtemps (verrouillé) */
+    bool lost_error_flag;         /**< valeur hors plage trop longtemps : sonde absente ou en court-circuit */
     bool error_flag; /**< erreur générale (haute, basse ou capteur perdu) */
 
     /* Interne */
-    uint8_t high_level_cnt;
-    uint8_t low_level_cnt;
-    uint8_t lost_cnt;
+    uint8_t high_level_cnt; /**< ticks consécutifs au-dessus de high_level */
+    uint8_t low_level_cnt;  /**< ticks consécutifs sous low_level */
+    uint8_t lost_cnt;       /**< ticks consécutifs hors plage */
 } sCTN_SENSOR;
 
 /** Remet le capteur à zéro et applique les seuils par défaut (50 / 70 / -5 °C). */

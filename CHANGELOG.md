@@ -39,6 +39,10 @@ respecte le [Semantic Versioning](https://semver.org/lang/fr/).
   `measures/`, `control/`, `hmi/` et `utils/`. `main.c` et `smb_config.h` restent à la racine de `src/`.
   Les `#include` sont écrits depuis la racine du dépôt. Les projets MPLAB X et VS Code, le Makefile de
   tests et le générateur CAN sont mis à jour. Le firmware produit est identique octet pour octet.
+- Commentaires ajoutés dans tous les fichiers de `src/` et `hal/` : rôle de chaque module, cadence
+  d'appel, unités, durée réelle des temporisations, rôle et relais attendus de chaque état de la
+  machine d'états, algorithmes de la couche CAN. `can_db.h` reprend les commentaires du `.dbc`.
+  Le code est inchangé (firmware identique octet pour octet).
 - Toutes les trames CAN lues ou émises par la SMB passent par la couche générique : télémétrie
   (`can_tx.c`), batteries IBS, FCCB (états et commandes), maintenance, ordres IHM. Les trames
   restent identiques octet pour octet, sauf les corrections ci-dessous. Flash 26 559 → 26 856 octets,
@@ -91,6 +95,11 @@ Repérées par `TODO(bug n)` dans le code et figées par des tests `current_beha
 11. Moyenne de puissance AC sommée sur 16 bits : fausse au-delà de 6553 VA de moyenne.
 12. Acquittement du mode défaut : `ctnSensorInit()` remplace les seuils applicatifs des sondes
     (75 / 0 °C et 90 / 0 °C) par les seuils par défaut du module (70 / -5 °C).
+13. Démarrage pile : après une première expiration du délai de 60 s en `FCS_START_2`, la nouvelle
+    tentative passe en défaut dès le retour en `FCS_START_2` si la FCCB n'est pas déjà `OPERATING`,
+    sans laisser à la pile un second délai de 60 s.
+14. L'état `DCAC_STOP` (210) est inatteignable : la seule branche qui y menait reprenait la condition
+    d'arrêt déjà traitée par `STOPPING`.
 
 ## [1.3.0] – 2026-11-04
 

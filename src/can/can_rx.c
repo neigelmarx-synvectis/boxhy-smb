@@ -1,6 +1,17 @@
 /**
  * @file can_rx.c
  * @brief Réception CAN (voir can_rx.h).
+ *
+ * Appelé par la boucle principale (main.c) dès qu'au moins un message attend dans les buffers de
+ * réception CAN1 ; un seul message est traité par tour de boucle, la réception étant prioritaire
+ * sur les autres tâches.
+ *
+ * Aiguillage, dans cet ordre (les identifiants sont disjoints, l'ordre n'a donc pas d'effet) :
+ *  1. batteries IBS (0x18FFxxD0/D1)            -> Battery_HandleCanFrame (devices/battery.c) ;
+ *  2. carte FCCB (0x2FC0000/03/04)              -> Fcs_HandleCanFrame (devices/fcs.c) ;
+ *  3. commandes de maintenance (0x2C01D0x, 0x2C0100F) -> Maintenance_HandleCanFrame (hmi/maintenance.c) ;
+ *  4. ordres de l'IHM (0x2C01009, 0x25C1000)   -> traités ici ;
+ * toute autre trame est ignorée.
  */
 #include "src/can/can_rx.h"
 #include "src/devices/battery.h"
@@ -11,10 +22,11 @@
 #include "src/can/can_db.h"
 #include "hal/can_port.h"
 
-#define MAINTENANCE_KEY      0x82
-#define IHM_ACK              1
+#define MAINTENANCE_KEY      0x82   /* clé attendue dans l'ordre d'acquittement du défaut */
+#define IHM_ACK              1      /* l'IHM confirme avoir pris en compte la RAZ des erreurs */
 
-/* Ordres de l'IHM traités ici (les autres trames sont aiguillées vers leur module) */
+/* Ordres de l'IHM traités ici (les autres trames sont aiguillées vers leur module).
+ * Les deux trames n'ont qu'un signal utile, sur l'octet 0 : elles le décodent dans la même variable. */
 static uint8_t order_value;
 
 static const sCanBinding reset_order[] CAN_ROM = {
@@ -31,9 +43,12 @@ static const sCanMessage order_messages[] CAN_ROM = {
     CAN_MESSAGE(CANDB_SMB_RX_IHM_ERRORS_ACK, ihm_errors_ack),
 };
 
+/* Message en cours de traitement : le driver MCC y recopie l'identifiant, le DLC et les 8 octets
+ * de données (au-delà du DLC, les octets valent 0 grâce à la remise à zéro en fin de traitement). */
 static uint8_t rx_data[8];
 static CAN_MSG_OBJ rx_msg;
 
+/* Prépare l'objet de réception : à appeler une fois au démarrage, avant la boucle principale. */
 void CanRx_Init(void)
 {
     uint8_t i;
@@ -44,6 +59,7 @@ void CanRx_Init(void)
     rx_msg.data = rx_data;
 }
 
+/* Lit un message et l'aiguille (voir l'en-tête du fichier). */
 void CanRx_Process(void)
 {
     uint8_t i;
@@ -51,6 +67,8 @@ void CanRx_Process(void)
     if (!CanPort_Receive(&rx_msg))
         return;
 
+    /* Chaque gestionnaire renvoie true s'il a reconnu l'identifiant ; le court-circuit du || arrête
+     * l'aiguillage au premier module concerné. */
     if (Battery_HandleCanFrame(&rx_msg) ||
         Fcs_HandleCanFrame(&rx_msg) ||
         Maintenance_HandleCanFrame(&rx_msg, smb.step))
@@ -80,6 +98,7 @@ void CanRx_Process(void)
         }
     }
 
+    /* RAZ du buffer : une trame courte suivante ne verra pas les octets de celle-ci */
     for (i = 0; i < 8; i++)
         rx_data[i] = 0;
 }
