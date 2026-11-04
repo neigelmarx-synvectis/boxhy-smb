@@ -28,6 +28,8 @@ funclist
 .DS_Store
 Thumbs.db
 *.swp
+# Réglages VS Code propres à chaque poste (le projet .vscode/*.mplab.json reste versionné)
+.vscode/settings.json
 
 # MPLAB VS Code extension regenerated cmake files
 cmake/**/.generated/
